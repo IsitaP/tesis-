@@ -1,0 +1,991 @@
+package com.rebottle.app.ui.screens.auth
+
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.rebottle.app.R
+
+
+
+// ============================================================
+// COLORES
+// ============================================================
+
+private val BackgroundColor = Color(0xFFFAF7EF)
+private val MainGreen = Color(0xFF5E7D3F)
+private val DarkGreen = Color(0xFF465F32)
+private val LightGreen = Color(0xFFF0F5E8)
+private val MainText = Color(0xFF45463F)
+private val SecondaryText = Color(0xFF77786F)
+private val BorderColor = Color(0xFFD9DDD2)
+
+
+// ============================================================
+// PANTALLAS
+// ============================================================
+
+private enum class AuthScreen {
+    ONBOARDING_ONE,
+    ONBOARDING_TWO,
+    ONBOARDING_THREE,
+    REGISTER,
+    LOGIN
+}
+
+
+// ============================================================
+// FLUJO PRINCIPAL
+// ============================================================
+
+@Composable
+fun AuthFlowScreen() {
+
+    var currentScreen by remember {
+        mutableStateOf(AuthScreen.ONBOARDING_ONE)
+    }
+
+    when (currentScreen) {
+
+        AuthScreen.ONBOARDING_ONE -> {
+
+            OnboardingScreen(
+
+                // ==================================================
+                // AQUÍ PONEMOS LA PRIMERA IMAGEN
+                // ==================================================
+                imageRes = R.drawable.onbording1,
+
+                title = "Bienvenido a\nReBottle",
+
+                description =
+                    "ReBottle facilita la gestión de tus residuos reciclables. " +
+                            "Solicita una recolección, organiza tus materiales y contribuye " +
+                            "al cuidado del ambiente desde un solo lugar.",
+
+                selectedPage = 0,
+
+                buttonText = "Siguiente",
+
+                onButtonClick = {
+                    currentScreen = AuthScreen.ONBOARDING_TWO
+                }
+            )
+        }
+
+
+        AuthScreen.ONBOARDING_TWO -> {
+
+            OnboardingScreen(
+
+                // ==================================================
+                // AQUÍ PONEMOS LA SEGUNDA IMAGEN
+                // ==================================================
+                imageRes = R.drawable.onboarding2,
+
+                title = "Agenda una recolección\nfácilmente",
+
+                description =
+                    "Programa una visita con un recolector, indica qué materiales " +
+                            "deseas entregar y conoce el estado de tu solicitud en tiempo real.",
+
+                selectedPage = 1,
+
+                buttonText = "Siguiente",
+
+                onButtonClick = {
+                    currentScreen = AuthScreen.ONBOARDING_THREE
+                }
+            )
+        }
+
+
+        AuthScreen.ONBOARDING_THREE -> {
+
+            OnboardingScreen(
+
+                // ==================================================
+                // AQUÍ PONEMOS LA TERCERA IMAGEN
+                // ==================================================
+                imageRes = R.drawable.onboarding3,
+
+                title = "Recicla y obtén\nrecompensas",
+
+                description =
+                    "Cada recolección registrada suma puntos que podrás canjear " +
+                            "por beneficios, mientras ayudas a construir un entorno más " +
+                            "limpio y sostenible.",
+
+                selectedPage = 2,
+
+                buttonText = "Empezar",
+
+                onButtonClick = {
+                    currentScreen = AuthScreen.REGISTER
+                }
+            )
+        }
+
+
+        AuthScreen.REGISTER -> {
+
+            RegisterScreen(
+                onLoginClick = {
+                    currentScreen = AuthScreen.LOGIN
+                }
+            )
+        }
+
+
+        AuthScreen.LOGIN -> {
+
+            LoginScreen(
+                onRegisterClick = {
+                    currentScreen = AuthScreen.REGISTER
+                }
+            )
+        }
+    }
+}
+
+
+// ============================================================
+// ONBOARDING GENERAL
+// ============================================================
+
+@Composable
+private fun OnboardingScreen(
+
+    @DrawableRes imageRes: Int,
+
+    title: String,
+
+    description: String,
+
+    selectedPage: Int,
+
+    buttonText: String,
+
+    onButtonClick: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundColor),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+
+        // ====================================================
+        // IMAGEN SUPERIOR
+        // ====================================================
+
+        OnboardingImage(
+            imageRes = imageRes
+        )
+
+
+        // ====================================================
+        // TÍTULO
+        // ====================================================
+
+        Text(
+            text = title,
+            color = DarkGreen,
+            fontSize = 23.sp,
+            lineHeight = 26.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
+
+        // ====================================================
+        // DESCRIPCIÓN
+        // ====================================================
+
+        Text(
+            text = description,
+            modifier = Modifier.padding(
+                horizontal = 34.dp
+            ),
+            color = SecondaryText,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            textAlign = TextAlign.Center
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(26.dp)
+        )
+
+
+        // ====================================================
+        // BOTÓN
+        // ====================================================
+
+        Button(
+            onClick = onButtonClick,
+
+            modifier = Modifier
+                .padding(
+                    horizontal = 55.dp
+                )
+                .fillMaxWidth()
+                .height(47.dp),
+
+            shape = RoundedCornerShape(6.dp),
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MainGreen
+            )
+        ) {
+
+            Text(
+                text = buttonText,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+
+        Spacer(
+            modifier = Modifier.height(25.dp)
+        )
+
+
+        // ====================================================
+        // PUNTOS
+        // ====================================================
+
+        PageIndicator(
+            selectedPage = selectedPage
+        )
+    }
+}
+
+
+// ============================================================
+// IMAGEN DEL ONBOARDING
+// ============================================================
+
+@Composable
+private fun OnboardingImage(
+    @DrawableRes imageRes: Int
+) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(440.dp)
+
+
+            .clipToBounds(),
+
+        contentAlignment = Alignment.TopCenter
+    ) {
+
+        Image(
+            painter = painterResource(
+                id = imageRes
+            ),
+
+            contentDescription = "Ilustración de ReBottle",
+
+            modifier = Modifier
+                .requiredSize(440.dp)
+                .offset(
+                    y = (-10).dp
+                ),
+
+            contentScale = ContentScale.Fit
+        )
+    }
+}
+
+
+// ============================================================
+// INDICADOR DE PÁGINA
+// ============================================================
+
+@Composable
+private fun PageIndicator(
+    selectedPage: Int
+) {
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        repeat(3) { index ->
+
+            Box(
+                modifier = Modifier
+                    .size(
+                        if (selectedPage == index) {
+                            8.dp
+                        } else {
+                            6.dp
+                        }
+                    )
+                    .background(
+                        color = if (selectedPage == index) {
+                            Color(0xFF8FAE57)
+                        } else {
+                            Color(0xFFC7DBA7)
+                        },
+                        shape = CircleShape
+                    )
+            )
+        }
+    }
+}
+
+
+// ============================================================
+// REGISTRO
+// ============================================================
+
+@Composable
+private fun RegisterScreen(
+    onLoginClick: () -> Unit
+) {
+
+    var username by remember {
+        mutableStateOf("")
+    }
+
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var password by remember {
+        mutableStateOf("")
+    }
+
+    var selectedUserType by remember {
+        mutableStateOf("Ciudadano")
+    }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundColor)
+            .verticalScroll(
+                rememberScrollState()
+            )
+            .padding(
+                horizontal = 25.dp
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Spacer(
+            modifier = Modifier.height(45.dp)
+        )
+
+
+        ReBottleLogo()
+
+
+        Spacer(
+            modifier = Modifier.height(30.dp)
+        )
+
+
+        Text(
+            text = "Crear cuenta",
+            modifier = Modifier.fillMaxWidth(),
+            color = MainText,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(14.dp)
+        )
+
+
+        ReBottleTextField(
+            value = username,
+            onValueChange = {
+                username = it
+            },
+            placeholder = "Usuario"
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
+
+        ReBottleTextField(
+            value = email,
+            onValueChange = {
+                email = it
+            },
+            placeholder = "Email"
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(10.dp)
+        )
+
+
+        ReBottleTextField(
+            value = password,
+            onValueChange = {
+                password = it
+            },
+            placeholder = "Contraseña",
+            password = true
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(17.dp)
+        )
+
+
+        Text(
+            text = "Tipo de usuario",
+            modifier = Modifier.fillMaxWidth(),
+            color = MainText,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+
+            UserTypeButton(
+                text = "Ciudadano",
+                selected = selectedUserType == "Ciudadano",
+                modifier = Modifier.weight(1f)
+            ) {
+
+                selectedUserType = "Ciudadano"
+            }
+
+
+            UserTypeButton(
+                text = "Fundación\nRecolectora",
+                selected = selectedUserType == "Fundación",
+                modifier = Modifier.weight(1f)
+            ) {
+
+                selectedUserType = "Fundación"
+            }
+
+
+            UserTypeButton(
+                text = "Recolector",
+                selected = selectedUserType == "Recolector",
+                modifier = Modifier.weight(1f)
+            ) {
+
+                selectedUserType = "Recolector"
+            }
+        }
+
+
+        Spacer(
+            modifier = Modifier.height(18.dp)
+        )
+
+
+        Button(
+            onClick = {},
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(47.dp),
+
+            shape = RoundedCornerShape(6.dp),
+
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MainGreen
+            )
+        ) {
+
+            Text(
+                text = "Registrarse",
+                color = Color.White,
+                fontSize = 15.sp
+            )
+        }
+
+
+        Spacer(
+            modifier = Modifier.height(15.dp)
+        )
+
+
+        Row {
+
+            Text(
+                text = "¿Ya tienes una cuenta? ",
+                color = SecondaryText,
+                fontSize = 10.sp
+            )
+
+
+            Text(
+                text = "Iniciar Sesión",
+
+                modifier = Modifier.clickable {
+                    onLoginClick()
+                },
+
+                color = MainGreen,
+
+                fontSize = 10.sp,
+
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+
+        Spacer(
+            modifier = Modifier.height(50.dp)
+        )
+
+
+        RegisterDecoration()
+    }
+}
+
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+@Composable
+private fun LoginScreen(
+    onRegisterClick: () -> Unit
+) {
+
+    var email by remember {
+        mutableStateOf("")
+    }
+
+    var password by remember {
+        mutableStateOf("")
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundColor)
+    ) {
+
+        // ====================================================
+        // IMAGEN DEL PLANETA - SIEMPRE ABAJO
+        // ====================================================
+
+        Image(
+            painter = painterResource(
+                id = R.drawable.login_bottom
+            ),
+            contentDescription = null,
+
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(280.dp),
+
+            contentScale = ContentScale.FillWidth
+        )
+
+
+        // ====================================================
+        // FORMULARIO
+        // ====================================================
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 25.dp,
+                    end = 25.dp,
+                    top = 25.dp
+                ),
+
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            // LOGO
+            ReBottleLogo()
+
+
+            Spacer(
+                modifier = Modifier.height(35.dp)
+            )
+
+
+            // TÍTULO
+            Text(
+                text = "Iniciar sesión",
+
+                modifier = Modifier.fillMaxWidth(),
+
+                color = MainText,
+
+                fontSize = 18.sp,
+
+                fontWeight = FontWeight.Medium
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+
+            // EMAIL
+            ReBottleTextField(
+                value = email,
+
+                onValueChange = {
+                    email = it
+                },
+
+                placeholder = "Email"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+
+            // CONTRASEÑA
+            ReBottleTextField(
+                value = password,
+
+                onValueChange = {
+                    password = it
+                },
+
+                placeholder = "Contraseña",
+
+                password = true
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(25.dp)
+            )
+
+
+            // BOTÓN
+            Button(
+                onClick = {},
+
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+
+                shape = RoundedCornerShape(6.dp),
+
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MainGreen
+                )
+            ) {
+
+                Text(
+                    text = "Iniciar sesión",
+
+                    color = Color.White,
+
+                    fontSize = 18.sp
+                )
+            }
+
+
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
+
+
+            // REGISTRARSE
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = "¿No tiene una cuenta? ",
+
+                    color = SecondaryText,
+
+                    fontSize = 14.sp
+                )
+
+
+                Text(
+                    text = "Registrarse",
+
+                    modifier = Modifier.clickable {
+                        onRegisterClick()
+                    },
+
+                    color = MainGreen,
+
+                    fontSize = 14.sp,
+
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// CAMPOS DE TEXTO
+// ============================================================
+
+@Composable
+private fun ReBottleTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    password: Boolean = false
+) {
+
+    OutlinedTextField(
+        value = value,
+
+        onValueChange = onValueChange,
+
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+
+        singleLine = true,
+
+        placeholder = {
+
+            Text(
+                text = placeholder,
+                color = Color(0xFF999B94),
+                fontSize = 11.sp
+            )
+        },
+
+        visualTransformation = if (password) {
+            PasswordVisualTransformation()
+        } else {
+            VisualTransformation.None
+        },
+
+        shape = RoundedCornerShape(4.dp),
+
+        colors = OutlinedTextFieldDefaults.colors(
+
+            focusedBorderColor = MainGreen,
+
+            unfocusedBorderColor = BorderColor,
+
+            focusedContainerColor = Color.White,
+
+            unfocusedContainerColor = Color.White,
+
+            cursorColor = MainGreen,
+
+            focusedTextColor = MainText,
+
+            unfocusedTextColor = MainText
+        )
+    )
+}
+
+
+// ============================================================
+// BOTONES DE TIPO DE USUARIO
+// ============================================================
+
+@Composable
+private fun UserTypeButton(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+
+    OutlinedButton(
+        onClick = onClick,
+
+        modifier = modifier.height(43.dp),
+
+        shape = RoundedCornerShape(4.dp),
+
+        contentPadding = PaddingValues(
+            horizontal = 2.dp,
+            vertical = 1.dp
+        ),
+
+        border = BorderStroke(
+            width = 1.dp,
+
+            color = if (selected) {
+                MainGreen
+            } else {
+                Color(0xFFBBC5AE)
+            }
+        ),
+
+        colors = ButtonDefaults.outlinedButtonColors(
+
+            containerColor = if (selected) {
+                LightGreen
+            } else {
+                Color.White
+            }
+        )
+    ) {
+
+        Text(
+            text = text,
+
+            color = MainGreen,
+
+            fontSize = 9.sp,
+
+            lineHeight = 10.sp,
+
+            textAlign = TextAlign.Center,
+
+            fontWeight = if (selected) {
+                FontWeight.SemiBold
+            } else {
+                FontWeight.Normal
+            }
+        )
+    }
+}
+
+
+// ============================================================
+// LOGO
+// ============================================================
+
+@Composable
+private fun ReBottleLogo() {
+
+    Image(
+        painter = painterResource(
+            id = R.drawable.rebottle
+        ),
+        contentDescription = "Logo ReBottle",
+        modifier = Modifier
+            .requiredWidth(200.dp)
+            .height(170.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
+
+// ============================================================
+// DECORACIÓN REGISTRO TEMPORAL
+// ============================================================
+
+@Composable
+private fun RegisterDecoration() {
+
+        Image(
+            painter = painterResource(
+                id = R.drawable.register_bottom
+            ),
+            contentDescription = null,
+            modifier = Modifier
+                .requiredWidth(400.dp)
+                .height(177.dp),
+            contentScale = ContentScale.FillWidth
+        )
+    }
+
+
+
+// ============================================================
+// IMAGEN LOGIN
+// ============================================================
+
+@Composable
+private fun LoginDecoration() {
+
+
+    Image(
+        painter = painterResource(
+            id = R.drawable.login_bottom
+        ),
+        contentDescription = null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(190.dp),
+        contentScale = ContentScale.FillWidth
+    )
+}
