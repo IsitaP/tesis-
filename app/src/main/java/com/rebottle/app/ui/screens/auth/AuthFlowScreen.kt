@@ -237,6 +237,10 @@ private fun OnboardingScreen(
             imageRes = imageRes
         )
 
+        Spacer(
+            modifier = Modifier.height(20.dp)
+        )
+
 
         // ====================================================
         // TÍTULO
@@ -245,7 +249,7 @@ private fun OnboardingScreen(
         Text(
             text = title,
             color = DarkGreen,
-            fontSize = 23.sp,
+            fontSize = 25.sp,
             lineHeight = 26.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
@@ -253,7 +257,7 @@ private fun OnboardingScreen(
 
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier = Modifier.height(15.dp)
         )
 
 
@@ -267,8 +271,8 @@ private fun OnboardingScreen(
                 horizontal = 34.dp
             ),
             color = SecondaryText,
-            fontSize = 12.sp,
-            lineHeight = 16.sp,
+            fontSize = 15.sp,
+            lineHeight = 18.sp,
             textAlign = TextAlign.Center
         )
 
@@ -292,7 +296,7 @@ private fun OnboardingScreen(
                 .fillMaxWidth()
                 .height(47.dp),
 
-            shape = RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(9.dp),
 
             colors = ButtonDefaults.buttonColors(
                 containerColor = MainGreen
@@ -302,7 +306,7 @@ private fun OnboardingScreen(
             Text(
                 text = buttonText,
                 color = Color.White,
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -352,9 +356,9 @@ private fun OnboardingImage(
             contentDescription = "Ilustración de ReBottle",
 
             modifier = Modifier
-                .requiredSize(440.dp)
+                .requiredSize(565.dp)
                 .offset(
-                    y = (-10).dp
+                    y = (25).dp
                 ),
 
             contentScale = ContentScale.Fit
@@ -458,7 +462,7 @@ private fun RegisterScreen(
             text = "Crear cuenta",
             modifier = Modifier.fillMaxWidth(),
             color = MainText,
-            fontSize = 14.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Medium
         )
 
@@ -515,7 +519,7 @@ private fun RegisterScreen(
             text = "Tipo de usuario",
             modifier = Modifier.fillMaxWidth(),
             color = MainText,
-            fontSize = 11.sp,
+            fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
 
@@ -541,7 +545,7 @@ private fun RegisterScreen(
 
 
             UserTypeButton(
-                text = "Fundación\nRecolectora",
+                text = "EcoAlianza",
                 selected = selectedUserType == "Fundación",
                 modifier = Modifier.weight(1f)
             ) {
@@ -573,7 +577,7 @@ private fun RegisterScreen(
                 .fillMaxWidth()
                 .height(47.dp),
 
-            shape = RoundedCornerShape(6.dp),
+            shape = RoundedCornerShape(9.dp),
 
             colors = ButtonDefaults.buttonColors(
                 containerColor = MainGreen
@@ -583,7 +587,7 @@ private fun RegisterScreen(
             Text(
                 text = "Registrarse",
                 color = Color.White,
-                fontSize = 15.sp
+                fontSize = 24.sp
             )
         }
 
@@ -598,7 +602,7 @@ private fun RegisterScreen(
             Text(
                 text = "¿Ya tienes una cuenta? ",
                 color = SecondaryText,
-                fontSize = 10.sp
+                fontSize = 15.sp
             )
 
 
@@ -611,7 +615,7 @@ private fun RegisterScreen(
 
                 color = MainGreen,
 
-                fontSize = 10.sp,
+                fontSize = 15.sp,
 
                 fontWeight = FontWeight.SemiBold
             )
@@ -704,7 +708,7 @@ private fun LoginScreen(
 
                 color = MainText,
 
-                fontSize = 18.sp,
+                fontSize = 20.sp,
 
                 fontWeight = FontWeight.Medium
             )
@@ -773,7 +777,7 @@ private fun LoginScreen(
 
                     color = Color.White,
 
-                    fontSize = 18.sp
+                    fontSize = 24.sp
                 )
             }
 
@@ -793,7 +797,7 @@ private fun LoginScreen(
 
                     color = SecondaryText,
 
-                    fontSize = 14.sp
+                    fontSize = 15.sp
                 )
 
 
@@ -806,7 +810,7 @@ private fun LoginScreen(
 
                     color = MainGreen,
 
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
 
                     fontWeight = FontWeight.SemiBold
                 )
@@ -844,7 +848,7 @@ private fun ReBottleTextField(
             Text(
                 text = placeholder,
                 color = Color(0xFF999B94),
-                fontSize = 11.sp
+                fontSize = 14.sp
             )
         },
 
@@ -925,7 +929,7 @@ private fun UserTypeButton(
 
             color = MainGreen,
 
-            fontSize = 9.sp,
+            fontSize = 14.sp,
 
             lineHeight = 10.sp,
 
@@ -954,8 +958,8 @@ private fun ReBottleLogo() {
         ),
         contentDescription = "Logo ReBottle",
         modifier = Modifier
-            .requiredWidth(200.dp)
-            .height(170.dp),
+            .requiredWidth(400.dp)
+            .height(180.dp),
         contentScale = ContentScale.Fit
     )
 }
@@ -974,8 +978,8 @@ private fun RegisterDecoration() {
             ),
             contentDescription = null,
             modifier = Modifier
-                .requiredWidth(400.dp)
-                .height(177.dp),
+                .requiredWidth(450.dp)
+                .height(230.dp),
             contentScale = ContentScale.FillWidth
         )
     }
