@@ -1,7 +1,7 @@
 package com.rebottle.app.ui.screens.auth
 
 import com.rebottle.app.ui.screens.HomeUserScreen
-import com.rebottle.app.ui.screens.fundacion.HomeFundacionScreen
+import com.rebottle.app.ui.screens.fundacion.FundacionFlowScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -198,7 +198,7 @@ fun AuthFlowScreen() {
         }
         AuthScreen.HOME_FUNDACION -> {
 
-            HomeFundacionScreen()
+            FundacionFlowScreen()
         }
 
         else -> {}
