@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,21 +65,31 @@ private val SecondaryText = Color(0xFF7F887A)
 // ----------------------------------------------------
 
 @Composable
-fun HomeFundacionScreen() {
+fun HomeFundacionScreen(
+    onProfileClick: () -> Unit
+) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+
         containerColor = BackgroundColor,
+
         bottomBar = {
-            ReBottleBottomBar()
+
+            ReBottleBottomBar(
+                onProfileClick = onProfileClick
+            )
         }
+
     ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(
                     start = 18.dp,
                     end = 18.dp,
@@ -90,7 +100,10 @@ fun HomeFundacionScreen() {
 
             HeaderFundacion()
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
+
 
             Text(
                 text = "¿Qué desea hacer hoy?",
@@ -99,27 +112,57 @@ fun HomeFundacionScreen() {
                 color = DarkGreen
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
 
-            SectionTitle("Ver solicitudes pendientes")
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+
+            SectionTitle(
+                title = "Ver solicitudes pendientes"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
 
             RequestsCard()
 
-            Spacer(modifier = Modifier.height(18.dp))
 
-            SectionTitle("Próxima ruta")
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+
+            SectionTitle(
+                title = "Próxima ruta"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
 
             NextRouteCard()
 
-            Spacer(modifier = Modifier.height(24.dp))
 
-            SectionTitle("Resumen del día")
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+
+            SectionTitle(
+                title = "Resumen del día"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
+
 
             DailySummaryCard()
         }
@@ -136,8 +179,12 @@ private fun HeaderFundacion() {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+
+        horizontalArrangement =
+            Arrangement.SpaceBetween,
+
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
 
         Column {
@@ -149,20 +196,35 @@ private fun HeaderFundacion() {
                 color = Brown
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+
+            Spacer(
+                modifier = Modifier.height(3.dp)
+            )
+
 
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Ubicación",
+                    imageVector =
+                        Icons.Outlined.LocationOn,
+
+                    contentDescription =
+                        "Ubicación",
+
                     tint = SecondaryText,
-                    modifier = Modifier.size(15.dp)
+
+                    modifier =
+                        Modifier.size(15.dp)
                 )
 
-                Spacer(modifier = Modifier.width(6.dp))
+
+                Spacer(
+                    modifier = Modifier.width(6.dp)
+                )
+
 
                 Text(
                     text = "Cll 34b #18-24",
@@ -172,34 +234,47 @@ private fun HeaderFundacion() {
             }
         }
 
+
+        // ------------------------------------------------
+        // NOTIFICACIONES
+        // ------------------------------------------------
+
         Box(
-            modifier = Modifier
-                .size(42.dp)
-                .background(
-                    color = Color.Transparent,
-                    shape = CircleShape
-                ),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier.size(42.dp),
+
+            contentAlignment =
+                Alignment.Center
         ) {
 
             Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = "Notificaciones",
+                imageVector =
+                    Icons.Default.Notifications,
+
+                contentDescription =
+                    "Notificaciones",
+
                 tint = MainGreen,
-                modifier = Modifier.size(25.dp)
+
+                modifier =
+                    Modifier.size(25.dp)
             )
 
-            // Punto rojo de notificación
+
+            // Punto rojo
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(
+                        Alignment.TopEnd
+                    )
                     .padding(
                         top = 7.dp,
                         end = 6.dp
                     )
                     .size(6.dp)
                     .background(
-                        color = Color(0xFFE16A58),
+                        color =
+                            Color(0xFFE16A58),
                         shape = CircleShape
                     )
             )
@@ -237,17 +312,25 @@ private fun RequestsCard() {
         modifier = Modifier
             .fillMaxWidth()
             .height(162.dp),
-        shape = RoundedCornerShape(7.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = BorderGreen
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = LightGreen
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp
-        )
+
+        shape =
+            RoundedCornerShape(7.dp),
+
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = BorderGreen
+            ),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor = LightGreen
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 3.dp
+            )
     ) {
 
         Row(
@@ -259,27 +342,44 @@ private fun RequestsCard() {
                     top = 8.dp,
                     bottom = 8.dp
                 ),
-            verticalAlignment = Alignment.CenterVertically
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
 
                 Text(
-                    text = "Resumen de solicitudes",
+                    text =
+                        "Resumen de solicitudes",
+
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
+
+                    fontWeight =
+                        FontWeight.Medium,
+
                     color = MainText
                 )
 
-                Spacer(modifier = Modifier.height(5.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(5.dp)
+                )
+
 
                 Text(
-                    text = "Solicitudes por atender",
+                    text =
+                        "Solicitudes por atender",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
+
 
                 Text(
                     text = "12 nuevas",
@@ -287,37 +387,57 @@ private fun RequestsCard() {
                     color = SecondaryText
                 )
 
+
                 Text(
                     text = "5 aceptadas",
                     fontSize = 14.sp,
                     color = SecondaryText
                 )
 
+
                 Text(
-                    text = "18 completadas hoy",
+                    text =
+                        "18 completadas hoy",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(2.dp)
+                )
+
 
                 Text(
                     text = "Ver todas →",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight =
+                        FontWeight.Medium,
                     color = MainGreen
                 )
             }
 
+
             Image(
-                painter = painterResource(
-                    id = R.drawable.fundacion_requests
-                ),
-                contentDescription = "Resumen de solicitudes",
+                painter =
+                    painterResource(
+                        id =
+                            R.drawable
+                                .fundacion_requests
+                    ),
+
+                contentDescription =
+                    "Resumen de solicitudes",
+
                 modifier = Modifier
                     .width(150.dp)
                     .height(100.dp),
-                contentScale = ContentScale.Fit
+
+                contentScale =
+                    ContentScale.Fit
             )
         }
     }
@@ -335,17 +455,25 @@ private fun NextRouteCard() {
         modifier = Modifier
             .fillMaxWidth()
             .height(165.dp),
-        shape = RoundedCornerShape(7.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = BorderGreen
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = LightGreen
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp
-        )
+
+        shape =
+            RoundedCornerShape(7.dp),
+
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = BorderGreen
+            ),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor = LightGreen
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 3.dp
+            )
     ) {
 
         Row(
@@ -357,27 +485,44 @@ private fun NextRouteCard() {
                     top = 8.dp,
                     bottom = 8.dp
                 ),
-            verticalAlignment = Alignment.CenterVertically
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
 
                 Text(
-                    text = "Siguiente recolección",
+                    text =
+                        "Siguiente recolección",
+
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
+
+                    fontWeight =
+                        FontWeight.Medium,
+
                     color = MainText
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(6.dp)
+                )
+
 
                 Text(
-                    text = "Barrio La Floresta",
+                    text =
+                        "Barrio La Floresta",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
+
 
                 Text(
                     text = "10:30 AM",
@@ -385,36 +530,59 @@ private fun NextRouteCard() {
                     color = SecondaryText
                 )
 
+
                 Text(
-                    text = "Usuario: Juan Pérez",
+                    text =
+                        "Usuario: Juan Pérez",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
+
                 Text(
-                    text = "Recolector: Lucho Díaz",
+                    text =
+                        "Recolector: Lucho Díaz",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
-                Spacer(modifier = Modifier.height(5.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(5.dp)
+                )
+
 
                 Text(
                     text = "Ver ruta →",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight =
+                        FontWeight.Medium,
                     color = MainGreen
                 )
             }
 
+
             Image(
-                painter = painterResource(
-                    id = R.drawable.fundacion_route
-                ),
-                contentDescription = "Próxima ruta",
-                modifier = Modifier
-                    .size(150.dp),
-                contentScale = ContentScale.Fit
+                painter =
+                    painterResource(
+                        id =
+                            R.drawable
+                                .fundacion_route
+                    ),
+
+                contentDescription =
+                    "Próxima ruta",
+
+                modifier =
+                    Modifier.size(150.dp),
+
+                contentScale =
+                    ContentScale.Fit
             )
         }
     }
@@ -432,17 +600,25 @@ private fun DailySummaryCard() {
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),
-        shape = RoundedCornerShape(7.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = BorderGreen
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = LightGreen
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp
-        )
+
+        shape =
+            RoundedCornerShape(7.dp),
+
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = BorderGreen
+            ),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor = LightGreen
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 3.dp
+            )
     ) {
 
         Row(
@@ -454,52 +630,91 @@ private fun DailySummaryCard() {
                     top = 9.dp,
                     bottom = 9.dp
                 ),
-            verticalAlignment = Alignment.CenterVertically
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
 
                 Text(
-                    text = "Actividad de hoy",
+                    text =
+                        "Actividad de hoy",
+
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
+
+                    fontWeight =
+                        FontWeight.Medium,
+
                     color = MainText
                 )
 
-                Spacer(modifier = Modifier.height(9.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(9.dp)
+                )
+
 
                 Text(
-                    text = "12 recolecciones realizadas",
+                    text =
+                        "12 recolecciones realizadas",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
+
                 Text(
-                    text = "48 kg de materiales reciclados",
+                    text =
+                        "48 kg de materiales reciclados",
+
                     fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+
+                Spacer(
+                    modifier =
+                        Modifier.height(6.dp)
+                )
+
 
                 Text(
-                    text = "Ver estadísticas →",
+                    text =
+                        "Ver estadísticas →",
+
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
+
+                    fontWeight =
+                        FontWeight.Medium,
+
                     color = MainGreen
                 )
             }
 
+
             Image(
-                painter = painterResource(
-                    id = R.drawable.fundacion_summary
-                ),
-                contentDescription = "Resumen de actividad",
-                modifier = Modifier
-                    .size(150.dp),
-                contentScale = ContentScale.Fit
+                painter =
+                    painterResource(
+                        id =
+                            R.drawable
+                                .fundacion_summary
+                    ),
+
+                contentDescription =
+                    "Resumen de actividad",
+
+                modifier =
+                    Modifier.size(150.dp),
+
+                contentScale =
+                    ContentScale.Fit
             )
         }
     }
@@ -512,17 +727,26 @@ private fun DailySummaryCard() {
 
 @Composable
 private fun BottomNavIcon(
+
     @DrawableRes iconRes: Int,
+
     contentDescription: String,
+
     size: Dp = 25.dp
+
 ) {
 
     Image(
-        painter = painterResource(
-            id = iconRes
-        ),
-        contentDescription = contentDescription,
-        modifier = Modifier.size(size)
+        painter =
+            painterResource(
+                id = iconRes
+            ),
+
+        contentDescription =
+            contentDescription,
+
+        modifier =
+            Modifier.size(size)
     )
 }
 
@@ -532,22 +756,35 @@ private fun BottomNavIcon(
 // ----------------------------------------------------
 
 @Composable
-private fun ReBottleBottomBar() {
+private fun ReBottleBottomBar(
+    onProfileClick: () -> Unit
+) {
 
-    // Esta caja conserva el color de fondo de la pantalla
-    // y deja una pequeña separación antes de la barra blanca.
+    // Pequeña separación del color de fondo
+    // antes de la barra blanca.
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundColor)
-            .padding(top = 3.dp)
+            .background(
+                BackgroundColor
+            )
+            .padding(
+                top = 3.dp
+            )
     ) {
 
         NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            tonalElevation = 0.dp
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            containerColor =
+                Color.White,
+
+            tonalElevation =
+                0.dp
         ) {
+
 
             // ------------------------------------------------
             // INICIO
@@ -555,15 +792,25 @@ private fun ReBottleBottomBar() {
 
             NavigationBarItem(
                 selected = true,
-                onClick = {},
+
+                onClick = {
+                    // Ya estamos en Inicio
+                },
+
                 icon = {
 
                     Icon(
-                        imageVector = Icons.Outlined.Home,
-                        contentDescription = "Inicio",
-                        modifier = Modifier.size(26.dp)
+                        imageVector =
+                            Icons.Outlined.Home,
+
+                        contentDescription =
+                            "Inicio",
+
+                        modifier =
+                            Modifier.size(26.dp)
                     )
                 },
+
                 label = {
 
                     Text(
@@ -571,13 +818,26 @@ private fun ReBottleBottomBar() {
                         fontSize = 12.sp
                     )
                 },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+
+                colors =
+                    NavigationBarItemDefaults
+                        .colors(
+
+                            selectedIconColor =
+                                MainGreen,
+
+                            selectedTextColor =
+                                MainGreen,
+
+                            unselectedIconColor =
+                                SecondaryText,
+
+                            unselectedTextColor =
+                                SecondaryText,
+
+                            indicatorColor =
+                                Color.Transparent
+                        )
             )
 
 
@@ -587,14 +847,24 @@ private fun ReBottleBottomBar() {
 
             NavigationBarItem(
                 selected = false,
-                onClick = {},
+
+                onClick = {
+                    // Más adelante:
+                    // pantalla de solicitudes
+                },
+
                 icon = {
 
                     BottomNavIcon(
-                        iconRes = R.drawable.icon_collection,
-                        contentDescription = "Solicitudes"
+                        iconRes =
+                            R.drawable
+                                .icon_collection,
+
+                        contentDescription =
+                            "Solicitudes"
                     )
                 },
+
                 label = {
 
                     Text(
@@ -602,11 +872,20 @@ private fun ReBottleBottomBar() {
                         fontSize = 12.sp
                     )
                 },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+
+                colors =
+                    NavigationBarItemDefaults
+                        .colors(
+
+                            selectedTextColor =
+                                MainGreen,
+
+                            unselectedTextColor =
+                                SecondaryText,
+
+                            indicatorColor =
+                                Color.Transparent
+                        )
             )
 
 
@@ -616,28 +895,53 @@ private fun ReBottleBottomBar() {
 
             NavigationBarItem(
                 selected = false,
-                onClick = {},
+
+                onClick = {
+                    // Más adelante:
+                    // pantalla de rutas
+                },
+
                 icon = {
 
                     BottomNavIcon(
-                        iconRes = R.drawable.icon_routes,
-                        contentDescription = "Rutas",
+                        iconRes =
+                            R.drawable
+                                .icon_routes,
+
+                        contentDescription =
+                            "Rutas",
+
                         size = 42.dp
                     )
                 },
+
                 label = {
 
                     Text(
                         text = "Rutas",
+
                         fontSize = 12.sp,
-                        modifier = Modifier.offset(y = (-8).dp)
+
+                        modifier =
+                            Modifier.offset(
+                                y = (-4).dp
+                            )
                     )
                 },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+
+                colors =
+                    NavigationBarItemDefaults
+                        .colors(
+
+                            selectedTextColor =
+                                MainGreen,
+
+                            unselectedTextColor =
+                                SecondaryText,
+
+                            indicatorColor =
+                                Color.Transparent
+                        )
             )
 
 
@@ -647,15 +951,25 @@ private fun ReBottleBottomBar() {
 
             NavigationBarItem(
                 selected = false,
-                onClick = {},
+
+                onClick = {
+                    onProfileClick()
+                },
+
                 icon = {
 
                     Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "Perfil",
-                        modifier = Modifier.size(26.dp)
+                        imageVector =
+                            Icons.Outlined.Person,
+
+                        contentDescription =
+                            "Perfil",
+
+                        modifier =
+                            Modifier.size(26.dp)
                     )
                 },
+
                 label = {
 
                     Text(
@@ -663,13 +977,26 @@ private fun ReBottleBottomBar() {
                         fontSize = 12.sp
                     )
                 },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+
+                colors =
+                    NavigationBarItemDefaults
+                        .colors(
+
+                            selectedIconColor =
+                                MainGreen,
+
+                            selectedTextColor =
+                                MainGreen,
+
+                            unselectedIconColor =
+                                SecondaryText,
+
+                            unselectedTextColor =
+                                SecondaryText,
+
+                            indicatorColor =
+                                Color.Transparent
+                        )
             )
         }
     }
