@@ -690,13 +690,16 @@ private fun LoginScreen(
 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(
+                modifier = Modifier.height(45.dp)
+            )
 
             // LOGO
             ReBottleLogo()
 
 
             Spacer(
-                modifier = Modifier.height(35.dp)
+                modifier = Modifier.height(30.dp)
             )
 
 
@@ -958,7 +961,7 @@ private fun ReBottleLogo() {
         ),
         contentDescription = "Logo ReBottle",
         modifier = Modifier
-            .requiredWidth(400.dp)
+            .requiredWidth(480.dp)
             .height(180.dp),
         contentScale = ContentScale.Fit
     )
