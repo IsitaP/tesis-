@@ -1,6 +1,7 @@
 package com.rebottle.app.ui.screens.auth
 
 import com.rebottle.app.ui.screens.HomeUserScreen
+import com.rebottle.app.ui.screens.fundacion.HomeFundacionScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -75,7 +76,9 @@ private enum class AuthScreen {
     ONBOARDING_THREE,
     REGISTER,
     LOGIN,
+    HOME_FUNDACION,
     HOME_USER
+
 }
 
 
@@ -186,17 +189,19 @@ fun AuthFlowScreen() {
 
             LoginScreen(
                 onLoginClick = {
-                    currentScreen = AuthScreen.HOME_USER
+                    currentScreen = AuthScreen.HOME_FUNDACION
                 },
                 onRegisterClick = {
                     currentScreen = AuthScreen.REGISTER
                 }
             )
         }
-        AuthScreen.HOME_USER -> {
+        AuthScreen.HOME_FUNDACION -> {
 
-            HomeUserScreen()
+            HomeFundacionScreen()
         }
+
+        else -> {}
     }
 }
 
