@@ -1,0 +1,33 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Head -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M17.5,4.5a2.5,2.5 0,1 1,-5 0 2.5,2.5 0,1 1,5 0Z" />
+    <!-- Body and Legs -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M16.5,8c-1.1,0 -2,0.9 -2,2v5h1.5v7h2v-7h1.5v-5c0,-1.1 -0.9,-2 -2,-2Z" />
+    <!-- Arm -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M14.5,10h-6.5c-0.55,0 -1,0.45 -1,1v0.5h2v-0.5h5.5v-1Z" />
+    <!-- Bin -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M3,14.5l1.5,7.5h6l1.5,-7.5h-9Z" />
+    <!-- Falling Particle -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M6,11l1.5,-1.5 1.5,1.5 -1.5,1.5Z" />
+    <!-- Particles in Bin -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M6,18.5l1,-1 1,1 -1,1Z" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M9,17.5l1,-1 1,1 -1,1Z" />
+</vector>

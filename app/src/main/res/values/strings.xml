@@ -27,4 +27,12 @@
     <string name="delete_collector">Eliminar recolector</string>
     <string name="collector_id_short"># %s</string>
     <string name="status_cancelled">Cancelada</string>
+    <string name="collection_requests_title">Solicitudes de recolección</string>
+    <string name="search_placeholder">Recolección ...</string>
+    <string name="total_recycled_label">Total reciclado</string>
+    <string name="completed_label">Completadas</string>
+    <string name="pending_label">Pendientes</string>
+    <string name="en_route_label">En ruta</string>
+    <string name="create_request_label">Crear Solicitud</string>
+    <string name="view_details_label">Ver detalles</string>
 </resources>
