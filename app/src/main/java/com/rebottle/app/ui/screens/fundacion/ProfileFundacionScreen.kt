@@ -98,11 +98,6 @@ private val MainText = Color(0xFF34382F)
 
 private val SecondaryText = Color(0xFF7F887A)
 
-
-// ----------------------------------------------------
-// PROFILE FUNDACIÓN
-// ----------------------------------------------------
-
 @Composable
 fun ProfileFundacionScreen(
 
@@ -110,16 +105,14 @@ fun ProfileFundacionScreen(
 
     onSolicitudesClick: () -> Unit = {},
 
-    onRutasClick: () -> Unit = {}
+    onRutasClick: () -> Unit = {},
+    onManageCollectorsClick: () -> Unit,
+    onManageRequestsClick: () -> Unit
 
 ) {
 
     val context = LocalContext.current
 
-
-    // ------------------------------------------------
-    // FOTO SELECCIONADA
-    // ------------------------------------------------
 
     var selectedImageBitmap by remember {
         mutableStateOf<ImageBitmap?>(null)
@@ -382,112 +375,89 @@ fun ProfileFundacionScreen(
                     modifier =
                         Modifier.height(16.dp)
                 )
-
-
                 // ------------------------------------------------
-                // GESTIÓN
-                // ------------------------------------------------
+// GESTIÓN
+// ------------------------------------------------
 
                 Text(
                     text = "Gestión",
-
-                    fontSize = 20.sp,
-
-                    fontWeight =
-                        FontWeight.Medium,
-
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium,
                     color = MainText
                 )
 
-
                 Spacer(
-                    modifier =
-                        Modifier.height(9.dp)
+                    modifier = Modifier.height(9.dp)
                 )
 
 
-                // ------------------------------------------------
-                // ADMINISTRAR SOLICITUDES
-                // ------------------------------------------------
+// ------------------------------------------------
+// ADMINISTRAR SOLICITUDES
+// ------------------------------------------------
 
                 Button(
-
                     onClick = {
-                        onSolicitudesClick()
+
+                        // Va a ManageRequestsScreen
+                        onManageRequestsClick()
                     },
 
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(42.dp),
 
-                    shape =
-                        RoundedCornerShape(50.dp),
+                    shape = RoundedCornerShape(50.dp),
 
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor =
-                                MainGreen
-                        )
-
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MainGreen
+                    )
                 ) {
 
                     Text(
-                        text =
-                            "Administrar solicitudes",
-
+                        text = "Administrar solicitudes",
                         color = Color.White,
-
                         fontSize = 18.sp
                     )
                 }
 
 
                 Spacer(
-                    modifier =
-                        Modifier.height(10.dp)
+                    modifier = Modifier.height(10.dp)
                 )
 
 
-                // ------------------------------------------------
-                // ADMINISTRAR RECOLECTORES
-                // ------------------------------------------------
+// ------------------------------------------------
+// ADMINISTRAR RECOLECTORES
+// ------------------------------------------------
 
                 Button(
-
                     onClick = {
-                        // Más adelante:
-                        // navegar a recolectores
+
+                        // Va a ManageCollectorsScreen
+                        onManageCollectorsClick()
                     },
 
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(42.dp),
 
-                    shape =
-                        RoundedCornerShape(50.dp),
+                    shape = RoundedCornerShape(50.dp),
 
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor =
-                                MainGreen
-                        )
-
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MainGreen
+                    )
                 ) {
 
                     Text(
-                        text =
-                            "Administrar recolectores",
-
+                        text = "Administrar recolectores",
                         color = Color.White,
-
                         fontSize = 18.sp
                     )
                 }
 
 
                 Spacer(
-                    modifier =
-                        Modifier.height(25.dp)
+                    modifier = Modifier.height(25.dp)
                 )
             }
         }
@@ -783,7 +753,7 @@ private fun ProfileSummaryCard() {
 
             Spacer(
                 modifier =
-                    Modifier.height(2.dp)
+                    Modifier.height(12.dp)
             )
 
 
@@ -800,7 +770,7 @@ private fun ProfileSummaryCard() {
 
                 fontSize = 16.sp,
 
-                lineHeight = 15.sp,
+                lineHeight = 22.sp,
 
                 color =
                     SecondaryText
