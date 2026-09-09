@@ -66,7 +66,10 @@ private val SecondaryText = Color(0xFF7F887A)
 
 @Composable
 fun HomeFundacionScreen(
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onRequestsClick: () -> Unit,
+    onEditRequestClick: () -> Unit,
+    onEditCollectorClick: () -> Unit
 ) {
 
     Scaffold(

@@ -10,8 +10,13 @@ import com.rebottle.app.ui.screens.fundacion.gestion.CollectorUiModel
 import com.rebottle.app.ui.screens.fundacion.gestion.EditCollectorScreen
 import com.rebottle.app.ui.screens.fundacion.gestion.ManageCollectorsScreen
 import com.rebottle.app.ui.screens.fundacion.gestion.ManageRequestsScreen
-//import com.rebottle.app.ui.screens.fundacion.gestion.ConfirmationChangesScreen
+import com.rebottle.app.ui.screens.CollectionDetailScreen
+import com.rebottle.app.ui.screens.fundacion.gestion.RequestUiModel
 
+
+// ----------------------------------------------------
+// PANTALLAS DEL FLUJO FUNDACIÓN
+// ----------------------------------------------------
 
 private enum class FundacionScreen {
 
@@ -24,58 +29,130 @@ private enum class FundacionScreen {
     MANAGE_COLLECTORS,
 
     EDIT_COLLECTOR,
-
-    CONFIRMATION_CHANGES
+    EDIT_REQUEST
 }
 
+
+// ----------------------------------------------------
+// FLOW FUNDACIÓN
+// ----------------------------------------------------
 
 @Composable
 fun FundacionFlowScreen() {
 
 
+    // ------------------------------------------------
+    // PANTALLA ACTUAL
+    // ------------------------------------------------
+
     var currentScreen by remember {
+
         mutableStateOf(
             FundacionScreen.HOME
         )
     }
 
-
-    // ----------------------------------------------------
-    // RECOLECTOR SELECCIONADO
-    // ----------------------------------------------------
-
     var selectedCollector by remember {
-        mutableStateOf<CollectorUiModel?>(null)
+
+        mutableStateOf<CollectorUiModel?>(
+            null
+        )
     }
 
+    var selectedRequest by remember {
+        mutableStateOf<RequestUiModel?>(null)
+    }
+
+    // ------------------------------------------------
+    // NAVEGACIÓN
+    // ------------------------------------------------
 
     when (currentScreen) {
 
 
-        // ------------------------------------------------
+        // ====================================================
         // HOME
-        // ------------------------------------------------
+        // ====================================================
 
         FundacionScreen.HOME -> {
 
+
             HomeFundacionScreen(
+
+                // ----------------------------------------
+                // PERFIL
+                // ----------------------------------------
 
                 onProfileClick = {
 
                     currentScreen =
                         FundacionScreen.PROFILE
-                }
+                },
+
+
+                // ----------------------------------------
+                // SOLICITUDES
+                // ----------------------------------------
+
+                onRequestsClick = {
+
+                    currentScreen =
+                        FundacionScreen.MANAGE_REQUESTS
+                },
+
+
+                // ----------------------------------------
+                // EDITAR SOLICITUD
+                // ----------------------------------------
+                //
+                // Por ahora lleva al listado.
+                //
+                // Después podremos mandarlo directamente
+                // a una solicitud específica.
+                //
+                // ----------------------------------------
+
+                onEditRequestClick = {
+
+                    currentScreen =
+                        FundacionScreen.MANAGE_REQUESTS
+                },
+
+
+                // ----------------------------------------
+                // EDITAR RECOLECTOR
+                // ----------------------------------------
+                //
+                // Primero mostramos la lista para que
+                // la Fundación elija cuál editar.
+                //
+                // ----------------------------------------
+
+                onEditCollectorClick = {
+
+                    currentScreen =
+                        FundacionScreen.MANAGE_COLLECTORS
+                },
+
+
+
             )
         }
 
 
-        // ------------------------------------------------
+        // ====================================================
         // PROFILE
-        // ------------------------------------------------
+        // ====================================================
 
         FundacionScreen.PROFILE -> {
 
+
             ProfileFundacionScreen(
+
+
+                // ----------------------------------------
+                // INICIO DE LA BARRA
+                // ----------------------------------------
 
                 onHomeClick = {
 
@@ -83,11 +160,42 @@ fun FundacionFlowScreen() {
                         FundacionScreen.HOME
                 },
 
+
+                // ----------------------------------------
+                // SOLICITUDES DE LA BARRA
+                // ----------------------------------------
+
+                onSolicitudesClick = {
+
+                    currentScreen =
+                        FundacionScreen.MANAGE_REQUESTS
+                },
+
+
+                // ----------------------------------------
+                // RUTAS
+                // ----------------------------------------
+
+                onRutasClick = {
+
+                    // Más adelante
+                },
+
+
+                // ----------------------------------------
+                // BOTÓN ADMINISTRAR SOLICITUDES
+                // ----------------------------------------
+
                 onManageRequestsClick = {
 
                     currentScreen =
                         FundacionScreen.MANAGE_REQUESTS
                 },
+
+
+                // ----------------------------------------
+                // BOTÓN ADMINISTRAR RECOLECTORES
+                // ----------------------------------------
 
                 onManageCollectorsClick = {
 
@@ -98,42 +206,51 @@ fun FundacionFlowScreen() {
         }
 
 
-        // ------------------------------------------------
+        // ====================================================
         // ADMINISTRAR SOLICITUDES
-        // ------------------------------------------------
+        // ====================================================
+
 
         FundacionScreen.MANAGE_REQUESTS -> {
 
             ManageRequestsScreen(
 
                 onBackClick = {
-
-                    currentScreen =
-                        FundacionScreen.PROFILE
+                    currentScreen = FundacionScreen.PROFILE
                 },
 
                 onHomeClick = {
-
-                    currentScreen =
-                        FundacionScreen.HOME
+                    currentScreen = FundacionScreen.HOME
                 },
 
                 onProfileClick = {
+                    currentScreen = FundacionScreen.PROFILE
+                },
+
+                onEditClick = { request ->
+
+                    selectedRequest = request
 
                     currentScreen =
-                        FundacionScreen.PROFILE
+                        FundacionScreen.EDIT_REQUEST
                 }
             )
         }
 
 
-        // ------------------------------------------------
+        // ====================================================
         // ADMINISTRAR RECOLECTORES
-        // ------------------------------------------------
+        // ====================================================
 
         FundacionScreen.MANAGE_COLLECTORS -> {
 
+
             ManageCollectorsScreen(
+
+
+                // ----------------------------------------
+                // FLECHA ATRÁS
+                // ----------------------------------------
 
                 onBackClick = {
 
@@ -141,11 +258,21 @@ fun FundacionFlowScreen() {
                         FundacionScreen.PROFILE
                 },
 
+
+                // ----------------------------------------
+                // INICIO
+                // ----------------------------------------
+
                 onHomeClick = {
 
                     currentScreen =
                         FundacionScreen.HOME
                 },
+
+
+                // ----------------------------------------
+                // PERFIL
+                // ----------------------------------------
 
                 onProfileClick = {
 
@@ -153,15 +280,21 @@ fun FundacionFlowScreen() {
                         FundacionScreen.PROFILE
                 },
 
+
+                // ----------------------------------------
+                // EDITAR RECOLECTOR
+                // ----------------------------------------
+
                 onEditClick = { collector ->
 
 
-                    // Guardamos TODO el recolector
-                    // que el usuario seleccionó
+                    // Guardamos TODO el CollectorUiModel
 
                     selectedCollector =
                         collector
 
+
+                    // Vamos a editar
 
                     currentScreen =
                         FundacionScreen.EDIT_COLLECTOR
@@ -169,15 +302,42 @@ fun FundacionFlowScreen() {
             )
         }
 
+        FundacionScreen.EDIT_REQUEST -> {
 
-        // ------------------------------------------------
+            selectedRequest?.let { request ->
+
+                CollectionDetailScreen(
+
+                    onBackClick = {
+                        currentScreen =
+                            FundacionScreen.MANAGE_REQUESTS
+                    },
+
+                    onAcceptChanges = {
+                        currentScreen =
+                            FundacionScreen.MANAGE_REQUESTS
+                    },
+
+                    onCancelChanges = {
+                        currentScreen =
+                            FundacionScreen.MANAGE_REQUESTS
+                    }
+                )
+            }
+        }
+
+
+        // ====================================================
         // EDITAR RECOLECTOR
-        // ------------------------------------------------
+        // ====================================================
 
         FundacionScreen.EDIT_COLLECTOR -> {
 
+            val collector =
+                selectedCollector
 
-            selectedCollector?.let { collector ->
+
+            if (collector != null) {
 
 
                 EditCollectorScreen(
@@ -197,11 +357,6 @@ fun FundacionFlowScreen() {
                     status =
                         collector.status,
 
-
-                    // ------------------------------------
-                    // ATRÁS
-                    // ------------------------------------
-
                     onBackClick = {
 
                         currentScreen =
@@ -209,20 +364,28 @@ fun FundacionFlowScreen() {
                     },
 
 
-                    // ------------------------------------
-                    // ACEPTAR CAMBIOS
-                    // ------------------------------------
 
                     onAcceptClick = {
 
+
+                        /*
+                         * MÁS ADELANTE:
+                         *
+                         * 1. Actualizamos Firebase
+                         * 2. Vamos a ConfirmationChangesScreen
+                         *
+                         * Por ahora volvemos al listado.
+                         */
+
+
                         currentScreen =
-                            FundacionScreen.CONFIRMATION_CHANGES
+                            FundacionScreen.MANAGE_COLLECTORS
                     },
 
 
-                    // ------------------------------------
-                    // CANCELAR
-                    // ------------------------------------
+                    // ----------------------------------------
+                    // CANCELAR CAMBIOS
+                    // ----------------------------------------
 
                     onCancelClick = {
 
@@ -231,34 +394,58 @@ fun FundacionFlowScreen() {
                     },
 
 
-                    // ------------------------------------
-                    // ELIMINAR
-                    // ------------------------------------
+                    // ----------------------------------------
+                    // ELIMINAR RECOLECTOR
+                    // ----------------------------------------
 
                     onDeleteClick = {
+
+
+                        /*
+                         * Más adelante aquí:
+                         *
+                         * Firebase
+                         *     .delete collector
+                         */
+
 
                         currentScreen =
                             FundacionScreen.MANAGE_COLLECTORS
                     }
                 )
+
+
+            } else {
+                ManageCollectorsScreen(
+
+                    onBackClick = {
+
+                        currentScreen =
+                            FundacionScreen.PROFILE
+                    },
+
+                    onHomeClick = {
+
+                        currentScreen =
+                            FundacionScreen.HOME
+                    },
+
+                    onProfileClick = {
+
+                        currentScreen =
+                            FundacionScreen.PROFILE
+                    },
+
+                    onEditClick = { collector ->
+
+                        selectedCollector =
+                            collector
+
+                        currentScreen =
+                            FundacionScreen.EDIT_COLLECTOR
+                    }
+                )
             }
-        }
-
-
-        // ------------------------------------------------
-        // CONFIRMACIÓN
-        // ------------------------------------------------
-
-        FundacionScreen.CONFIRMATION_CHANGES -> {
-
-//            ConfirmationChangesScreen(
-//
-//                onContinueClick = {
-//
-//                    currentScreen =
-//                        FundacionScreen.MANAGE_COLLECTORS
-//                }
-//            )
         }
     }
 }

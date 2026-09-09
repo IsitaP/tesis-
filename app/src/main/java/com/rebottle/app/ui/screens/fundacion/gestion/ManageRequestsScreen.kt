@@ -47,45 +47,49 @@ import com.rebottle.app.ui.theme.RebottleTheme
 
 
 // ----------------------------------------------------
-// COLORES
+// COLORES GENERALES
 // ----------------------------------------------------
 
 private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF536D45)
-private val LightGreen = Color(0xFFF2F7ED)
-private val MainOrange = Color(0xFFD99B4B)
-private val LightOrange = Color(0xFFFEF3D7)
+
 private val MainText = Color(0xFF34382F)
+
 private val SecondaryText = Color(0xFF7F887A)
-private val BorderGreen = Color(0xFFD5E3CD)
-private val BorderOrange = Color(0xFFF5E1B8)
+
 private val Brown = Color(0xFFA55E37)
 
 
 // ----------------------------------------------------
-// ESTADOS
+// COMPLETADA - VERDE
 // ----------------------------------------------------
 
-private enum class RequestStatus {
-    COMPLETED,
-    PENDING
-}
+private val MainGreen = Color(0xFF536D45)
+
+private val LightGreen = Color(0xFFF2F7ED)
+
+private val BorderGreen = Color(0xFFD5E3CD)
 
 
 // ----------------------------------------------------
-// MODELO
+// PENDIENTE - NARANJA
 // ----------------------------------------------------
 
-private data class RequestItemData(
-    val id: Int,
-    val address: String,
-    val items: String,
-    val weight: String,
-    val date: String,
-    val time: String,
-    val assignee: String,
-    val status: RequestStatus
-)
+private val MainOrange = Color(0xFFD99B4B)
+
+private val LightOrange = Color(0xFFFEF3D7)
+
+private val BorderOrange = Color(0xFFF5E1B8)
+
+
+// ----------------------------------------------------
+// CANCELADA - ROJO
+// ----------------------------------------------------
+
+private val MainRed = Color(0xFFC94338)
+
+private val LightRed = Color(0xFFFFD8D4)
+
+private val BorderRed = Color(0xFFF3A29B)
 
 
 // ----------------------------------------------------
@@ -94,85 +98,214 @@ private data class RequestItemData(
 
 @Composable
 fun ManageRequestsScreen(
+
     modifier: Modifier = Modifier,
+
     onBackClick: () -> Unit = {},
+
     onHomeClick: () -> Unit = {},
+
     onProfileClick: () -> Unit = {},
-    onEditClick: (Int) -> Unit = {}
+
+    onEditClick: (RequestUiModel) -> Unit = {}
+
 ) {
 
+
+    // ------------------------------------------------
+    // DATOS TEMPORALES
+    // Después vendrán de Firebase
+    // ------------------------------------------------
+
     val requests = listOf(
-        RequestItemData(
+
+
+        // ------------------------------------------------
+        // COMPLETADA
+        // ------------------------------------------------
+
+        RequestUiModel(
+
             id = 1,
+
             address = "Cll 131a # 53-31",
+
             items = "Plástico, vidrio, cartón",
+
             weight = "3 kg",
+
             date = "Agosto 24",
+
             time = "10:00 AM",
+
             assignee = "Juan Correa",
+
             status = RequestStatus.COMPLETED
         ),
-        RequestItemData(
+
+
+        // ------------------------------------------------
+        // PENDIENTE
+        // ------------------------------------------------
+
+        RequestUiModel(
+
             id = 2,
-            address = "Cra 15# 136-32",
-            items = "Metal, vidrio.",
+
+            address = "Cra 15 # 136-32",
+
+            items = "Metal, vidrio",
+
             weight = "8 kg",
+
             date = "Septiembre 12",
+
             time = "9:00 AM",
+
             assignee = "Juan Correa",
+
             status = RequestStatus.PENDING
+        ),
+
+
+        // ------------------------------------------------
+        // CANCELADA
+        // ------------------------------------------------
+
+        RequestUiModel(
+
+            id = 3,
+
+            address = "Cra 45 # 82-20",
+
+            items = "Cartón, plástico",
+
+            weight = "5 kg",
+
+            date = "Septiembre 15",
+
+            time = "2:00 PM",
+
+            assignee = "Samuel Robayo",
+
+            status = RequestStatus.CANCELLED
         )
     )
 
+
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = BackgroundColor,
+
+        modifier =
+            modifier.fillMaxSize(),
+
+        containerColor =
+            BackgroundColor,
+
+
+        // ------------------------------------------------
+        // HEADER
+        // ------------------------------------------------
+
         topBar = {
+
             Header(
                 onBackClick = onBackClick
             )
         },
+
+
+        // ------------------------------------------------
+        // BOTTOM BAR
+        // ------------------------------------------------
+
         bottomBar = {
+
             ReBottleBottomBar(
-                onHomeClick = onHomeClick,
-                onProfileClick = onProfileClick
+
+                onHomeClick =
+                    onHomeClick,
+
+                onProfileClick =
+                    onProfileClick
             )
         }
+
     ) { innerPadding ->
 
+
         Column(
+
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp)
+                .padding(
+                    horizontal = 20.dp
+                )
+
         ) {
 
-            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = stringResource(id = R.string.history_title),
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MainText
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+
+                text =
+                    stringResource(
+                        id =
+                            R.string.history_title
+                    ),
+
+                fontSize = 20.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold,
+
+                color =
+                    MainText
+            )
+
+
+            Spacer(
+                modifier =
+                    Modifier.height(16.dp)
+            )
+
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-                modifier = Modifier.fillMaxSize()
+
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        20.dp
+                    ),
+
+                modifier =
+                    Modifier.fillMaxSize()
+
             ) {
+
+
                 items(requests) { request ->
                     RequestCard(
                         request = request,
                         onEditClick = {
-                            onEditClick(request.id)
+                            onEditClick(request)
                         }
                     )
                 }
 
+
                 item {
-                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                20.dp
+                            )
+                    )
                 }
             }
         }
@@ -186,9 +319,13 @@ fun ManageRequestsScreen(
 
 @Composable
 private fun Header(
+
     onBackClick: () -> Unit
+
 ) {
+
     Row(
+
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -197,136 +334,341 @@ private fun Header(
                 end = 20.dp,
                 bottom = 10.dp
             ),
-        verticalAlignment = Alignment.CenterVertically
+
+        verticalAlignment =
+            Alignment.CenterVertically
+
     ) {
 
+
         Icon(
-            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-            contentDescription = "Volver",
+
+            imageVector =
+                Icons.AutoMirrored
+                    .Outlined
+                    .ArrowBack,
+
+            contentDescription =
+                "Volver",
+
             modifier = Modifier
                 .size(24.dp)
                 .clickable {
+
                     onBackClick()
                 },
-            tint = MainText
+
+            tint =
+                MainText
         )
 
-        Spacer(modifier = Modifier.width(16.dp))
+
+        Spacer(
+            modifier =
+                Modifier.width(16.dp)
+        )
+
 
         Text(
-            text = stringResource(id = R.string.manage_requests_title),
+
+            text =
+                stringResource(
+                    id =
+                        R.string
+                            .manage_requests_title
+                ),
+
             fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = MainGreen
+
+            fontWeight =
+                FontWeight.Bold,
+
+            color =
+                MainGreen
         )
     }
 }
 
 
 // ----------------------------------------------------
-// CARD SOLICITUD
+// CARD DE SOLICITUD
 // ----------------------------------------------------
 
 @Composable
 private fun RequestCard(
-    request: RequestItemData,
+
+    request: RequestUiModel,
+
     onEditClick: () -> Unit
+
 ) {
 
+
+    // ------------------------------------------------
+    // COLOR DEL FONDO
+    // ------------------------------------------------
+
     val backgroundColor =
-        if (request.status == RequestStatus.COMPLETED) {
-            LightGreen
-        } else {
-            LightOrange
+        when (request.status) {
+
+            RequestStatus.COMPLETED ->
+                LightGreen
+
+            RequestStatus.PENDING ->
+                LightOrange
+
+            RequestStatus.CANCELLED ->
+                LightRed
         }
+
+
+    // ------------------------------------------------
+    // COLOR DEL BORDE
+    // ------------------------------------------------
 
     val borderColor =
-        if (request.status == RequestStatus.COMPLETED) {
-            BorderGreen
-        } else {
-            BorderOrange
+        when (request.status) {
+
+            RequestStatus.COMPLETED ->
+                BorderGreen
+
+            RequestStatus.PENDING ->
+                BorderOrange
+
+            RequestStatus.CANCELLED ->
+                BorderRed
         }
 
+
+    // ------------------------------------------------
+    // COLOR DE "EDITAR"
+    // ------------------------------------------------
+
+    val actionColor =
+        when (request.status) {
+
+            RequestStatus.COMPLETED ->
+                MainGreen
+
+            RequestStatus.PENDING ->
+                MainOrange
+
+            RequestStatus.CANCELLED ->
+                MainRed
+        }
+
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, borderColor),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+
+        modifier =
+            Modifier.fillMaxWidth(),
+
+        shape =
+            RoundedCornerShape(12.dp),
+
+        border =
+            BorderStroke(
+                width = 1.dp,
+                color = borderColor
+            ),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    backgroundColor
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+
     ) {
+
+
         Column(
-            modifier = Modifier.padding(16.dp)
+
+            modifier =
+                Modifier.padding(16.dp)
+
         ) {
 
+
+            // ------------------------------------------------
+            // TÍTULO + ESTADO
+            // ------------------------------------------------
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                horizontalArrangement =
+                    Arrangement.SpaceBetween,
+
+                verticalAlignment =
+                    Alignment.CenterVertically
+
             ) {
 
+
                 Text(
-                    text = stringResource(
-                        id = R.string.collection_label,
-                        request.id
-                    ),
+
+                    text =
+                        stringResource(
+
+                            id =
+                                R.string
+                                    .collection_label,
+
+                            request.id
+                        ),
+
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainText
+
+                    fontWeight =
+                        FontWeight.Medium,
+
+                    color =
+                        MainText
                 )
 
+
                 StatusBadge(
-                    status = request.status
+
+                    status =
+                        request.status
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
-            RequestDetailItem(
-                icon = Icons.Outlined.LocationOn,
-                text = request.address
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
             )
 
-            RequestDetailItem(
-                iconRes = R.drawable.ic_box,
-                text = request.items
-            )
+
+            // ------------------------------------------------
+            // DIRECCIÓN
+            // ------------------------------------------------
 
             RequestDetailItem(
-                iconRes = R.drawable.ic_weight,
-                text = request.weight
+
+                icon =
+                    Icons.Outlined.LocationOn,
+
+                text =
+                    request.address
             )
 
-            RequestDetailItem(
-                iconRes = R.drawable.ic_calendar,
-                text = request.date
-            )
+
+            // ------------------------------------------------
+            // MATERIALES
+            // ------------------------------------------------
 
             RequestDetailItem(
-                iconRes = R.drawable.ic_clock,
-                text = request.time
+
+                iconRes =
+                    R.drawable.ic_box,
+
+                text =
+                    request.items
             )
 
+
+            // ------------------------------------------------
+            // PESO
+            // ------------------------------------------------
+
             RequestDetailItem(
-                iconRes = R.drawable.icon_collection,
-                text = request.assignee
+
+                iconRes =
+                    R.drawable.ic_weight,
+
+                text =
+                    request.weight
             )
+
+
+            // ------------------------------------------------
+            // FECHA
+            // ------------------------------------------------
+
+            RequestDetailItem(
+
+                iconRes =
+                    R.drawable.ic_calendar,
+
+                text =
+                    request.date
+            )
+
+
+            // ------------------------------------------------
+            // HORA
+            // ------------------------------------------------
+
+            RequestDetailItem(
+
+                iconRes =
+                    R.drawable.ic_clock,
+
+                text =
+                    request.time
+            )
+
+
+            // ------------------------------------------------
+            // RECOLECTOR
+            // ------------------------------------------------
+
+            RequestDetailItem(
+
+                iconRes =
+                    R.drawable
+                        .icon_collection,
+
+                text =
+                    request.assignee
+            )
+
+
+            // ------------------------------------------------
+            // EDITAR
+            // ------------------------------------------------
 
             Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.BottomEnd
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                contentAlignment =
+                    Alignment.BottomEnd
+
             ) {
+
+
                 Text(
-                    text = stringResource(id = R.string.edit_label) + " →",
+
+                    text =
+                        stringResource(
+                            id =
+                                R.string.edit_label
+                        ) + " →",
+
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (request.status == RequestStatus.COMPLETED) {
-                        MainGreen
-                    } else {
-                        MainOrange
-                    },
-                    modifier = Modifier.clickable {
-                        onEditClick()
-                    }
+
+                    fontWeight =
+                        FontWeight.Medium,
+
+                    color =
+                        actionColor,
+
+                    modifier =
+                        Modifier.clickable {
+
+                            onEditClick()
+                        }
                 )
             }
         }
@@ -335,44 +677,102 @@ private fun RequestCard(
 
 
 // ----------------------------------------------------
-// BADGE ESTADO
+// BADGE DE ESTADO
 // ----------------------------------------------------
 
 @Composable
 private fun StatusBadge(
+
     status: RequestStatus
+
 ) {
 
+
+    // ------------------------------------------------
+    // COLOR SEGÚN ESTADO
+    // ------------------------------------------------
+
     val backgroundColor =
-        if (status == RequestStatus.COMPLETED) {
-            MainGreen
-        } else {
-            MainOrange
+        when (status) {
+
+            RequestStatus.COMPLETED ->
+                MainGreen
+
+            RequestStatus.PENDING ->
+                MainOrange
+
+            RequestStatus.CANCELLED ->
+                MainRed
         }
+
+
+    // ------------------------------------------------
+    // TEXTO SEGÚN ESTADO
+    // ------------------------------------------------
 
     val text =
-        if (status == RequestStatus.COMPLETED) {
-            stringResource(id = R.string.status_completed)
-        } else {
-            stringResource(id = R.string.status_pending)
+        when (status) {
+
+            RequestStatus.COMPLETED ->
+
+                stringResource(
+                    id =
+                        R.string
+                            .status_completed
+                )
+
+
+            RequestStatus.PENDING ->
+
+                stringResource(
+                    id =
+                        R.string
+                            .status_pending
+                )
+
+
+            RequestStatus.CANCELLED ->
+
+                stringResource(
+                    id =
+                        R.string
+                            .status_cancelled
+                )
         }
 
+
     Box(
+
         modifier = Modifier
             .background(
-                color = backgroundColor,
-                shape = RoundedCornerShape(50.dp)
+
+                color =
+                    backgroundColor,
+
+                shape =
+                    RoundedCornerShape(
+                        50.dp
+                    )
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 4.dp
+                horizontal = 14.dp,
+                vertical = 5.dp
             )
+
     ) {
+
+
         Text(
+
             text = text,
-            color = Color.White,
+
+            color =
+                Color.White,
+
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+
+            fontWeight =
+                FontWeight.Medium
         )
     }
 }
@@ -384,45 +784,98 @@ private fun StatusBadge(
 
 @Composable
 private fun RequestDetailItem(
+
     icon: ImageVector? = null,
+
     iconRes: Int? = null,
+
     text: String
+
 ) {
+
     Row(
+
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(
+                vertical = 4.dp
+            ),
+
+        verticalAlignment =
+            Alignment.CenterVertically
+
     ) {
 
+
         Box(
-            modifier = Modifier.size(20.dp),
-            contentAlignment = Alignment.Center
+
+            modifier =
+                Modifier.size(20.dp),
+
+            contentAlignment =
+                Alignment.Center
+
         ) {
 
+
             if (icon != null) {
+
                 Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = Brown
+
+                    imageVector =
+                        icon,
+
+                    contentDescription =
+                        null,
+
+                    modifier =
+                        Modifier.size(18.dp),
+
+                    tint =
+                        Brown
                 )
-            } else if (iconRes != null) {
+
+            } else if (
+                iconRes != null
+            ) {
+
+
                 Icon(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = Brown
+
+                    painter =
+                        painterResource(
+                            id = iconRes
+                        ),
+
+                    contentDescription =
+                        null,
+
+                    modifier =
+                        Modifier.size(18.dp),
+
+                    tint =
+                        Brown
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+
+        Spacer(
+            modifier =
+                Modifier.width(12.dp)
+        )
+
 
         Text(
-            text = text,
-            fontSize = 14.sp,
-            color = SecondaryText
+
+            text =
+                text,
+
+            fontSize =
+                14.sp,
+
+            color =
+                SecondaryText
         )
     }
 }
@@ -434,106 +887,261 @@ private fun RequestDetailItem(
 
 @Composable
 private fun ReBottleBottomBar(
+
     onHomeClick: () -> Unit,
+
     onProfileClick: () -> Unit
+
 ) {
 
     Box(
+
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundColor)
-            .padding(top = 3.dp)
+            .background(
+                BackgroundColor
+            )
+            .padding(
+                top = 3.dp
+            )
+
     ) {
 
+
         NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            tonalElevation = 0.dp
+
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            containerColor =
+                Color.White,
+
+            tonalElevation =
+                0.dp
+
         ) {
 
+
+            // ------------------------------------------------
+            // INICIO
+            // ------------------------------------------------
+
             NavigationBarItem(
+
                 selected = false,
+
                 onClick = {
+
                     onHomeClick()
                 },
+
                 icon = {
+
                     Icon(
-                        imageVector = Icons.Outlined.Home,
-                        contentDescription = stringResource(id = R.string.tab_inicio),
-                        modifier = Modifier.size(26.dp)
+
+                        imageVector =
+                            Icons.Outlined.Home,
+
+                        contentDescription =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_inicio
+                            ),
+
+                        modifier =
+                            Modifier.size(26.dp)
                     )
                 },
+
                 label = {
+
                     Text(
-                        text = stringResource(id = R.string.tab_inicio),
-                        fontSize = 12.sp
+
+                        text =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_inicio
+                            ),
+
+                        fontSize =
+                            12.sp
                     )
                 },
-                colors = navigationItemColors()
+
+                colors =
+                    navigationItemColors()
             )
 
+
+            // ------------------------------------------------
+            // SOLICITUDES
+            // ------------------------------------------------
+
             NavigationBarItem(
+
                 selected = true,
+
                 onClick = {
-                    // Ya estamos en solicitudes
+                    // Ya estamos aquí
                 },
+
                 icon = {
+
                     Icon(
-                        painter = painterResource(id = R.drawable.icon_collection),
-                        contentDescription = stringResource(id = R.string.tab_solicitudes),
-                        modifier = Modifier.size(26.dp)
+
+                        painter =
+                            painterResource(
+                                id =
+                                    R.drawable
+                                        .icon_collection
+                            ),
+
+                        contentDescription =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_solicitudes
+                            ),
+
+                        modifier =
+                            Modifier.size(26.dp)
                     )
                 },
+
                 label = {
+
                     Text(
-                        text = stringResource(id = R.string.tab_solicitudes),
-                        fontSize = 12.sp
+
+                        text =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_solicitudes
+                            ),
+
+                        fontSize =
+                            12.sp
                     )
                 },
-                colors = navigationItemColors()
+
+                colors =
+                    navigationItemColors()
             )
 
-            NavigationBarItem(
-                selected = false,
-                onClick = {
-                    // Rutas más adelante
-                },
-                icon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icon_routes),
-                        contentDescription = stringResource(id = R.string.tab_rutas),
-                        modifier = Modifier.size(42.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = stringResource(id = R.string.tab_rutas),
-                        fontSize = 12.sp,
-                        modifier = Modifier.offset(y = (-4).dp)
-                    )
-                },
-                colors = navigationItemColors()
-            )
+
+            // ------------------------------------------------
+            // RUTAS
+            // ------------------------------------------------
 
             NavigationBarItem(
+
                 selected = false,
+
                 onClick = {
+                    // Se conecta más adelante
+                },
+
+                icon = {
+
+                    Icon(
+
+                        painter =
+                            painterResource(
+                                id =
+                                    R.drawable
+                                        .icon_routes
+                            ),
+
+                        contentDescription =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_rutas
+                            ),
+
+                        modifier =
+                            Modifier.size(42.dp)
+                    )
+                },
+
+                label = {
+
+                    Text(
+
+                        text =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_rutas
+                            ),
+
+                        fontSize =
+                            12.sp,
+
+                        modifier =
+                            Modifier.offset(
+                                y = (-4).dp
+                            )
+                    )
+                },
+
+                colors =
+                    navigationItemColors()
+            )
+
+
+            // ------------------------------------------------
+            // PERFIL
+            // ------------------------------------------------
+
+            NavigationBarItem(
+
+                selected = false,
+
+                onClick = {
+
                     onProfileClick()
                 },
+
                 icon = {
+
                     Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = stringResource(id = R.string.tab_perfil),
-                        modifier = Modifier.size(26.dp)
+
+                        imageVector =
+                            Icons.Outlined.Person,
+
+                        contentDescription =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_perfil
+                            ),
+
+                        modifier =
+                            Modifier.size(26.dp)
                     )
                 },
+
                 label = {
+
                     Text(
-                        text = stringResource(id = R.string.tab_perfil),
-                        fontSize = 12.sp
+
+                        text =
+                            stringResource(
+                                id =
+                                    R.string
+                                        .tab_perfil
+                            ),
+
+                        fontSize =
+                            12.sp
                     )
                 },
-                colors = navigationItemColors()
+
+                colors =
+                    navigationItemColors()
             )
         }
     }
@@ -547,11 +1155,21 @@ private fun ReBottleBottomBar(
 @Composable
 private fun navigationItemColors() =
     NavigationBarItemDefaults.colors(
-        selectedIconColor = MainGreen,
-        selectedTextColor = MainGreen,
-        unselectedIconColor = SecondaryText,
-        unselectedTextColor = SecondaryText,
-        indicatorColor = Color.Transparent
+
+        selectedIconColor =
+            MainGreen,
+
+        selectedTextColor =
+            MainGreen,
+
+        unselectedIconColor =
+            SecondaryText,
+
+        unselectedTextColor =
+            SecondaryText,
+
+        indicatorColor =
+            Color.Transparent
     )
 
 
@@ -559,10 +1177,14 @@ private fun navigationItemColors() =
 // PREVIEW
 // ----------------------------------------------------
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true
+)
 @Composable
 fun ManageRequestsScreenPreview() {
+
     RebottleTheme {
+
         ManageRequestsScreen()
     }
 }
