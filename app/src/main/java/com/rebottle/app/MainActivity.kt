@@ -10,18 +10,23 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import com.rebottle.app.navigation.Navigation
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.screens.HomeUserScreen
 import com.rebottle.app.ui.screens.auth.AuthFlowScreen
+import com.rebottle.app.ui.screens.auth.LoginScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             RebottleTheme {
-                AuthFlowScreen()
+                Navigation()
             }
         }
     }

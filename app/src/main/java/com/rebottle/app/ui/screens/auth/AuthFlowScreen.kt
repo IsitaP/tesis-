@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.rebottle.app.R
 
 
@@ -57,12 +59,12 @@ import com.rebottle.app.R
 // COLORES
 // ============================================================
 
-private val BackgroundColor = Color(0xFFFAF7EF)
-private val MainGreen = Color(0xFF5E7D3F)
+val BackgroundColor = Color(0xFFFAF7EF)
+val MainGreen = Color(0xFF5E7D3F)
 private val DarkGreen = Color(0xFF465F32)
 private val LightGreen = Color(0xFFF0F5E8)
-private val MainText = Color(0xFF45463F)
-private val SecondaryText = Color(0xFF77786F)
+val MainText = Color(0xFF45463F)
+val SecondaryText = Color(0xFF77786F)
 private val BorderColor = Color(0xFFD9DDD2)
 
 
@@ -87,7 +89,7 @@ private enum class AuthScreen {
 // ============================================================
 
 @Composable
-fun AuthFlowScreen() {
+fun AuthFlowScreen(controller: NavController) {
 
     var currentScreen by remember {
         mutableStateOf(AuthScreen.ONBOARDING_ONE)
@@ -175,27 +177,10 @@ fun AuthFlowScreen() {
         }
 
 
-        AuthScreen.REGISTER -> {
-
-            RegisterScreen(
-                onLoginClick = {
-                    currentScreen = AuthScreen.LOGIN
-                }
-            )
-        }
 
 
-        AuthScreen.LOGIN -> {
 
-            LoginScreen(
-                onLoginClick = {
-                    currentScreen = AuthScreen.HOME_FUNDACION
-                },
-                onRegisterClick = {
-                    currentScreen = AuthScreen.REGISTER
-                }
-            )
-        }
+
         AuthScreen.HOME_FUNDACION -> {
 
             FundacionFlowScreen()
@@ -410,430 +395,12 @@ private fun PageIndicator(
     }
 }
 
-
-// ============================================================
-// REGISTRO
-// ============================================================
-
-@Composable
-private fun RegisterScreen(
-    onLoginClick: () -> Unit
-) {
-
-    var username by remember {
-        mutableStateOf("")
-    }
-
-    var email by remember {
-        mutableStateOf("")
-    }
-
-    var password by remember {
-        mutableStateOf("")
-    }
-
-    var selectedUserType by remember {
-        mutableStateOf("Ciudadano")
-    }
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundColor)
-            .verticalScroll(
-                rememberScrollState()
-            )
-            .padding(
-                horizontal = 25.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Spacer(
-            modifier = Modifier.height(45.dp)
-        )
-
-
-        ReBottleLogo()
-
-
-        Spacer(
-            modifier = Modifier.height(30.dp)
-        )
-
-
-        Text(
-            text = "Crear cuenta",
-            modifier = Modifier.fillMaxWidth(),
-            color = MainText,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(14.dp)
-        )
-
-
-        ReBottleTextField(
-            value = username,
-            onValueChange = {
-                username = it
-            },
-            placeholder = "Usuario"
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
-
-
-        ReBottleTextField(
-            value = email,
-            onValueChange = {
-                email = it
-            },
-            placeholder = "Email"
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(10.dp)
-        )
-
-
-        ReBottleTextField(
-            value = password,
-            onValueChange = {
-                password = it
-            },
-            placeholder = "Contraseña",
-            password = true
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(17.dp)
-        )
-
-
-        Text(
-            text = "Tipo de usuario",
-            modifier = Modifier.fillMaxWidth(),
-            color = MainText,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium
-        )
-
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-
-            UserTypeButton(
-                text = "Ciudadano",
-                selected = selectedUserType == "Ciudadano",
-                modifier = Modifier.weight(1f)
-            ) {
-
-                selectedUserType = "Ciudadano"
-            }
-
-
-            UserTypeButton(
-                text = "EcoAlianza",
-                selected = selectedUserType == "Fundación",
-                modifier = Modifier.weight(1f)
-            ) {
-
-                selectedUserType = "Fundación"
-            }
-
-
-            UserTypeButton(
-                text = "Recolector",
-                selected = selectedUserType == "Recolector",
-                modifier = Modifier.weight(1f)
-            ) {
-
-                selectedUserType = "Recolector"
-            }
-        }
-
-
-        Spacer(
-            modifier = Modifier.height(18.dp)
-        )
-
-
-        Button(
-            onClick = {},
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(47.dp),
-
-            shape = RoundedCornerShape(9.dp),
-
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MainGreen
-            )
-        ) {
-
-            Text(
-                text = "Registrarse",
-                color = Color.White,
-                fontSize = 24.sp
-            )
-        }
-
-
-        Spacer(
-            modifier = Modifier.height(15.dp)
-        )
-
-
-        Row {
-
-            Text(
-                text = "¿Ya tienes una cuenta? ",
-                color = SecondaryText,
-                fontSize = 15.sp
-            )
-
-
-            Text(
-                text = "Iniciar Sesión",
-
-                modifier = Modifier.clickable {
-                    onLoginClick()
-                },
-
-                color = MainGreen,
-
-                fontSize = 15.sp,
-
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-
-        Spacer(
-            modifier = Modifier.height(50.dp)
-        )
-
-
-        RegisterDecoration()
-    }
-}
-
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-@Composable
-private fun LoginScreen(
-    onLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
-) {
-
-    var email by remember {
-        mutableStateOf("")
-    }
-
-    var password by remember {
-        mutableStateOf("")
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundColor)
-    ) {
-
-        // ====================================================
-        // IMAGEN DEL PLANETA - SIEMPRE ABAJO
-        // ====================================================
-
-        Image(
-            painter = painterResource(
-                id = R.drawable.login_bottom
-            ),
-            contentDescription = null,
-
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(280.dp),
-
-            contentScale = ContentScale.FillWidth
-        )
-
-
-        // ====================================================
-        // FORMULARIO
-        // ====================================================
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = 25.dp,
-                    end = 25.dp,
-                    top = 25.dp
-                ),
-
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(
-                modifier = Modifier.height(45.dp)
-            )
-
-            // LOGO
-            ReBottleLogo()
-
-
-            Spacer(
-                modifier = Modifier.height(30.dp)
-            )
-
-
-            // TÍTULO
-            Text(
-                text = "Iniciar sesión",
-
-                modifier = Modifier.fillMaxWidth(),
-
-                color = MainText,
-
-                fontSize = 20.sp,
-
-                fontWeight = FontWeight.Medium
-            )
-
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-
-            // EMAIL
-            ReBottleTextField(
-                value = email,
-
-                onValueChange = {
-                    email = it
-                },
-
-                placeholder = "Email"
-            )
-
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-
-            // CONTRASEÑA
-            ReBottleTextField(
-                value = password,
-
-                onValueChange = {
-                    password = it
-                },
-
-                placeholder = "Contraseña",
-
-                password = true
-            )
-
-
-            Spacer(
-                modifier = Modifier.height(25.dp)
-            )
-
-
-            // BOTÓN
-            Button(
-                onClick = {
-                    onLoginClick()
-                },
-
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
-
-                shape = RoundedCornerShape(6.dp),
-
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MainGreen
-                )
-            ) {
-
-                Text(
-                    text = "Iniciar sesión",
-
-                    color = Color.White,
-
-                    fontSize = 24.sp
-                )
-            }
-
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-
-            // REGISTRARSE
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "¿No tiene una cuenta? ",
-
-                    color = SecondaryText,
-
-                    fontSize = 15.sp
-                )
-
-
-                Text(
-                    text = "Registrarse",
-
-                    modifier = Modifier.clickable {
-                        onRegisterClick()
-                    },
-
-                    color = MainGreen,
-
-                    fontSize = 15.sp,
-
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
-
-
 // ============================================================
 // CAMPOS DE TEXTO
 // ============================================================
 
 @Composable
-private fun ReBottleTextField(
+fun ReBottleTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
@@ -893,7 +460,7 @@ private fun ReBottleTextField(
 // ============================================================
 
 @Composable
-private fun UserTypeButton(
+fun UserTypeButton(
     text: String,
     selected: Boolean,
     modifier: Modifier = Modifier,
@@ -958,7 +525,7 @@ private fun UserTypeButton(
 // ============================================================
 
 @Composable
-private fun ReBottleLogo() {
+fun ReBottleLogo() {
 
     Image(
         painter = painterResource(
@@ -978,7 +545,7 @@ private fun ReBottleLogo() {
 // ============================================================
 
 @Composable
-private fun RegisterDecoration() {
+fun RegisterDecoration() {
 
         Image(
             painter = painterResource(
