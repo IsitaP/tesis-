@@ -1,15 +1,6 @@
 package com.rebottle.app.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.ui.res.painterResource
-import androidx.annotation.DrawableRes
-import androidx.annotation.Size
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import com.rebottle.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,8 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,10 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.nio.file.Files.size
 
 
 // ----------------------------------------------------
@@ -295,15 +282,8 @@ private fun CollectionCard() {
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Image(
-                painter = painterResource(
-                    id = R.drawable.home_collection
-                ),
-                contentDescription = "Ilustración recolección programada",
-                modifier = Modifier
-                    .width(125.dp)
-                    .height(105.dp),
-                contentScale = ContentScale.Fit
+            IllustrationPlaceholder(
+                symbol = "♻"
             )
         }
     }
@@ -373,15 +353,8 @@ private fun LearnCard() {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Image(
-                painter = painterResource(
-                    id = R.drawable.home_learn
-                ),
-                contentDescription = "Rocco reciclando",
-                modifier = Modifier
-                    .width(125.dp)
-                    .height(115.dp),
-                contentScale = ContentScale.Fit
+            IllustrationPlaceholder(
+                symbol = "R"
             )
         }
     }
@@ -412,67 +385,55 @@ private fun ImpactCard() {
         )
     ) {
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(14.dp)
         ) {
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Text(
+                text = "Tu aporte al medio ambiente",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MainText
+            )
 
-                Text(
-                    text = "Tu aporte al medio ambiente",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainText
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(7.dp))
+            Text(
+                text = "12 recolecciones realizadas",
+                fontSize = 12.sp,
+                color = SecondaryText
+            )
 
-                Text(
-                    text = "12 recolecciones realizadas",
-                    fontSize = 11.sp,
-                    color = SecondaryText
-                )
+            Spacer(modifier = Modifier.height(2.dp))
 
-                Text(
-                    text = "48 kg de materiales reciclados",
-                    fontSize = 11.sp,
-                    color = SecondaryText
-                )
+            Text(
+                text = "48 kg de materiales reciclados",
+                fontSize = 12.sp,
+                color = SecondaryText
+            )
 
-                Text(
-                    text = "1.250 puntos acumulados",
-                    fontSize = 11.sp,
-                    color = SecondaryText
-                )
+            Spacer(modifier = Modifier.height(2.dp))
 
-                Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "1.250 puntos acumulados",
+                fontSize = 12.sp,
+                color = SecondaryText
+            )
 
-                Text(
-                    text = "Saber más →",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainGreen
-                )
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Image(
-                painter = painterResource(
-                    id = R.drawable.home_impact
-                ),
-                contentDescription = "Impacto ambiental",
-                modifier = Modifier
-                    .width(125.dp)
-                    .height(105.dp),
-                contentScale = ContentScale.Fit
+            Text(
+                text = "Saber más  →",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = MainGreen
             )
         }
     }
 }
+
 
 // ----------------------------------------------------
 // PLACEHOLDER PARA LAS ILUSTRACIONES DE FIGMA
@@ -508,23 +469,6 @@ private fun IllustrationPlaceholder(
 // ----------------------------------------------------
 
 @Composable
-private fun BottomNavIcon(
-    @DrawableRes iconRes: Int,
-    contentDescription: String,
-    size:
-    Dp = 24.dp
-) {
-
-    Image(
-        painter = painterResource(
-            id = iconRes
-
-        ),
-        contentDescription = contentDescription,
-        modifier = Modifier.size(size)
-    )
-}
-@Composable
 private fun ReBottleBottomBar() {
 
     NavigationBar(
@@ -533,14 +477,12 @@ private fun ReBottleBottomBar() {
     ) {
 
         NavigationBarItem(
-            selected = false,
+            selected = true,
             onClick = {},
             icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Home,
-                    contentDescription = "Inicio",
-                    modifier = Modifier.size(26.dp),
-                    tint = MainGreen
+                BottomIcon(
+                    symbol = "⌂",
+                    selected = true
                 )
             },
             label = {
@@ -548,19 +490,16 @@ private fun ReBottleBottomBar() {
                     text = "Inicio",
                     fontSize = 10.sp
                 )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Transparent
-            )
+            }
         )
 
         NavigationBarItem(
             selected = false,
             onClick = {},
             icon = {
-                BottomNavIcon(
-                    iconRes = R.drawable.icon_collection,
-                    contentDescription = "Recolecciones"
+                BottomIcon(
+                    symbol = "♻",
+                    selected = false
                 )
             },
             label = {
@@ -568,19 +507,16 @@ private fun ReBottleBottomBar() {
                     text = "Recolecciones",
                     fontSize = 10.sp
                 )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Transparent
-            )
+            }
         )
 
         NavigationBarItem(
             selected = false,
             onClick = {},
             icon = {
-                BottomNavIcon(
-                    iconRes = R.drawable.icon_rewards,
-                    contentDescription = "Recompensas"
+                BottomIcon(
+                    symbol = "★",
+                    selected = false
                 )
             },
             label = {
@@ -588,21 +524,16 @@ private fun ReBottleBottomBar() {
                     text = "Recompensas",
                     fontSize = 10.sp
                 )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Transparent
-            )
+            }
         )
 
         NavigationBarItem(
             selected = false,
             onClick = {},
             icon = {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = "Perfil",
-                    modifier = Modifier.size(26.dp),
-                    tint = Color(0xFF747B69)
+                BottomIcon(
+                    symbol = "●",
+                    selected = false
                 )
             },
             label = {
@@ -610,10 +541,7 @@ private fun ReBottleBottomBar() {
                     text = "Perfil",
                     fontSize = 10.sp
                 )
-            },
-            colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Transparent
-            )
+            }
         )
     }
 }
