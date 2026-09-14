@@ -1,7 +1,6 @@
 package com.rebottle.app.ui.screens.auth
 
 import com.rebottle.app.ui.screens.HomeUserScreen
-import com.rebottle.app.ui.screens.fundacion.FundacionFlowScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -183,7 +182,7 @@ fun AuthFlowScreen(controller: NavController) {
 
         AuthScreen.HOME_FUNDACION -> {
 
-            FundacionFlowScreen()
+           // FundacionFlowScreen()
         }
 
         else -> {}
@@ -404,7 +403,9 @@ fun ReBottleTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    password: Boolean = false
+    password: Boolean = false,
+    isError: Boolean = false,
+    errorMessage: String = ""
 ) {
 
     OutlinedTextField(
@@ -418,6 +419,8 @@ fun ReBottleTextField(
 
         singleLine = true,
 
+        isError = isError,
+
         placeholder = {
 
             Text(
@@ -425,6 +428,15 @@ fun ReBottleTextField(
                 color = Color(0xFF999B94),
                 fontSize = 14.sp
             )
+        },
+
+        supportingText = {
+            if (isError) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red
+                )
+            }
         },
 
         visualTransformation = if (password) {
@@ -451,7 +463,9 @@ fun ReBottleTextField(
 
             unfocusedTextColor = MainText
         )
+
     )
+
 }
 
 

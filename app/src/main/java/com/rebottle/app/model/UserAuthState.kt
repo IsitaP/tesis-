@@ -8,7 +8,8 @@ data class UserAuthState(
     var email : String = "",
     var password : String = "",
     val emailError:String = "",
-    val passError : String = ""
+    val passError : String = "",
+    val isLoading: Boolean = false
 )
 class UserAuthViewModel : ViewModel() {
     val _user = MutableStateFlow<UserAuthState>(UserAuthState())
@@ -27,5 +28,9 @@ class UserAuthViewModel : ViewModel() {
 
     fun updatePassError(error: String) {
         _user.value = _user.value.copy(passError = error)
+    }
+
+    fun updateLoading(loading: Boolean) {
+        _user.value = _user.value.copy(isLoading = loading)
     }
 }

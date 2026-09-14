@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +48,12 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
 
     val context = LocalContext.current
     val user by model.user.collectAsState()
+
+    LaunchedEffect(Unit) {
+        firebaseAuth.currentUser?.let{
+            controller.navigate(AppScreens.homeFundacion.name)
+        }
+    }
 
 
     Box(
@@ -127,8 +135,9 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                 onValueChange = {
                     model.updateEmailClass(it)
                 },
-
-                placeholder = "Email"
+                placeholder = "Email",
+                isError = user.emailError.isNotEmpty(),
+                errorMessage = user.emailError
             )
 
 
@@ -146,8 +155,9 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                 },
 
                 placeholder = "Contraseña",
-
-                password = true
+                password = true,
+                isError = user.password.isNotEmpty(),
+                errorMessage = user.passError
             )
 
 
@@ -159,8 +169,9 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
             // BOTÓN
             Button(
                 onClick = {
-                    login(user.email, user.password, controller, context)
+                    login(model,user.email, user.password, controller, context)
                 },
+                enabled = !user.isLoading,
 
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,14 +183,22 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                     containerColor = MainGreen
                 )
             ) {
+                if(user.isLoading){
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                }
+                else {
+                    Text(
+                        text = "Iniciar sesión",
 
-                Text(
-                    text = "Iniciar sesión",
+                        color = Color.White,
 
-                    color = Color.White,
-
-                    fontSize = 24.sp
-                )
+                        fontSize = 24.sp
+                    )
+                }
             }
 
 
@@ -206,7 +225,7 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                     text = "Registrarse",
 
                     modifier = Modifier.clickable {
-
+                        controller.navigate(AppScreens.register.name)
                     },
 
                     color = MainGreen,
@@ -220,28 +239,36 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
     }
 }
 
-fun validateForm(email:String, password:String):Boolean{
-    if (!email.isEmpty() &&
-        validEmailAddress(email) &&
-        !password.isEmpty() &&
-        password.length >= 6){
-        return true
-    }
-    return false
+fun validateForm(model: UserAuthViewModel,email:String, password:String):Boolean{
+    if (email.isEmpty()){ model.updateEmailError("Email is empty")
+        return false
+    }else{model.updateEmailError("")}
+    if(!validEmailAddress(email)){model.updateEmailError("Not a valid address")
+        return false
+    }else{model.updateEmailError("")}
+    if(password.isEmpty()) {model.updatePassError("Password is empty")
+        return false
+    }else{model.updatePassError("")}
+    if(password.length < 6) {model.updatePassError("Password is too short")
+        return false
+    }else{model.updatePassError("")}
+    return true
 }
 private fun validEmailAddress(email:String):Boolean{
     val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$"
     return email.matches(regex.toRegex())
 }
 
-fun login(email:String, password:String, controller: NavController, context: Context){
-    if(validateForm(email, password)){
+
+fun login(model: UserAuthViewModel, email: String, password: String, controller: NavController, context: Context) {
+    if (validateForm(model, email, password)) {
+        model.updateLoading(true)
         firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
-            if(it.isSuccessful){
-                controller.navigate(AppScreens.home.name)
-            }else{
-                Toast.makeText(context, "Login error ${it.exception.toString()}",
-                    Toast.LENGTH_LONG).show()
+            model.updateLoading(false)
+            if (it.isSuccessful) {
+                controller.navigate(AppScreens.homeFundacion.name)
+            } else {
+                Toast.makeText(context, "Login error ${it.exception.toString()}", Toast.LENGTH_LONG).show()
             }
         }
     }

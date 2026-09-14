@@ -28,9 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.rebottle.app.navigation.AppScreens
 
 @Composable
-public fun RegisterScreen( navController: NavController) {
+public fun RegisterScreen( controller: NavController) {
 
     var username by remember {
         mutableStateOf("")
@@ -227,7 +228,7 @@ public fun RegisterScreen( navController: NavController) {
                 text = "Iniciar Sesión",
 
                 modifier = Modifier.clickable {
-
+                    controller.navigate(AppScreens.login.name)
                 },
 
                 color = MainGreen,
