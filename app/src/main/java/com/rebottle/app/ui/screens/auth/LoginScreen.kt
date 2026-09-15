@@ -254,7 +254,7 @@ fun validateForm(model: UserAuthViewModel,email:String, password:String):Boolean
     }else{model.updatePassError("")}
     return true
 }
-private fun validEmailAddress(email:String):Boolean{
+fun validEmailAddress(email:String):Boolean{
     val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$"
     return email.matches(regex.toRegex())
 }
@@ -273,3 +273,5 @@ fun login(model: UserAuthViewModel, email: String, password: String, controller:
         }
     }
 }
+
+

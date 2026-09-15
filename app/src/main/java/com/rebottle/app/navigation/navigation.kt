@@ -24,6 +24,8 @@ enum class AppScreens{
     login,
     register,
     homeFundacion,
+    homeCiudadano,
+    homeRecolector,
     solicitudes,
     perfil,
     rutas
