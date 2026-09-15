@@ -1,4 +1,4 @@
-package com.rebottle.app.ui.screens
+package com.rebottle.app.ui.screens.usuario
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -36,6 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.rebottle.app.R
 
 
 // ----------------------------------------------------
@@ -57,7 +63,9 @@ private val SecondaryText = Color(0xFF7F887A)
 // ----------------------------------------------------
 
 @Composable
-fun HomeUserScreen() {
+fun HomeUserScreen(
+        onLearnClick: () -> Unit
+    ) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -131,15 +139,15 @@ fun HomeUserScreen() {
 
             Spacer(modifier = Modifier.height(9.dp))
 
-            LearnCard()
+            LearnCard(onLearnClick = onLearnClick)
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            SectionTitle("Mi impacto")
+            SectionTitle("Mas acciones")
 
-            Spacer(modifier = Modifier.height(9.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            ImpactCard()
+            MoreActionsSection()
         }
     }
 }
@@ -231,60 +239,88 @@ private fun CollectionCard() {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(14.dp),
+                .padding(
+                    start = 14.dp,
+                    end = 8.dp,
+                    top = 10.dp,
+                    bottom = 10.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            // =========================================
+            // TEXTO
+            // =========================================
             Column(
                 modifier = Modifier.weight(1f)
             ) {
 
                 Text(
                     text = "Recolección programada",
-                    fontSize = 16.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainText
+                    color = MainText,
+                    maxLines = 1
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(
+                    modifier = Modifier.height(5.dp)
+                )
 
                 Text(
                     text = "Estado: Programada",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = SecondaryText
                 )
-
-                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = "Fecha: Agosto 24",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = SecondaryText
                 )
-
-                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = "Hora: 10:00 AM",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = SecondaryText
                 )
 
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(
+                    modifier = Modifier.height(2.dp)
+                )
 
                 Text(
-                    text = "Ver más detalles  →",
-                    fontSize = 12.sp,
+                    text = "Ver más detalles →",
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = MainGreen
                 )
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            // =========================================
+            // IMAGEN
+            // =========================================
+            Box(
+                modifier = Modifier
+                    .width(120.dp)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
 
-            IllustrationPlaceholder(
-                symbol = "♻"
-            )
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.home_collection
+                    ),
+                    contentDescription = "Recolección programada",
+                    modifier = Modifier
+                        .width(110.dp)
+                        .height(105.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
     }
 }
@@ -295,7 +331,7 @@ private fun CollectionCard() {
 // ----------------------------------------------------
 
 @Composable
-private fun LearnCard() {
+private fun LearnCard(onLearnClick: () -> Unit) {
 
     Card(
         modifier = Modifier
@@ -347,31 +383,70 @@ private fun LearnCard() {
                     text = "Aprender más  →",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen
+                    color = MainGreen,
+                    modifier = Modifier.clickable {
+                        onLearnClick()
+                    }
                 )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
-
-            IllustrationPlaceholder(
-                symbol = "R"
+            Box(
+                modifier = Modifier
+                    .width(130.dp)
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+            Image(
+                painter = painterResource(
+                    id = R.drawable.home_learn
+                ),
+                contentDescription = "Rocco reciclando",
+                modifier = Modifier
+                    .width(125.dp)
+                    .height(115.dp),
+                contentScale = ContentScale.Fit
             )
+            }
         }
     }
 }
 
 
 // ----------------------------------------------------
-// TARJETA IMPACTO
+// TARJETA DE MAS ACCIONES
 // ----------------------------------------------------
-
 @Composable
-private fun ImpactCard() {
+private fun MoreActionsSection() {
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+
+        ActionCard(
+            title = "Mis aportes",
+            imageRes = R.drawable.home_impact,
+            modifier = Modifier.weight(1f)
+        )
+
+        ActionCard(
+            title = "Ranking",
+            imageRes = R.drawable.home_ranking,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+@Composable
+private fun ActionCard(
+    title: String,
+    imageRes: Int,
+    modifier: Modifier = Modifier
+) {
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(140.dp),
+        modifier = modifier
+            .height(150.dp),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(
             width = 1.dp,
@@ -388,47 +463,31 @@ private fun ImpactCard() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(14.dp)
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
 
-            Text(
-                text = "Tu aporte al medio ambiente",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MainText
+            Image(
+                painter = painterResource(
+                    id = imageRes
+                ),
+                contentDescription = title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(95.dp),
+                contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "12 recolecciones realizadas",
-                fontSize = 12.sp,
-                color = SecondaryText
+            Spacer(
+                modifier = Modifier.height(6.dp)
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
-
             Text(
-                text = "48 kg de materiales reciclados",
-                fontSize = 12.sp,
-                color = SecondaryText
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "1.250 puntos acumulados",
-                fontSize = 12.sp,
-                color = SecondaryText
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "Saber más  →",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = MainGreen
+                text = title,
+                fontSize = 14.sp,
+                color = MainText,
+                textAlign = TextAlign.Center
             )
         }
     }

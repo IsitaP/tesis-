@@ -1,7 +1,6 @@
 package com.rebottle.app.ui.screens.auth
 
-import com.rebottle.app.ui.screens.HomeUserScreen
-import com.rebottle.app.ui.screens.fundacion.FundacionFlowScreen
+import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebottle.app.R
+import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.HomeUserScreen
+
 
 
 
@@ -77,7 +78,8 @@ private enum class AuthScreen {
     REGISTER,
     LOGIN,
     HOME_FUNDACION,
-    HOME_USER
+    HOME_USER,
+    LEARN
 
 }
 
@@ -185,20 +187,34 @@ fun AuthFlowScreen() {
         }
 
 
+
         AuthScreen.LOGIN -> {
 
             LoginScreen(
                 onLoginClick = {
-                    currentScreen = AuthScreen.HOME_FUNDACION
+                    currentScreen = AuthScreen.HOME_USER
                 },
                 onRegisterClick = {
                     currentScreen = AuthScreen.REGISTER
                 }
             )
         }
-        AuthScreen.HOME_FUNDACION -> {
+        AuthScreen.HOME_USER -> {
 
-            FundacionFlowScreen()
+            HomeUserScreen(
+                onLearnClick = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
+
+        AuthScreen.LEARN -> {
+
+            LearnRoadmapScreen(
+                onBack = {
+                    currentScreen = AuthScreen.HOME_USER
+                }
+            )
         }
 
         else -> {}
