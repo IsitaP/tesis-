@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969211057023",
+    "project_id": "rebottle-tesis",
+    "storage_bucket": "rebottle-tesis.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969211057023:android:eb37b05ffbaa9f13fa404a",
+        "android_client_info": {
+          "package_name": "com.rebottle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ9T2pC2gWO5IV-BQVt2pfUh9P1arjVtw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
