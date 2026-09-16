@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.rebottle.app.R
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.HomeUserScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 
 
 
@@ -79,7 +80,8 @@ private enum class AuthScreen {
     LOGIN,
     HOME_FUNDACION,
     HOME_USER,
-    LEARN
+    LEARN,
+    MODULE_ONE
 
 }
 
@@ -213,6 +215,20 @@ fun AuthFlowScreen() {
             LearnRoadmapScreen(
                 onBack = {
                     currentScreen = AuthScreen.HOME_USER
+                },
+                onM1Click = {
+                    currentScreen = AuthScreen.MODULE_ONE
+                }
+            )
+        }
+        AuthScreen.MODULE_ONE -> {
+
+            ModuleOneFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
                 }
             )
         }

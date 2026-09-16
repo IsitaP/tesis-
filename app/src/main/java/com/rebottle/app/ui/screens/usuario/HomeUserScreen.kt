@@ -39,9 +39,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.rebottle.app.R
+import androidx.compose.ui.tooling.preview.Preview
+import com.rebottle.app.ui.theme.RebottleTheme
+import androidx.compose.material.icons.filled.Home
 
 
 // ----------------------------------------------------
@@ -530,78 +535,144 @@ private fun IllustrationPlaceholder(
 @Composable
 private fun ReBottleBottomBar() {
 
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 4.dp
+    val selectedColor = Color(0xFF5F7D43)
+    val unselectedColor = Color(0xFF7A806F)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(82.dp)
+            .background(Color.White)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
-        NavigationBarItem(
+        // INICIO - Compose
+        ReBottleBottomItem(
+            title = "Inicio",
             selected = true,
-            onClick = {},
-            icon = {
-                BottomIcon(
-                    symbol = "⌂",
-                    selected = true
-                )
-            },
-            label = {
-                Text(
-                    text = "Inicio",
-                    fontSize = 10.sp
-                )
-            }
+            imageVector = Icons.Default.Home,
+            selectedColor = selectedColor,
+            unselectedColor = unselectedColor,
+            modifier = Modifier.weight(1f)
         )
 
-        NavigationBarItem(
+        // RECOLECCIONES - tu drawable
+        ReBottleBottomItem(
+            title = "Recolecciones",
             selected = false,
-            onClick = {},
-            icon = {
-                BottomIcon(
-                    symbol = "♻",
-                    selected = false
-                )
-            },
-            label = {
-                Text(
-                    text = "Recolecciones",
-                    fontSize = 10.sp
-                )
-            }
+            iconRes = R.drawable.icon_collection,
+            selectedColor = selectedColor,
+            unselectedColor = unselectedColor,
+            modifier = Modifier.weight(1f)
         )
 
-        NavigationBarItem(
+        // RECOMPENSAS - tu drawable
+        ReBottleBottomItem(
+            title = "Recompensas",
             selected = false,
-            onClick = {},
-            icon = {
-                BottomIcon(
-                    symbol = "★",
-                    selected = false
-                )
-            },
-            label = {
-                Text(
-                    text = "Recompensas",
-                    fontSize = 10.sp
-                )
-            }
+            iconRes = R.drawable.icon_rewards,
+            selectedColor = selectedColor,
+            unselectedColor = unselectedColor,
+            modifier = Modifier.weight(1f)
         )
 
-        NavigationBarItem(
+        // PERFIL - Compose
+        ReBottleBottomItem(
+            title = "Perfil",
             selected = false,
-            onClick = {},
-            icon = {
-                BottomIcon(
-                    symbol = "●",
-                    selected = false
-                )
-            },
-            label = {
-                Text(
-                    text = "Perfil",
-                    fontSize = 10.sp
-                )
-            }
+            imageVector = Icons.Outlined.Person,
+            selectedColor = selectedColor,
+            unselectedColor = unselectedColor,
+            modifier = Modifier.weight(1f)
         )
+    }
+}
+
+@Composable
+private fun ReBottleBottomItem(
+    title: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    iconRes: Int? = null,
+    imageVector: ImageVector? = null,
+    selectedColor: Color,
+    unselectedColor: Color
+) {
+
+    val itemColor = if (selected) {
+        selectedColor
+    } else {
+        unselectedColor
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable {
+                // Después ponemos navegación aquí
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        // ICONO
+        if (imageVector != null) {
+
+            Icon(
+                imageVector = imageVector,
+                contentDescription = title,
+                modifier = Modifier.size(29.dp),
+                tint = itemColor
+            )
+
+        } else if (iconRes != null) {
+
+            Icon(
+                painter = painterResource(
+                    id = iconRes
+                ),
+                contentDescription = title,
+                modifier = Modifier.size(31.dp),
+                tint = itemColor
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        // TEXTO
+        Text(
+            text = title,
+            fontSize = 12.sp,
+            color = itemColor,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(
+            modifier = Modifier.height(3.dp)
+        )
+
+        // PUNTICO DEL ITEM SELECCIONADO
+        if (selected) {
+
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .background(
+                        color = selectedColor,
+                        shape = CircleShape
+                    )
+            )
+
+        } else {
+
+            // Mantiene todos los textos alineados
+            Spacer(
+                modifier = Modifier.height(7.dp)
+            )
+        }
     }
 }
 
@@ -622,4 +693,17 @@ private fun BottomIcon(
             Color(0xFF888E85)
         }
     )
+}
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+private fun HomeUserScreenPreview() {
+
+    RebottleTheme {
+        HomeUserScreen(
+            onLearnClick = {}
+        )
+    }
 }

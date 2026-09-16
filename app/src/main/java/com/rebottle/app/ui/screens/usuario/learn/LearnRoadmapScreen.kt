@@ -38,7 +38,8 @@ private val ShadowGreen = Color(0xFF78835D)
 
 @Composable
 fun LearnRoadmapScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onM1Click: () -> Unit
 ) {
 
     Column(
@@ -112,7 +113,10 @@ fun LearnRoadmapScreen(
             ModuleButton(
                 text = "M1",
                 x = 20.dp,
-                y = 115.dp
+                y = 115.dp,
+                onClick={
+                    onM1Click()
+                }
             )
 
             ModuleButton(
@@ -151,11 +155,6 @@ fun LearnRoadmapScreen(
                 y = 780.dp
             )
 
-            ModuleButton(
-                text = "M8",
-                x = 260.dp,
-                y = 905.dp
-            )
         }
     }
 }
@@ -165,7 +164,8 @@ fun LearnRoadmapScreen(
 private fun ModuleButton(
     text: String,
     x: androidx.compose.ui.unit.Dp,
-    y: androidx.compose.ui.unit.Dp
+    y: androidx.compose.ui.unit.Dp,
+    onClick: () -> Unit = {}
 ) {
 
     Box(
@@ -196,7 +196,7 @@ private fun ModuleButton(
             modifier = Modifier
                 .size(85.dp)
                 .clickable {
-                    // Después podemos navegar al módulo.
+                    onClick()
                 },
             shape = CircleShape,
             colors = CardDefaults.cardColors(
