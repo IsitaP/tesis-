@@ -39,7 +39,10 @@ private val ShadowGreen = Color(0xFF78835D)
 @Composable
 fun LearnRoadmapScreen(
     onBack: () -> Unit,
-    onM1Click: () -> Unit
+    onM1Click: () -> Unit,
+    onM2Click: () -> Unit,
+    onM3Click: () -> Unit
+
 ) {
 
     Column(
@@ -122,13 +125,19 @@ fun LearnRoadmapScreen(
             ModuleButton(
                 text = "M2",
                 x = 265.dp,
-                y = 230.dp
+                y = 230.dp,
+                onClick={
+                    onM2Click()
+                }
             )
 
             ModuleButton(
                 text = "M3",
                 x = 5.dp,
-                y = 350.dp
+                y = 350.dp,
+                onClick={
+                    onM3Click()
+                }
             )
 
             ModuleButton(

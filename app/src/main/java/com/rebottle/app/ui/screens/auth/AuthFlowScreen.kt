@@ -51,7 +51,8 @@ import com.rebottle.app.R
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
-
+import com.rebottle.app.ui.screens.usuario.learn.ModuleThreeFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
 
 
 
@@ -81,7 +82,9 @@ private enum class AuthScreen {
     HOME_FUNDACION,
     HOME_USER,
     LEARN,
-    MODULE_ONE
+    MODULE_ONE,
+    MODULE_TWO,
+    MODULE_THREE
 
 }
 
@@ -218,8 +221,15 @@ fun AuthFlowScreen() {
                 },
                 onM1Click = {
                     currentScreen = AuthScreen.MODULE_ONE
+                },
+                onM2Click = {
+                    currentScreen = AuthScreen.MODULE_TWO
+                },
+                onM3Click = {
+                    currentScreen = AuthScreen.MODULE_THREE
                 }
             )
+
         }
         AuthScreen.MODULE_ONE -> {
 
@@ -227,6 +237,31 @@ fun AuthFlowScreen() {
                 onBackToRoadmap = {
                     currentScreen = AuthScreen.LEARN
                 },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
+        AuthScreen.MODULE_TWO -> {
+
+            ModuleTwoFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
+
+        AuthScreen.MODULE_THREE -> {
+
+            ModuleThreeFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+
                 onFinish = {
                     currentScreen = AuthScreen.LEARN
                 }
