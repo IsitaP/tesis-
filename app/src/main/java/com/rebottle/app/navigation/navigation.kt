@@ -5,7 +5,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.rebottle.app.ui.screens.HomeUserScreen
+import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import com.rebottle.app.ui.screens.auth.LoginScreen
 import com.rebottle.app.ui.screens.auth.RegisterScreen
 import com.rebottle.app.ui.screens.fundacion.HomeFundacionScreen
@@ -62,6 +62,13 @@ fun Navigation() {
         }
         composable(route = AppScreens.homeFundacion.name){
             HomeFundacionScreen(navController)
+        }
+        composable(route = AppScreens.homeCiudadano.name) {
+            HomeUserScreen(
+                onLearnClick = {
+                    // TODO: navegar a LearnRoadmapScreen cuando tenga su ruta en el enum
+                }
+            )
         }
         composable(route = AppScreens.solicitudes.name){
             CollectionRequestsScreen(navController)
