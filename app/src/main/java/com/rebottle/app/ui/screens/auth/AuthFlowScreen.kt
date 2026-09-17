@@ -1,6 +1,6 @@
 package com.rebottle.app.ui.screens.auth
 
-import com.rebottle.app.ui.screens.HomeUserScreen
+import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -182,7 +182,7 @@ fun AuthFlowScreen(controller: NavController) {
 
         AuthScreen.HOME_FUNDACION -> {
 
-           // FundacionFlowScreen()
+            // FundacionFlowScreen()
         }
 
         else -> {}
@@ -561,17 +561,17 @@ fun ReBottleLogo() {
 @Composable
 fun RegisterDecoration() {
 
-        Image(
-            painter = painterResource(
-                id = R.drawable.register_bottom
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .requiredWidth(450.dp)
-                .height(230.dp),
-            contentScale = ContentScale.FillWidth
-        )
-    }
+    Image(
+        painter = painterResource(
+            id = R.drawable.register_bottom
+        ),
+        contentDescription = null,
+        modifier = Modifier
+            .requiredWidth(450.dp)
+            .height(230.dp),
+        contentScale = ContentScale.FillWidth
+    )
+}
 
 
 

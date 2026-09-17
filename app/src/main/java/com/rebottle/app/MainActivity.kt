@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import com.rebottle.app.navigation.Navigation
 import com.rebottle.app.ui.theme.RebottleTheme
-import com.rebottle.app.ui.screens.HomeUserScreen
+import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import com.rebottle.app.ui.screens.auth.AuthFlowScreen
 import com.rebottle.app.ui.screens.auth.LoginScreen
 

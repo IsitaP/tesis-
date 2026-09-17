@@ -37,7 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
 import com.rebottle.app.R
 import com.rebottle.app.model.UserAuthViewModel
 import com.rebottle.app.navigation.AppScreens
@@ -50,8 +52,8 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
     val user by model.user.collectAsState()
 
     LaunchedEffect(Unit) {
-        firebaseAuth.currentUser?.let{
-            controller.navigate(AppScreens.homeFundacion.name)
+        firebaseAuth.currentUser?.let {
+            navigateByRole(it.uid, controller, context)
         }
     }
 
@@ -100,38 +102,26 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                 modifier = Modifier.height(45.dp)
             )
 
-            // LOGO
             ReBottleLogo()
-
 
             Spacer(
                 modifier = Modifier.height(30.dp)
             )
 
-
-            // TÍTULO
             Text(
                 text = "Iniciar sesión",
-
                 modifier = Modifier.fillMaxWidth(),
-
                 color = MainText,
-
                 fontSize = 20.sp,
-
                 fontWeight = FontWeight.Medium
             )
-
 
             Spacer(
                 modifier = Modifier.height(20.dp)
             )
 
-
-            // EMAIL
             ReBottleTextField(
                 value = user.email,
-
                 onValueChange = {
                     model.updateEmailClass(it)
                 },
@@ -140,57 +130,44 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                 errorMessage = user.emailError
             )
 
-
             Spacer(
                 modifier = Modifier.height(12.dp)
             )
 
-
-            // CONTRASEÑA
             ReBottleTextField(
                 value = user.password,
-
                 onValueChange = {
                     model.updatePassClass(it)
                 },
-
                 placeholder = "Contraseña",
                 password = true,
-                isError = user.password.isNotEmpty(),
+                isError = user.passError.isNotEmpty(),
                 errorMessage = user.passError
             )
-
 
             Spacer(
                 modifier = Modifier.height(25.dp)
             )
 
+            if (user.isLoading) {
+                CircularProgressIndicator(color = MainGreen)
+            } else {
+                Button(
+                    onClick = {
+                        login(model, user.email, user.password, controller, context)
+                    },
 
-            // BOTÓN
-            Button(
-                onClick = {
-                    login(model,user.email, user.password, controller, context)
-                },
-                enabled = !user.isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(55.dp),
 
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp),
+                    shape = RoundedCornerShape(6.dp),
 
-                shape = RoundedCornerShape(6.dp),
-
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MainGreen
-                )
-            ) {
-                if(user.isLoading){
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MainGreen
                     )
-                }
-                else {
+                ) {
+
                     Text(
                         text = "Iniciar sesión",
 
@@ -201,13 +178,10 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
                 }
             }
 
-
             Spacer(
                 modifier = Modifier.height(18.dp)
             )
 
-
-            // REGISTRARSE
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -266,7 +240,10 @@ fun login(model: UserAuthViewModel, email: String, password: String, controller:
         firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
             model.updateLoading(false)
             if (it.isSuccessful) {
-                controller.navigate(AppScreens.homeFundacion.name)
+                val uid = firebaseAuth.currentUser?.uid
+                if (uid != null) {
+                    navigateByRole(uid, controller, context)
+                }
             } else {
                 Toast.makeText(context, "Login error ${it.exception.toString()}", Toast.LENGTH_LONG).show()
             }
@@ -274,4 +251,20 @@ fun login(model: UserAuthViewModel, email: String, password: String, controller:
     }
 }
 
-
+private fun navigateByRole(uid: String, controller: NavController, context: Context) {
+    Firebase.firestore.collection("users").document(uid).get()
+        .addOnSuccessListener { doc ->
+            val roleValue = doc.getString("role")
+            val destination = when (roleValue) {
+                UserRole.CIUDADANO.firestoreValue -> AppScreens.homeCiudadano.name
+                UserRole.RECOLECTOR.firestoreValue -> AppScreens.homeRecolector.name
+                else -> AppScreens.homeFundacion.name
+            }
+            controller.navigate(destination) {
+                popUpTo(AppScreens.login.name) { inclusive = true }
+            }
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Error obteniendo el perfil: ${it.message}", Toast.LENGTH_LONG).show()
+        }
+}
