@@ -76,8 +76,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 import com.rebottle.app.R
+import com.rebottle.app.navigation.AppScreens
 
 
 // ----------------------------------------------------
@@ -100,14 +103,7 @@ private val SecondaryText = Color(0xFF7F887A)
 
 @Composable
 fun ProfileFundacionScreen(
-
-    onHomeClick: () -> Unit,
-
-    onSolicitudesClick: () -> Unit = {},
-
-    onRutasClick: () -> Unit = {},
-    onManageCollectorsClick: () -> Unit,
-    onManageRequestsClick: () -> Unit
+    controller: NavController
 
 ) {
 
@@ -183,14 +179,7 @@ fun ProfileFundacionScreen(
 
             ReBottleProfileBottomBar(
 
-                onHomeClick =
-                    onHomeClick,
-
-                onSolicitudesClick =
-                    onSolicitudesClick,
-
-                onRutasClick =
-                    onRutasClick
+                controller = controller
             )
         }
 
@@ -399,7 +388,7 @@ fun ProfileFundacionScreen(
                     onClick = {
 
                         // Va a ManageRequestsScreen
-                        onManageRequestsClick()
+                        //onManageRequestsClick()
                     },
 
                     modifier = Modifier
@@ -434,7 +423,7 @@ fun ProfileFundacionScreen(
                     onClick = {
 
                         // Va a ManageCollectorsScreen
-                        onManageCollectorsClick()
+                        //onManageCollectorsClick()
                     },
 
                     modifier = Modifier
@@ -818,13 +807,12 @@ private fun BottomNavIcon(
 @Composable
 private fun ReBottleProfileBottomBar(
 
-    onHomeClick: () -> Unit,
-
-    onSolicitudesClick: () -> Unit,
-
-    onRutasClick: () -> Unit
+    controller: NavController
 
 ) {
+
+    val navBackStackEntry by controller.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     Box(
 
@@ -860,10 +848,11 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = false,
-
+                selected = currentRoute == AppScreens.homeFundacion.name,
                 onClick = {
-                    onHomeClick()
+                    if (currentRoute != AppScreens.homeFundacion.name) {
+                        controller.navigate(AppScreens.homeFundacion.name)
+                    }
                 },
 
                 icon = {
@@ -917,10 +906,9 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = false,
-
+                selected = currentRoute == AppScreens.solicitudes.name,
                 onClick = {
-                    onSolicitudesClick()
+                    controller.navigate(AppScreens.solicitudes.name)
                 },
 
                 icon = {
@@ -966,10 +954,10 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = false,
-
+                selected = currentRoute == AppScreens.rutas.name,
                 onClick = {
-                    onRutasClick()
+                    // TODO: descomentar cuando exista la pantalla de rutas
+                    // controller.navigate(AppScreens.rutas.name)
                 },
 
                 icon = {
@@ -1024,10 +1012,9 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = true,
-
+                selected = currentRoute == AppScreens.perfil.name,
                 onClick = {
-                    // Ya estamos en perfil
+                    controller.navigate(AppScreens.perfil.name)
                 },
 
                 icon = {

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -27,7 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.rebottle.app.R
+import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 
 private val BackgroundColor = Color(0xFFFBF8F2)
@@ -41,6 +45,7 @@ private val Brown = Color(0xFFA55E37)
 
 @Composable
 fun CollectionRequestsScreen(
+    controller: NavController,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onCreateClick: () -> Unit = {},
@@ -63,7 +68,7 @@ fun CollectionRequestsScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            CollectionBottomBar()
+            CollectionBottomBar(controller = controller)
         }
     ) { innerPadding ->
         LazyColumn(
@@ -373,21 +378,33 @@ private fun DetailItem(
 }
 
 @Composable
-private fun CollectionBottomBar() {
+private fun CollectionBottomBar(controller: NavController) {
+
+    val navBackStackEntry by controller.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+
+
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 0.dp
     ) {
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = currentRoute == AppScreens.homeFundacion.name,
+            onClick = {
+                if (currentRoute != AppScreens.homeFundacion.name) {
+                    controller.navigate(AppScreens.homeFundacion.name)
+                }
+            },
             icon = { Icon(Icons.Outlined.Home, contentDescription = null, modifier = Modifier.size(26.dp)) },
             label = { Text(stringResource(R.string.tab_inicio), fontSize = 12.sp) },
             colors = navigationItemColors()
         )
         NavigationBarItem(
-            selected = true,
-            onClick = {},
+            selected = currentRoute == AppScreens.solicitudes.name,
+            onClick = {
+                controller.navigate(AppScreens.solicitudes.name)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_collection),
@@ -409,8 +426,11 @@ private fun CollectionBottomBar() {
             colors = navigationItemColors()
         )
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = currentRoute == AppScreens.rutas.name,
+            onClick = {
+                // TODO: descomentar cuando exista la pantalla de rutas
+                // controller.navigate(AppScreens.rutas.name)
+            },
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.icon_routes),
@@ -428,8 +448,10 @@ private fun CollectionBottomBar() {
             colors = navigationItemColors()
         )
         NavigationBarItem(
-            selected = false,
-            onClick = {},
+            selected = currentRoute == AppScreens.perfil.name,
+            onClick = {
+                controller.navigate(AppScreens.perfil.name)
+            },
             icon = { Icon(Icons.Outlined.Person, contentDescription = null, modifier = Modifier.size(26.dp)) },
             label = { Text(stringResource(R.string.tab_perfil), fontSize = 12.sp) },
             colors = navigationItemColors()
@@ -450,6 +472,6 @@ private fun navigationItemColors() = NavigationBarItemDefaults.colors(
 @Composable
 fun CollectionRequestsScreenPreview() {
     RebottleTheme {
-        CollectionRequestsScreen()
+        //CollectionRequestsScreen()
     }
 }
