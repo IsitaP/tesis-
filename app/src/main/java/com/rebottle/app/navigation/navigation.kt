@@ -15,7 +15,7 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingOneScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingPrefs
 import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
-
+import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 
 enum class AppScreens{
     onboardingOne,
@@ -78,6 +78,9 @@ fun Navigation() {
         }
         composable(route = AppScreens.rutas.name) {
             ProfileFundacionScreen(navController)
+        }
+        composable(route = AppScreens.homeRecolector.name) {
+            PantallaInicioRecolector(navController)
         }
     }
 }
