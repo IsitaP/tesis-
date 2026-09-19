@@ -69,7 +69,7 @@ fun PantallaInicioRecolector(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(start = 18.dp, end = 18.dp, top = 24.dp, bottom = 24.dp)
+                .padding(start = 17.dp, end = 18.dp, top = 24.dp, bottom = 24.dp)
         ) {
 
             HeaderRecolector()
@@ -145,7 +145,7 @@ private fun HeaderRecolector() {
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = "Fundación X",
+                text = "Fundación Ecoalianza",
                 fontSize = 18.sp,
                 color = SecondaryText
             )
@@ -181,8 +181,8 @@ private fun HeaderRecolector() {
 private fun SectionTitle(title: String) {
     Text(
         text = title,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontSize = 19.sp,
+        fontWeight = FontWeight.Medium,
         color = MainText
     )
 }

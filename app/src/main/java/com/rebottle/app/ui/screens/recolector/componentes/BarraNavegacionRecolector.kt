@@ -1,27 +1,31 @@
 package com.rebottle.app.ui.screens.recolector.componentes
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -34,9 +38,8 @@ import com.rebottle.app.navigation.AppScreens
 // COLORES
 // ----------------------------------------------------
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF536D45)
-private val SecondaryText = Color(0xFF7F887A)
+private val selectedColor = Color(0xFF536D45)
+private val unselectedColor = Color(0xFF7A806F)
 
 
 // ----------------------------------------------------
@@ -50,98 +53,153 @@ fun BarraNavegacionRecolector(
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundColor)
-            .padding(top = 3.dp)
+            .height(82.dp)
+            .background(Color.White)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            tonalElevation = 0.dp
-        ) {
 
-            // INICIO
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.homeRecolector.name,
-                onClick = {
-                    if (currentRoute != AppScreens.homeRecolector.name) {
-                        controller.navigate(AppScreens.homeRecolector.name)
-                    }
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Home, contentDescription = "Inicio", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Inicio", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
+        // INICIO
+        ItemBarraRecolector(
+            title = "Inicio",
+            selected = currentRoute == AppScreens.homeRecolector.name,
+            imageVector = Icons.Outlined.Home,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                if (currentRoute != AppScreens.homeRecolector.name) {
+                    controller.navigate(AppScreens.homeRecolector.name)
+                }
+            }
+        )
 
-            // SOLICITUDES
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.solicitudesRecolector.name,
-                onClick = {
+        // SOLICITUDES
+        ItemBarraRecolector(
+            title = "Solicitudes",
+            selected = currentRoute == AppScreens.solicitudesRecolector.name,
+            iconRes = R.drawable.icon_collection,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                if (currentRoute != AppScreens.solicitudesRecolector.name) {
                     controller.navigate(AppScreens.solicitudesRecolector.name)
-                },
-                icon = { BottomNavIcon(iconRes = R.drawable.icon_collection, contentDescription = "Solicitudes") },
-                label = { Text(text = "Solicitudes", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
+                }
+            }
+        )
 
-            // RUTAS
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.rutas.name,
-                onClick = {
-                    // TODO: descomentar cuando exista PantallaRutasRecolector
-                    // controller.navigate(AppScreens.rutas.name)
-                },
-                icon = { BottomNavIcon(iconRes = R.drawable.icon_routes, contentDescription = "Rutas", size = 42.dp) },
-                label = { Text(text = "Rutas", fontSize = 12.sp, modifier = Modifier.offset(y = (-4).dp)) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
+        // RUTAS (aún sin pantalla)
+        ItemBarraRecolector(
+            title = "Rutas",
+            selected = currentRoute == AppScreens.rutas.name,
+            iconRes = R.drawable.icon_routes,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                // TODO: descomentar cuando exista PantallaRutasRecolector
+                // controller.navigate(AppScreens.rutas.name)
+            }
+        )
 
-            // PERFIL
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.perfil.name,
-                onClick = {
+        // PERFIL
+        ItemBarraRecolector(
+            title = "Perfil",
+            selected = currentRoute == AppScreens.perfil.name,
+            imageVector = Icons.Outlined.Person,
+            modifier = Modifier.weight(1f),
+            onClick = {
+                if (currentRoute != AppScreens.perfil.name) {
                     controller.navigate(AppScreens.perfil.name)
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Perfil", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Perfil", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+                }
+            }
+        )
+    }
+}
+
+
+// ----------------------------------------------------
+// ITEM INDIVIDUAL DE LA BARRA
+// ----------------------------------------------------
+
+@Composable
+private fun ItemBarraRecolector(
+    title: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    iconRes: Int? = null,
+    imageVector: ImageVector? = null,
+    onClick: () -> Unit
+) {
+
+    val itemColor = if (selected) {
+        selectedColor
+    } else {
+        unselectedColor
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        // ICONO
+        if (imageVector != null) {
+
+            Icon(
+                imageVector = imageVector,
+                contentDescription = title,
+                modifier = Modifier.size(29.dp),
+                tint = itemColor
+            )
+
+        } else if (iconRes != null) {
+
+            Icon(
+                painter = painterResource(
+                    id = iconRes
+                ),
+                contentDescription = title,
+                modifier = Modifier.size(31.dp),
+                tint = itemColor
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(4.dp)
+        )
+
+        // TEXTO
+        Text(
+            text = title,
+            fontSize = 12.sp,
+            color = itemColor,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(
+            modifier = Modifier.height(3.dp)
+        )
+
+        // PUNTICO DEL ITEM SELECCIONADO
+        if (selected) {
+
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .background(
+                        color = selectedColor,
+                        shape = CircleShape
+                    )
+            )
+
+        } else {
+
+            // Mantiene todos los textos alineados
+            Spacer(
+                modifier = Modifier.height(7.dp)
             )
         }
     }
 }
-
-@Composable
-private fun BottomNavIcon(
-    @DrawableRes iconRes: Int,
-    contentDescription: String,
-    size: Dp = 25.dp
-) {
-    Image(
-        painter = painterResource(id = iconRes),
-        contentDescription = contentDescription,
-        modifier = Modifier.size(size)
-    )
-}
-
