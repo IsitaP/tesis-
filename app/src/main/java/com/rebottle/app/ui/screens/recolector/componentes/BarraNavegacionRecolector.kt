@@ -83,9 +83,9 @@ fun BarraNavegacionRecolector(
 
             // SOLICITUDES
             NavigationBarItem(
-                selected = currentRoute == AppScreens.solicitudes.name,
+                selected = currentRoute == AppScreens.solicitudesRecolector.name,
                 onClick = {
-                    controller.navigate(AppScreens.solicitudes.name)
+                    controller.navigate(AppScreens.solicitudesRecolector.name)
                 },
                 icon = { BottomNavIcon(iconRes = R.drawable.icon_collection, contentDescription = "Solicitudes") },
                 label = { Text(text = "Solicitudes", fontSize = 12.sp) },
