@@ -40,6 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebottle.app.R
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.temporal.WeekFields
 
 
 // ============================================================
@@ -310,4 +314,38 @@ internal fun LoginDecoration() {
             .height(190.dp),
         contentScale = ContentScale.FillWidth
     )
+}
+
+public fun buildCalendarGrid(month: YearMonth): List<LocalDate?> {
+    val firstOfMonth = month.atDay(1)
+    val lastOfMonth = month.atEndOfMonth()
+
+    // Lunes = 1 ... Domingo = 7
+    val firstDayOffset = firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value
+
+    val days = mutableListOf<LocalDate?>()
+
+    repeat(firstDayOffset) {
+        days.add(null)
+    }
+
+    var current = firstOfMonth
+    while (!current.isAfter(lastOfMonth)) {
+        days.add(current)
+        current = current.plusDays(1)
+    }
+
+    while (days.size % 7 != 0) {
+        days.add(null)
+    }
+
+    return days
+}
+
+fun monthYearLabel(month: YearMonth): String {
+    val meses = listOf(
+        "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    )
+    return "${meses[month.monthValue - 1]} ${month.year}"
 }

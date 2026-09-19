@@ -15,6 +15,7 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingOneScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingPrefs
 import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
+import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 
 
 enum class AppScreens{
@@ -25,6 +26,8 @@ enum class AppScreens{
     register,
     homeFundacion,
     homeCiudadano,
+
+    crearSolicitud,
     homeRecolector,
     solicitudes,
     perfil,
@@ -64,12 +67,13 @@ fun Navigation() {
             HomeFundacionScreen(navController)
         }
         composable(route = AppScreens.homeCiudadano.name) {
-            HomeUserScreen(
-                onLearnClick = {
-                    // TODO: navegar a LearnRoadmapScreen cuando tenga su ruta en el enum
-                }
-            )
+            HomeUserScreen(navController)
+
         }
+        composable(route = AppScreens.crearSolicitud.name){
+            CreateRequestScreen(navController)
+        }
+
         composable(route = AppScreens.solicitudes.name){
             CollectionRequestsScreen(navController)
         }

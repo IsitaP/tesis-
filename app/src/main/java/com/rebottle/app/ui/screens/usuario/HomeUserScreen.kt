@@ -1,12 +1,15 @@
 package com.rebottle.app.ui.screens.usuario
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,41 +20,47 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Person
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import com.rebottle.app.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+
+import com.rebottle.app.R
+import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
-import androidx.compose.material.icons.filled.Home
 
 
-// ----------------------------------------------------
-// COLORES DE REBOTTLE
-// ----------------------------------------------------
+// ============================================================
+// COLORES
+// ============================================================
 
 private val BackgroundColor = Color(0xFFFBF9F3)
 private val MainGreen = Color(0xFF536D45)
@@ -63,28 +72,36 @@ private val MainText = Color(0xFF3D433A)
 private val SecondaryText = Color(0xFF7F887A)
 
 
-// ----------------------------------------------------
-// PANTALLA PRINCIPAL
-// ----------------------------------------------------
+// ============================================================
+// HOME USUARIO
+// ============================================================
 
 @Composable
 fun HomeUserScreen(
-        onLearnClick: () -> Unit
-    ) {
+    controller: NavController
+) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+
         containerColor = BackgroundColor,
+
         bottomBar = {
-            ReBottleBottomBar()
+
+            ReBottleBottomBar(
+                controller = controller
+            )
         }
+
     ) { innerPadding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(
+                    rememberScrollState()
+                )
                 .padding(
                     start = 22.dp,
                     end = 22.dp,
@@ -93,9 +110,21 @@ fun HomeUserScreen(
                 )
         ) {
 
+            // =================================================
+            // HEADER
+            // =================================================
+
             Header()
 
-            Spacer(modifier = Modifier.height(34.dp))
+
+            Spacer(
+                modifier = Modifier.height(34.dp)
+            )
+
+
+            // =================================================
+            // ¿QUÉ DESEA HACER HOY?
+            // =================================================
 
             Text(
                 text = "¿Qué desea hacer hoy?",
@@ -104,7 +133,15 @@ fun HomeUserScreen(
                 color = DarkGreen
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
+
+            // =================================================
+            // BOTÓN SOLICITAR RECOLECCIÓN
+            // =================================================
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -113,11 +150,24 @@ fun HomeUserScreen(
 
                 Button(
                     onClick = {
-                        // Sin funcionalidad por ahora
+
+                        /*
+                         * Cuando tengas definida la ruta exacta de
+                         * CreateRequestScreen en AppScreens,
+                         * puedes navegar aquí.
+                         *
+                         * Ejemplo:
+                         *
+                         * controller.navigate(
+                         *     AppScreens.crearSolicitud.name
+                         * )
+                         */
                     },
+
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MainGreen
                     ),
+
                     shape = RoundedCornerShape(7.dp)
                 ) {
 
@@ -130,27 +180,69 @@ fun HomeUserScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
 
-            SectionTitle("Mis Solicitudes")
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-            Spacer(modifier = Modifier.height(9.dp))
+
+            // =================================================
+            // MIS SOLICITUDES
+            // =================================================
+
+            SectionTitle(
+                title = "Mis Solicitudes"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(9.dp)
+            )
+
 
             CollectionCard()
 
-            Spacer(modifier = Modifier.height(18.dp))
 
-            SectionTitle("Aprende a reciclar")
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
 
-            Spacer(modifier = Modifier.height(9.dp))
 
-            LearnCard(onLearnClick = onLearnClick)
+            // =================================================
+            // APRENDE A RECICLAR
+            // =================================================
 
-            Spacer(modifier = Modifier.height(18.dp))
+            SectionTitle(
+                title = "Aprende a reciclar"
+            )
 
-            SectionTitle("Mas acciones")
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(
+                modifier = Modifier.height(9.dp)
+            )
+
+
+            LearnCard()
+
+
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
+
+
+            // =================================================
+            // MÁS ACCIONES
+            // =================================================
+
+            SectionTitle(
+                title = "Mas acciones"
+            )
+
+
+            Spacer(
+                modifier = Modifier.height(10.dp)
+            )
+
 
             MoreActionsSection()
         }
@@ -158,16 +250,18 @@ fun HomeUserScreen(
 }
 
 
-// ----------------------------------------------------
-// ENCABEZADO
-// ----------------------------------------------------
+// ============================================================
+// HEADER
+// ============================================================
 
 @Composable
 private fun Header() {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
+
         verticalAlignment = Alignment.CenterVertically,
+
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
@@ -178,6 +272,7 @@ private fun Header() {
             color = Brown
         )
 
+
         Box(
             modifier = Modifier
                 .size(42.dp)
@@ -185,6 +280,7 @@ private fun Header() {
                     color = Color(0xFFF1F5ED),
                     shape = CircleShape
                 ),
+
             contentAlignment = Alignment.Center
         ) {
 
@@ -199,9 +295,9 @@ private fun Header() {
 }
 
 
-// ----------------------------------------------------
+// ============================================================
 // TÍTULOS DE SECCIÓN
-// ----------------------------------------------------
+// ============================================================
 
 @Composable
 private fun SectionTitle(
@@ -217,9 +313,9 @@ private fun SectionTitle(
 }
 
 
-// ----------------------------------------------------
+// ============================================================
 // TARJETA DE SOLICITUD
-// ----------------------------------------------------
+// ============================================================
 
 @Composable
 private fun CollectionCard() {
@@ -228,14 +324,18 @@ private fun CollectionCard() {
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),
+
         shape = RoundedCornerShape(8.dp),
+
         border = BorderStroke(
             width = 1.dp,
             color = BorderGreen
         ),
+
         colors = CardDefaults.cardColors(
             containerColor = LightGreen
         ),
+
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         )
@@ -250,12 +350,14 @@ private fun CollectionCard() {
                     top = 10.dp,
                     bottom = 10.dp
                 ),
+
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // =========================================
+            // =================================================
             // TEXTO
-            // =========================================
+            // =================================================
+
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -268,9 +370,11 @@ private fun CollectionCard() {
                     maxLines = 1
                 )
 
+
                 Spacer(
                     modifier = Modifier.height(5.dp)
                 )
+
 
                 Text(
                     text = "Estado: Programada",
@@ -279,12 +383,14 @@ private fun CollectionCard() {
                     color = SecondaryText
                 )
 
+
                 Text(
                     text = "Fecha: Agosto 24",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
                 )
+
 
                 Text(
                     text = "Hora: 10:00 AM",
@@ -293,9 +399,11 @@ private fun CollectionCard() {
                     color = SecondaryText
                 )
 
+
                 Spacer(
                     modifier = Modifier.height(2.dp)
                 )
+
 
                 Text(
                     text = "Ver más detalles →",
@@ -305,13 +413,16 @@ private fun CollectionCard() {
                 )
             }
 
-            // =========================================
+
+            // =================================================
             // IMAGEN
-            // =========================================
+            // =================================================
+
             Box(
                 modifier = Modifier
                     .width(120.dp)
                     .fillMaxHeight(),
+
                 contentAlignment = Alignment.Center
             ) {
 
@@ -319,10 +430,13 @@ private fun CollectionCard() {
                     painter = painterResource(
                         id = R.drawable.home_collection
                     ),
+
                     contentDescription = "Recolección programada",
+
                     modifier = Modifier
                         .width(110.dp)
                         .height(105.dp),
+
                     contentScale = ContentScale.Fit
                 )
             }
@@ -331,25 +445,29 @@ private fun CollectionCard() {
 }
 
 
-// ----------------------------------------------------
+// ============================================================
 // TARJETA APRENDE A RECICLAR
-// ----------------------------------------------------
+// ============================================================
 
 @Composable
-private fun LearnCard(onLearnClick: () -> Unit) {
+private fun LearnCard() {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(155.dp),
+
         shape = RoundedCornerShape(8.dp),
+
         border = BorderStroke(
             width = 1.dp,
             color = BorderGreen
         ),
+
         colors = CardDefaults.cardColors(
             containerColor = LightGreen
         ),
+
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         )
@@ -359,6 +477,7 @@ private fun LearnCard(onLearnClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(14.dp),
+
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -373,7 +492,11 @@ private fun LearnCard(onLearnClick: () -> Unit) {
                     color = MainText
                 )
 
-                Spacer(modifier = Modifier.height(7.dp))
+
+                Spacer(
+                    modifier = Modifier.height(7.dp)
+                )
+
 
                 Text(
                     text = "Aprende a separar tus residuos por material y mantén limpios los envases antes de entregarlos.",
@@ -382,51 +505,66 @@ private fun LearnCard(onLearnClick: () -> Unit) {
                     color = SecondaryText
                 )
 
-                Spacer(modifier = Modifier.height(7.dp))
+
+                Spacer(
+                    modifier = Modifier.height(7.dp)
+                )
+
 
                 Text(
                     text = "Aprender más  →",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen,
-                    modifier = Modifier.clickable {
-                        onLearnClick()
-                    }
+                    color = MainGreen
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+
+            Spacer(
+                modifier = Modifier.width(8.dp)
+            )
+
+
             Box(
                 modifier = Modifier
                     .width(130.dp)
                     .fillMaxHeight(),
+
                 contentAlignment = Alignment.Center
             ) {
-            Image(
-                painter = painterResource(
-                    id = R.drawable.home_learn
-                ),
-                contentDescription = "Rocco reciclando",
-                modifier = Modifier
-                    .width(125.dp)
-                    .height(115.dp),
-                contentScale = ContentScale.Fit
-            )
+
+                Image(
+                    painter = painterResource(
+                        id = R.drawable.home_learn
+                    ),
+
+                    contentDescription = "Rocco reciclando",
+
+                    modifier = Modifier
+                        .width(125.dp)
+                        .height(115.dp),
+
+                    contentScale = ContentScale.Fit
+                )
             }
         }
     }
 }
 
 
-// ----------------------------------------------------
-// TARJETA DE MAS ACCIONES
-// ----------------------------------------------------
+// ============================================================
+// MÁS ACCIONES
+// ============================================================
+
 @Composable
 private fun MoreActionsSection() {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+        horizontalArrangement = Arrangement.spacedBy(
+            12.dp
+        )
     ) {
 
         ActionCard(
@@ -435,6 +573,7 @@ private fun MoreActionsSection() {
             modifier = Modifier.weight(1f)
         )
 
+
         ActionCard(
             title = "Ranking",
             imageRes = R.drawable.home_ranking,
@@ -442,6 +581,12 @@ private fun MoreActionsSection() {
         )
     }
 }
+
+
+// ============================================================
+// ACTION CARD
+// ============================================================
+
 @Composable
 private fun ActionCard(
     title: String,
@@ -452,14 +597,18 @@ private fun ActionCard(
     Card(
         modifier = modifier
             .height(150.dp),
+
         shape = RoundedCornerShape(8.dp),
+
         border = BorderStroke(
             width = 1.dp,
             color = BorderGreen
         ),
+
         colors = CardDefaults.cardColors(
             containerColor = LightGreen
         ),
+
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         )
@@ -469,7 +618,9 @@ private fun ActionCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(10.dp),
+
             horizontalAlignment = Alignment.CenterHorizontally,
+
             verticalArrangement = Arrangement.Center
         ) {
 
@@ -477,16 +628,21 @@ private fun ActionCard(
                 painter = painterResource(
                     id = imageRes
                 ),
+
                 contentDescription = title,
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(95.dp),
+
                 contentScale = ContentScale.Fit
             )
+
 
             Spacer(
                 modifier = Modifier.height(6.dp)
             )
+
 
             Text(
                 text = title,
@@ -499,44 +655,29 @@ private fun ActionCard(
 }
 
 
-// ----------------------------------------------------
-// PLACEHOLDER PARA LAS ILUSTRACIONES DE FIGMA
-// ----------------------------------------------------
+// ============================================================
+// BARRA DE NAVEGACIÓN INFERIOR
+// ============================================================
 
 @Composable
-private fun IllustrationPlaceholder(
-    symbol: String
+private fun ReBottleBottomBar(
+    controller: NavController
 ) {
 
-    Box(
-        modifier = Modifier
-            .size(90.dp)
-            .background(
-                color = Color(0xFFE3EEDC),
-                shape = RoundedCornerShape(15.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
+    // Observamos la ruta actual del NavController
+    val navBackStackEntry by
+    controller.currentBackStackEntryAsState()
 
-        Text(
-            text = symbol,
-            fontSize = 35.sp,
-            fontWeight = FontWeight.Bold,
-            color = MainGreen
-        )
-    }
-}
+    val currentRoute =
+        navBackStackEntry?.destination?.route
 
 
-// ----------------------------------------------------
-// BARRA DE NAVEGACIÓN INFERIOR
-// ----------------------------------------------------
+    val selectedColor =
+        Color(0xFF5F7D43)
 
-@Composable
-private fun ReBottleBottomBar() {
+    val unselectedColor =
+        Color(0xFF7A806F)
 
-    val selectedColor = Color(0xFF5F7D43)
-    val unselectedColor = Color(0xFF7A806F)
 
     Row(
         modifier = Modifier
@@ -544,50 +685,154 @@ private fun ReBottleBottomBar() {
             .height(82.dp)
             .background(Color.White)
             .padding(horizontal = 8.dp),
+
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // INICIO - Compose
+        // =====================================================
+        // INICIO
+        // =====================================================
+
         ReBottleBottomItem(
             title = "Inicio",
-            selected = true,
-            imageVector = Icons.Default.Home,
-            selectedColor = selectedColor,
-            unselectedColor = unselectedColor,
-            modifier = Modifier.weight(1f)
+
+            selected =
+                currentRoute == AppScreens.homeCiudadano.name,
+
+            imageVector =
+                Icons.Default.Home,
+
+            selectedColor =
+                selectedColor,
+
+            unselectedColor =
+                unselectedColor,
+
+            modifier =
+                Modifier.weight(1f),
+
+            onClick = {
+
+                if (
+                    currentRoute !=
+                    AppScreens.homeCiudadano.name
+                ) {
+
+                    controller.navigate(
+                        AppScreens.homeCiudadano.name
+                    )
+                }
+            }
         )
 
-        // RECOLECCIONES - tu drawable
+
+        // =====================================================
+        // RECOLECCIONES
+        // =====================================================
+
         ReBottleBottomItem(
             title = "Recolecciones",
-            selected = false,
-            iconRes = R.drawable.icon_collection,
-            selectedColor = selectedColor,
-            unselectedColor = unselectedColor,
-            modifier = Modifier.weight(1f)
+
+            selected =
+                currentRoute == AppScreens.crearSolicitud.name,
+
+            iconRes =
+                R.drawable.icon_collection,
+
+            selectedColor =
+                selectedColor,
+
+            unselectedColor =
+                unselectedColor,
+
+            modifier =
+                Modifier.weight(1f),
+
+            onClick = {
+                controller.navigate(AppScreens.crearSolicitud.name)
+            }
         )
 
-        // RECOMPENSAS - tu drawable
+
+        // =====================================================
+        // RECOMPENSAS
+        // =====================================================
+
         ReBottleBottomItem(
             title = "Recompensas",
+
+            // Todavía queda false mientras no exista
+            // la pantalla correspondiente.
             selected = false,
-            iconRes = R.drawable.icon_rewards,
-            selectedColor = selectedColor,
-            unselectedColor = unselectedColor,
-            modifier = Modifier.weight(1f)
+
+            iconRes =
+                R.drawable.icon_rewards,
+
+            selectedColor =
+                selectedColor,
+
+            unselectedColor =
+                unselectedColor,
+
+            modifier =
+                Modifier.weight(1f),
+
+            onClick = {
+
+                /*
+                 * Cuando agregues la pantalla de recompensas
+                 * a AppScreens puedes poner:
+                 *
+                 * controller.navigate(
+                 *     AppScreens.recompensas.name
+                 * )
+                 */
+            }
         )
 
-        // PERFIL - Compose
+
+        // =====================================================
+        // PERFIL
+        // =====================================================
+
         ReBottleBottomItem(
             title = "Perfil",
-            selected = false,
-            imageVector = Icons.Outlined.Person,
-            selectedColor = selectedColor,
-            unselectedColor = unselectedColor,
-            modifier = Modifier.weight(1f)
+
+            selected =
+                currentRoute == AppScreens.perfil.name,
+
+            imageVector =
+                Icons.Outlined.Person,
+
+            selectedColor =
+                selectedColor,
+
+            unselectedColor =
+                unselectedColor,
+
+            modifier =
+                Modifier.weight(1f),
+
+            onClick = {
+
+                if (
+                    currentRoute !=
+                    AppScreens.perfil.name
+                ) {
+
+                    controller.navigate(
+                        AppScreens.perfil.name
+                    )
+                }
+            }
         )
     }
 }
+
+
+// ============================================================
+// ITEM DE LA BARRA INFERIOR
+// ============================================================
 
 @Composable
 private fun ReBottleBottomItem(
@@ -597,103 +842,138 @@ private fun ReBottleBottomItem(
     iconRes: Int? = null,
     imageVector: ImageVector? = null,
     selectedColor: Color,
-    unselectedColor: Color
+    unselectedColor: Color,
+    onClick: () -> Unit
 ) {
 
-    val itemColor = if (selected) {
-        selectedColor
-    } else {
-        unselectedColor
-    }
+    val itemColor =
+
+        if (selected) {
+
+            selectedColor
+
+        } else {
+
+            unselectedColor
+        }
+
 
     Column(
         modifier = modifier
             .fillMaxHeight()
             .clickable {
-                // Después ponemos navegación aquí
+
+                onClick()
             },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+
+        horizontalAlignment =
+            Alignment.CenterHorizontally,
+
+        verticalArrangement =
+            Arrangement.Center
     ) {
 
+        // =====================================================
         // ICONO
+        // =====================================================
+
         if (imageVector != null) {
 
             Icon(
                 imageVector = imageVector,
+
                 contentDescription = title,
-                modifier = Modifier.size(29.dp),
+
+                modifier =
+                    Modifier.size(29.dp),
+
                 tint = itemColor
             )
+
 
         } else if (iconRes != null) {
 
             Icon(
-                painter = painterResource(
-                    id = iconRes
-                ),
-                contentDescription = title,
-                modifier = Modifier.size(31.dp),
-                tint = itemColor
+                painter =
+                    painterResource(
+                        id = iconRes
+                    ),
+
+                contentDescription =
+                    title,
+
+                modifier =
+                    Modifier.size(31.dp),
+
+                tint =
+                    itemColor
             )
         }
 
+
         Spacer(
-            modifier = Modifier.height(4.dp)
+            modifier =
+                Modifier.height(4.dp)
         )
 
+
+        // =====================================================
         // TEXTO
+        // =====================================================
+
         Text(
             text = title,
+
             fontSize = 12.sp,
+
             color = itemColor,
-            textAlign = TextAlign.Center
+
+            textAlign =
+                TextAlign.Center
         )
+
 
         Spacer(
-            modifier = Modifier.height(3.dp)
+            modifier =
+                Modifier.height(3.dp)
         )
 
-        // PUNTICO DEL ITEM SELECCIONADO
+
+        // =====================================================
+        // PUNTO DE SELECCIÓN
+        // =====================================================
+
         if (selected) {
 
             Box(
                 modifier = Modifier
                     .size(7.dp)
                     .background(
-                        color = selectedColor,
-                        shape = CircleShape
+                        color =
+                            selectedColor,
+
+                        shape =
+                            CircleShape
                     )
             )
 
+
         } else {
 
-            // Mantiene todos los textos alineados
+            // Espacio para mantener todos alineados
             Spacer(
-                modifier = Modifier.height(7.dp)
+                modifier =
+                    Modifier.height(7.dp)
             )
         }
     }
 }
 
 
-@Composable
-private fun BottomIcon(
-    symbol: String,
-    selected: Boolean
-) {
+// ============================================================
+// PREVIEW
+// ============================================================
 
-    Text(
-        text = symbol,
-        fontSize = 24.sp,
-        textAlign = TextAlign.Center,
-        color = if (selected) {
-            MainGreen
-        } else {
-            Color(0xFF888E85)
-        }
-    )
-}
 @Preview(
     showBackground = true,
     showSystemUi = true
@@ -701,9 +981,14 @@ private fun BottomIcon(
 @Composable
 private fun HomeUserScreenPreview() {
 
+    val controller =
+        rememberNavController()
+
+
     RebottleTheme {
+
         HomeUserScreen(
-            onLearnClick = {}
+            controller = controller
         )
     }
 }
