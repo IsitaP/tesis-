@@ -168,7 +168,7 @@ fun PantallaDetalleAsignacionRecolector(
                     ) {
                         Icon(Icons.Filled.Chat, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.height(0.dp))
-                        Text(text = "  Contactar", color = MainGreen)
+                        Text(text = "  Contactar Usuario", color = MainGreen)
                     }
                 }
             }
@@ -193,9 +193,9 @@ fun PantallaDetalleAsignacionRecolector(
         Spacer(modifier = Modifier.height(20.dp))
 
         Image(
-            painter = painterResource(id = R.drawable.fundacion_route),
+            painter = painterResource(id = R.drawable.solicitudes_paisaje),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(150.dp)
+            modifier = Modifier.fillMaxWidth().height(200.dp)
         )
     }
 }

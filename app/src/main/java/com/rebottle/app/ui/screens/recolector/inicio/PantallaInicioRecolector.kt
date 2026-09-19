@@ -30,6 +30,9 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.screens.recolector.componentes.TarjetaAccionRecolector
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.rebottle.app.ui.theme.RebottleTheme
 
 
 // ----------------------------------------------------
@@ -182,4 +185,13 @@ private fun SectionTitle(title: String) {
         fontWeight = FontWeight.SemiBold,
         color = MainText
     )
+}
+
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun PantallaInicioRecolectorPreview() {
+    RebottleTheme {
+        PantallaInicioRecolector(controller = rememberNavController())
+    }
 }
