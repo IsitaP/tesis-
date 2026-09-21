@@ -1,9 +1,14 @@
 package com.rebottle.app.ui.screens.recolector.perfil
 
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,12 +36,19 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -71,6 +83,45 @@ fun PantallaPerfilRecolector(
     controller: NavController
 ) {
 
+    val context = LocalContext.current
+
+    var selectedImageBitmap by remember {
+        mutableStateOf<ImageBitmap?>(null)
+    }
+
+    // ------------------------------------------------
+    // SELECTOR DE FOTO
+    // ------------------------------------------------
+
+    val photoPickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+
+            if (uri != null) {
+
+                selectedImageBitmap = runCatching {
+
+                    context.contentResolver
+                        .openInputStream(uri)
+                        ?.use { inputStream ->
+                            BitmapFactory
+                                .decodeStream(inputStream)
+                                ?.asImageBitmap()
+                        }
+
+                }.getOrNull()
+            }
+        }
+
+    val openPhotoPicker = {
+        photoPickerLauncher.launch(
+            PickVisualMediaRequest(
+                ActivityResultContracts.PickVisualMedia.ImageOnly
+            )
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
@@ -87,7 +138,10 @@ fun PantallaPerfilRecolector(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            HeaderPerfilRecolector()
+            HeaderPerfilRecolector(
+                selectedImageBitmap = selectedImageBitmap,
+                onPhotoClick = { openPhotoPicker() }
+            )
 
             Spacer(modifier = Modifier.height(5.dp))
 
@@ -107,9 +161,7 @@ fun PantallaPerfilRecolector(
             Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedButton(
-                onClick = {
-                    // TODO: navegar a edición de perfil cuando exista
-                },
+                onClick = { openPhotoPicker() },
                 modifier = Modifier
                     .width(230.dp)
                     .height(36.dp),
@@ -150,7 +202,10 @@ fun PantallaPerfilRecolector(
 // ----------------------------------------------------
 
 @Composable
-private fun HeaderPerfilRecolector() {
+private fun HeaderPerfilRecolector(
+    selectedImageBitmap: ImageBitmap?,
+    onPhotoClick: () -> Unit
+) {
 
     Box(
         modifier = Modifier
@@ -173,13 +228,28 @@ private fun HeaderPerfilRecolector() {
                 .align(Alignment.BottomCenter)
                 .clip(CircleShape)
                 .border(width = 2.dp, color = BackgroundColor, shape = CircleShape)
+                .clickable { onPhotoClick() },
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.Recolector_perfil),
-                contentDescription = "Foto del recolector",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+
+            if (selectedImageBitmap != null) {
+
+                Image(
+                    bitmap = selectedImageBitmap,
+                    contentDescription = "Foto seleccionada",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+            } else {
+
+                Image(
+                    painter = painterResource(id = R.drawable.recolector_perfil),
+                    contentDescription = "Foto del recolector",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
     }
 }
