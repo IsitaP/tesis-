@@ -72,122 +72,127 @@ fun PantallaDetalleAsignacionRecolector(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundColor)
-            .padding(horizontal = 18.dp, vertical = 20.dp)
     ) {
 
-        // Header
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = MainText,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable { controller.popBackStack() }
-            )
-            Text(
-                text = "  Asignación # ${asignacion.id}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MainText
-            )
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = CardColor),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        Column(
+            modifier = Modifier
+                .padding(start = 18.dp, end = 18.dp, top = 48.dp, bottom = 20.dp)
         ) {
 
-            Column(modifier = Modifier.padding(16.dp)) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = asignacion.codigo,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MainGreen,
-                        textDecoration = TextDecoration.Underline
-                    )
-                    EtiquetaEstado(estado = estado)
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                FilaDetalle(icono = Icons.Filled.LocationOn, texto = asignacion.direccion)
-                Spacer(modifier = Modifier.height(6.dp))
-                FilaDetalle(icono = Icons.Filled.CalendarToday, texto = asignacion.fecha)
-                Spacer(modifier = Modifier.height(6.dp))
-                FilaDetalle(icono = Icons.Filled.Schedule, texto = asignacion.hora)
-
-                Spacer(modifier = Modifier.height(14.dp))
-
+            // Header
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = MainText,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { controller.popBackStack() }
+                )
                 Text(
-                    text = "Materiales",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
+                    text = "  Asignación # ${asignacion.id}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MainText
                 )
+            }
 
-                Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    asignacion.materiales.forEach { material ->
-                        Text(text = "•  $material", fontSize = 14.sp, color = SecondaryText)
-                    }
-                }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = CardColor),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Column(modifier = Modifier.padding(16.dp)) {
 
-                FilaDetalle(icono = Icons.Filled.ShoppingBag, texto = "Peso estimado ${asignacion.pesoKg} KG")
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { /* TODO: abrir mapa con la dirección */ },
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Map, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.height(0.dp))
-                        Text(text = "  Ver mapa", color = MainGreen)
+                        Text(
+                            text = asignacion.codigo,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MainGreen,
+                            textDecoration = TextDecoration.Underline
+                        )
+                        EtiquetaEstado(estado = estado)
                     }
-                    OutlinedButton(
-                        onClick = { /* TODO: abrir chat con el usuario */ },
-                        modifier = Modifier.weight(1f)
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    FilaDetalle(icono = Icons.Filled.LocationOn, texto = asignacion.direccion)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    FilaDetalle(icono = Icons.Filled.CalendarToday, texto = asignacion.fecha)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    FilaDetalle(icono = Icons.Filled.Schedule, texto = asignacion.hora)
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "Materiales",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MainText
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                        asignacion.materiales.forEach { material ->
+                            Text(text = "•  $material", fontSize = 14.sp, color = SecondaryText)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    FilaDetalle(icono = Icons.Filled.ShoppingBag, texto = "Peso estimado ${asignacion.pesoKg} KG")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(Icons.Filled.Chat, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.height(0.dp))
-                        Text(text = "  Contactar Usuario", color = MainGreen)
+                        OutlinedButton(
+                            onClick = { /* TODO: abrir mapa con la dirección */ },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Filled.Map, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.height(0.dp))
+                            Text(text = "  Ver mapa", color = MainGreen)
+                        }
+                        OutlinedButton(
+                            onClick = { /* TODO: abrir chat con el usuario */ },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Filled.Chat, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.height(0.dp))
+                            Text(text = "  Contactar", color = MainGreen)
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
-            onClick = {
-                estado = EstadoAsignacion.COMPLETADA
-                // TODO: al conectar Firestore, actualizar el documento acá
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = MainGreen)
-        ) {
-            Text(text = "Completada", color = Color.White, fontSize = 17.sp)
+            Button(
+                onClick = {
+                    estado = com.rebottle.app.ui.screens.recolector.solicitudes.EstadoAsignacion.COMPLETADA
+                    // TODO: al conectar Firestore, actualizar el documento acá
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MainGreen)
+            ) {
+                Text(text = "Completada", color = Color.White, fontSize = 17.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -195,7 +200,9 @@ fun PantallaDetalleAsignacionRecolector(
         Image(
             painter = painterResource(id = R.drawable.solicitudes_paisaje),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth().height(200.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(2000.dp)
         )
     }
 }
