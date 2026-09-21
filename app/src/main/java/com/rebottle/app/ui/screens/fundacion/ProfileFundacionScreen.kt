@@ -906,7 +906,7 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = currentRoute == AppScreens.solicitudes.name,
+                selected = currentRoute == AppScreens.solicitudesUsuario.name,
                 onClick = {
                     controller.navigate(AppScreens.solicitudes.name)
                 },

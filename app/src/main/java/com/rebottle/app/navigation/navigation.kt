@@ -16,6 +16,7 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingPrefs
 import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
+import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 
 
 enum class AppScreens{
@@ -28,8 +29,11 @@ enum class AppScreens{
     homeCiudadano,
 
     crearSolicitud,
+
+    solicitudesUsuario,
     homeRecolector,
     solicitudes,
+
     perfil,
     rutas
 }
@@ -48,6 +52,9 @@ fun Navigation() {
 
 
     NavHost(navController = navController, startDestination = startDestination) {
+
+
+        // **ONBOARDING** //
         composable(route = AppScreens.onboardingOne.name) {
             OnboardingOneScreen(navController)
         }
@@ -57,15 +64,34 @@ fun Navigation() {
         composable(route = AppScreens.onboardingThree.name) {
             OnboardingThreeScreen(navController)
         }
+
+        //**LOGIN Y REGISTER**//
         composable(route = AppScreens.login.name) {
             LoginScreen(navController)
         }
         composable(route = AppScreens.register.name){
             RegisterScreen(navController)
         }
+
+        //**FUNDACION**//
         composable(route = AppScreens.homeFundacion.name){
             HomeFundacionScreen(navController)
         }
+
+        composable(route = AppScreens.solicitudes.name) {
+            CollectionRequestsScreen(navController)
+        }
+
+        composable(route = AppScreens.perfil.name) {
+            ProfileFundacionScreen(navController)
+        }
+        composable(route = AppScreens.rutas.name) {
+            ProfileFundacionScreen(navController)
+        }
+
+
+
+        //**CIUDADANO**/
         composable(route = AppScreens.homeCiudadano.name) {
             HomeUserScreen(navController)
 
@@ -74,14 +100,8 @@ fun Navigation() {
             CreateRequestScreen(navController)
         }
 
-        composable(route = AppScreens.solicitudes.name){
-            CollectionRequestsScreen(navController)
-        }
-        composable(route = AppScreens.perfil.name) {
-            ProfileFundacionScreen(navController)
-        }
-        composable(route = AppScreens.rutas.name) {
-            ProfileFundacionScreen(navController)
+        composable(route = AppScreens.solicitudesUsuario.name){
+            SolicitudesUsuarioScreen(navController)
         }
     }
 }

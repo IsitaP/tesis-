@@ -41,15 +41,16 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.rebottle.app.R
-import com.rebottle.app.model.UserAuthViewModel
+import com.rebottle.app.model.AuthViewModel
 import com.rebottle.app.navigation.AppScreens
 
 val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
 @Composable
-public fun LoginScreen(controller: NavController, model: UserAuthViewModel = viewModel()) {
+public fun LoginScreen(controller: NavController, model: AuthViewModel = viewModel()) {
 
     val context = LocalContext.current
-    val user by model.user.collectAsState()
+    val authState by model.state.collectAsState()
+    val user = authState.login
 
     LaunchedEffect(Unit) {
         firebaseAuth.currentUser?.let {
@@ -123,7 +124,7 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
             ReBottleTextField(
                 value = user.email,
                 onValueChange = {
-                    model.updateEmailClass(it)
+                    model.updateLoginEmail(it)
                 },
                 placeholder = "Email",
                 isError = user.emailError.isNotEmpty(),
@@ -137,7 +138,7 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
             ReBottleTextField(
                 value = user.password,
                 onValueChange = {
-                    model.updatePassClass(it)
+                    model.updateLoginPassword(it)
                 },
                 placeholder = "Contraseña",
                 password = true,
@@ -213,19 +214,19 @@ public fun LoginScreen(controller: NavController, model: UserAuthViewModel = vie
     }
 }
 
-fun validateForm(model: UserAuthViewModel,email:String, password:String):Boolean{
-    if (email.isEmpty()){ model.updateEmailError("Email is empty")
+fun validateForm(model: AuthViewModel,email:String, password:String):Boolean{
+    if (email.isEmpty()){ model.updateLoginEmailError("Email is empty")
         return false
-    }else{model.updateEmailError("")}
-    if(!validEmailAddress(email)){model.updateEmailError("Not a valid address")
+    }else{model.updateLoginEmailError("")}
+    if(!validEmailAddress(email)){model.updateLoginEmailError("Not a valid address")
         return false
-    }else{model.updateEmailError("")}
-    if(password.isEmpty()) {model.updatePassError("Password is empty")
+    }else{model.updateLoginEmailError("")}
+    if(password.isEmpty()) {model.updateLoginPassError("Password is empty")
         return false
-    }else{model.updatePassError("")}
-    if(password.length < 6) {model.updatePassError("Password is too short")
+    }else{model.updateLoginPassError("")}
+    if(password.length < 6) {model.updateLoginPassError("Password is too short")
         return false
-    }else{model.updatePassError("")}
+    }else{model.updateLoginPassError("")}
     return true
 }
 fun validEmailAddress(email:String):Boolean{
@@ -234,11 +235,11 @@ fun validEmailAddress(email:String):Boolean{
 }
 
 
-fun login(model: UserAuthViewModel, email: String, password: String, controller: NavController, context: Context) {
+fun login(model: AuthViewModel, email: String, password: String, controller: NavController, context: Context) {
     if (validateForm(model, email, password)) {
-        model.updateLoading(true)
+        model.updateLoginLoading(true)
         firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
-            model.updateLoading(false)
+            model.updateLoginLoading(false)
             if (it.isSuccessful) {
                 val uid = firebaseAuth.currentUser?.uid
                 if (uid != null) {

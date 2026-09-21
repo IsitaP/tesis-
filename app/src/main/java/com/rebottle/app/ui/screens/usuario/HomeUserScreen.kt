@@ -150,18 +150,7 @@ fun HomeUserScreen(
 
                 Button(
                     onClick = {
-
-                        /*
-                         * Cuando tengas definida la ruta exacta de
-                         * CreateRequestScreen en AppScreens,
-                         * puedes navegar aquí.
-                         *
-                         * Ejemplo:
-                         *
-                         * controller.navigate(
-                         *     AppScreens.crearSolicitud.name
-                         * )
-                         */
+                        controller.navigate(AppScreens.crearSolicitud.name)
                     },
 
                     colors = ButtonDefaults.buttonColors(
@@ -734,7 +723,7 @@ private fun ReBottleBottomBar(
             title = "Recolecciones",
 
             selected =
-                currentRoute == AppScreens.crearSolicitud.name,
+                currentRoute == AppScreens.solicitudesUsuario.name,
 
             iconRes =
                 R.drawable.icon_collection,
@@ -749,7 +738,7 @@ private fun ReBottleBottomBar(
                 Modifier.weight(1f),
 
             onClick = {
-                controller.navigate(AppScreens.crearSolicitud.name)
+                controller.navigate(AppScreens.solicitudesUsuario.name)
             }
         )
 
@@ -780,12 +769,7 @@ private fun ReBottleBottomBar(
             onClick = {
 
                 /*
-                 * Cuando agregues la pantalla de recompensas
-                 * a AppScreens puedes poner:
-                 *
-                 * controller.navigate(
-                 *     AppScreens.recompensas.name
-                 * )
+                 * Aqui va la pantalla de recompensas
                  */
             }
         )

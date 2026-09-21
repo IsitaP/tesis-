@@ -35,7 +35,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -49,12 +48,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.components.monthYearLabel
-import com.rebottle.app.model.CreateRequestState
-import com.rebottle.app.model.CreateRequestViewModel
 import com.rebottle.app.model.MaterialType
 import java.time.LocalDate
 import com.rebottle.app.components.buildCalendarGrid
 import android.widget.Toast
+import com.rebottle.app.model.SolicitudState
+import com.rebottle.app.model.SolicitudViewModel
 
 // ============================================================
 // COLORES (mismos que el resto de la app)
@@ -70,7 +69,7 @@ private val WeekdayGreen = Color(0xFF6B8A5A)
 private val PastMonthGray = Color(0xFFBFBFBF)
 
 @Composable
-fun CreateRequestScreen(controller: NavController, model: CreateRequestViewModel = viewModel()) {
+fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = viewModel()) {
 
     val state by model.state.collectAsState()
     val context = LocalContext.current
@@ -403,7 +402,7 @@ private fun MaterialCheckboxRow(
 
 @Composable
 private fun CalendarCard(
-    state: CreateRequestState,
+    state: SolicitudState,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSelectDate: (LocalDate) -> Unit

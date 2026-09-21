@@ -37,14 +37,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
-import com.rebottle.app.model.RegisterViewModel
+import com.rebottle.app.model.AuthViewModel
 import com.rebottle.app.navigation.AppScreens
 
 @Composable
-public fun RegisterScreen(controller: NavController, model: RegisterViewModel = viewModel()) {
+public fun RegisterScreen(controller: NavController, model: AuthViewModel = viewModel()) {
 
     val context = LocalContext.current
-    val user by model.user.collectAsState()
+    val authState by model.state.collectAsState()
+    val user = authState.register
 
     Column(
         modifier = Modifier
@@ -89,7 +90,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
         ReBottleTextField(
             value = user.name,
             onValueChange = {
-                model.updateName(it)
+                model.updateRegisterName(it)
             },
             placeholder = "Usuario",
             isError = user.nameError.isNotEmpty(),
@@ -105,7 +106,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
         ReBottleTextField(
             value = user.email,
             onValueChange = {
-                model.updateEmail(it)
+                model.updateRegisterEmail(it)
             },
             placeholder = "Email",
             isError = user.emailError.isNotEmpty(),
@@ -121,7 +122,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
         ReBottleTextField(
             value = user.password,
             onValueChange = {
-                model.updatePassword(it)
+                model.updateRegisterPassword(it)
             },
             placeholder = "Contraseña",
             password = true,
@@ -160,7 +161,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRole(UserRole.CIUDADANO)
+                model.updateRegisterRole(UserRole.CIUDADANO)
             }
 
 
@@ -170,7 +171,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRole(UserRole.FUNDACION)
+                model.updateRegisterRole(UserRole.FUNDACION)
             }
 
 
@@ -180,7 +181,7 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRole(UserRole.RECOLECTOR)
+                model.updateRegisterRole(UserRole.RECOLECTOR)
             }
         }
 
@@ -280,30 +281,30 @@ public fun RegisterScreen(controller: NavController, model: RegisterViewModel = 
     }
 }
 
-fun validateRegisterForm(model: RegisterViewModel, name: String, email: String, password: String, role: UserRole?): Boolean {
-    if (name.isEmpty()) { model.updateNameError("El nombre es obligatorio"); return false }
-    else { model.updateNameError("") }
+fun validateRegisterForm(model: AuthViewModel, name: String, email: String, password: String, role: UserRole?): Boolean {
+    if (name.isEmpty()) { model.updateRegisterNameError("El nombre es obligatorio"); return false }
+    else { model.updateRegisterNameError("") }
 
-    if (email.isEmpty()) { model.updateEmailError("El email es obligatorio"); return false }
-    else { model.updateEmailError("") }
+    if (email.isEmpty()) { model.updateRegisterEmailError("El email es obligatorio"); return false }
+    else { model.updateRegisterEmailError("") }
 
-    if (!validEmailAddress(email)) { model.updateEmailError("Email no válido"); return false }
-    else { model.updateEmailError("") }
+    if (!validEmailAddress(email)) { model.updateRegisterEmailError("Email no válido"); return false }
+    else { model.updateRegisterEmailError("") }
 
-    if (password.isEmpty()) { model.updatePassError("La contraseña es obligatoria"); return false }
-    else { model.updatePassError("") }
+    if (password.isEmpty()) { model.updateRegisterPassError("La contraseña es obligatoria"); return false }
+    else { model.updateRegisterPassError("") }
 
-    if (password.length < 6) { model.updatePassError("Mínimo 6 caracteres"); return false }
-    else { model.updatePassError("") }
+    if (password.length < 6) { model.updateRegisterPassError("Mínimo 6 caracteres"); return false }
+    else { model.updateRegisterPassError("") }
 
-    if (role == null) { model.updateRoleError("Selecciona un tipo de usuario"); return false }
-    else { model.updateRoleError("") }
+    if (role == null) { model.updateRegisterRoleError("Selecciona un tipo de usuario"); return false }
+    else { model.updateRegisterRoleError("") }
 
     return true
 }
 
 fun register(
-    model: RegisterViewModel,
+    model: AuthViewModel,
     name: String,
     email: String,
     password: String,
@@ -313,7 +314,7 @@ fun register(
 ) {
     if (!validateRegisterForm(model, name, email, password, role)) return
 
-    model.updateLoading(true)
+    model.updateRegisterLoading(true)
 
     firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
         if (task.isSuccessful) {
@@ -329,7 +330,7 @@ fun register(
                 Firebase.firestore.collection("users").document(uid)
                     .set(userData)
                     .addOnSuccessListener {
-                        model.updateLoading(false)
+                        model.updateRegisterLoading(false)
                         val destination = when (role) {
                             UserRole.CIUDADANO -> AppScreens.homeCiudadano.name
                             UserRole.FUNDACION -> AppScreens.homeFundacion.name
@@ -340,12 +341,12 @@ fun register(
                         }
                     }
                     .addOnFailureListener {
-                        model.updateLoading(false)
+                        model.updateRegisterLoading(false)
                         Toast.makeText(context, "Error guardando el perfil: ${it.message}", Toast.LENGTH_LONG).show()
                     }
             }
         } else {
-            model.updateLoading(false)
+            model.updateRegisterLoading(false)
             Toast.makeText(context, "Error en el registro: ${task.exception}", Toast.LENGTH_LONG).show()
         }
     }
