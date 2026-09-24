@@ -18,6 +18,11 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 
+import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
+import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
+import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 
 enum class AppScreens{
     onboardingOne,
@@ -35,7 +40,10 @@ enum class AppScreens{
     solicitudes,
 
     perfil,
-    rutas
+    rutas,
+
+    solicitudesRecolector,
+    detalleAsignacionRecolector,
 }
 
 @Composable
@@ -77,8 +85,11 @@ fun Navigation() {
         composable(route = AppScreens.homeFundacion.name){
             HomeFundacionScreen(navController)
         }
+        composable(route = AppScreens.homeCiudadano.name) {
+            HomeUserScreen(navController)
 
-        composable(route = AppScreens.solicitudes.name) {
+        }
+        composable(route = AppScreens.solicitudes.name){
             CollectionRequestsScreen(navController)
         }
 
@@ -102,6 +113,19 @@ fun Navigation() {
 
         composable(route = AppScreens.solicitudesUsuario.name){
             SolicitudesUsuarioScreen(navController)
+        }
+        composable(route = AppScreens.homeRecolector.name) {
+            PantallaInicioRecolector(navController)
+        }
+        composable(route = AppScreens.solicitudesRecolector.name) {
+            PantallaSolicitudesRecolector(navController)
+        }
+        composable(
+            route = "${AppScreens.detalleAsignacionRecolector.name}/{asignacionId}",
+            arguments = listOf(navArgument("asignacionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("asignacionId") ?: ""
+            PantallaDetalleAsignacionRecolector(navController, id)
         }
     }
 }
