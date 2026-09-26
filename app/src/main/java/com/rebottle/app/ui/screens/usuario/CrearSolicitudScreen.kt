@@ -213,7 +213,7 @@ fun CreateRequestContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CardWhite, shape = RoundedCornerShape(16.dp))
-                .padding(5.dp)
+                .padding(8.dp)
         ) {
             val leftColumn = listOf(
                 MaterialType.PLASTICO,
@@ -316,7 +316,7 @@ fun CreateRequestContent(
             onSelectDate = onSelectDate
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(15.dp))
 
         // ====================================================
         // BOTÓN SOLICITAR
@@ -475,8 +475,7 @@ private fun CalendarCard(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(1f)
-                            .padding(1.dp),
+                            .padding(8.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (date != null) {
@@ -499,7 +498,7 @@ private fun CalendarCard(
                                         isWeekend -> Color(0xFFD98555)
                                         else -> DarkGreen
                                     },
-                                    fontSize = 12.sp
+                                    fontSize = 13.sp
                                 )
                             }
                         }
