@@ -54,6 +54,7 @@ import com.rebottle.app.components.buildCalendarGrid
 import android.widget.Toast
 import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.ui.theme.RebottleTheme
 
 // ============================================================
 // COLORES (mismos que el resto de la app)
@@ -70,10 +71,69 @@ private val PastMonthGray = Color(0xFFBFBFBF)
 
 @Composable
 fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = viewModel()) {
-
     val state by model.state.collectAsState()
     val context = LocalContext.current
 
+    CreateRequestContent(
+        state = state,
+        onLocationChange = { model.updateLocation(it) },
+        onToggleMaterial = { model.toggleMaterial(it) },
+        onDecrementWeight = { model.decrementWeight() },
+        onIncrementWeight = { model.incrementWeight() },
+        onPreviousMonth = { model.previousMonth() },
+        onNextMonth = { model.nextMonth() },
+        onSelectDate = { model.selectDate(it) },
+        onCreateClick = {
+            if (state.location.isBlank()) {
+                model.updateLocationError("Ingresa la dirección de recolección")
+            } else {
+                model.updateLocationError("")
+            }
+
+            if (state.selectedMaterials.isEmpty()) {
+                model.updateMaterialsError("Selecciona al menos un material")
+            } else {
+                model.updateMaterialsError("")
+            }
+
+            if (state.location.isNotBlank() && state.selectedMaterials.isNotEmpty()) {
+                model.crearSolicitud(
+                    onSuccess = {
+                        Toast.makeText(
+                            context,
+                            "Solicitud creada correctamente",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        model.resetForm()
+                        controller.popBackStack()
+                    },
+                    onError = { mensaje ->
+                        Toast.makeText(
+                            context,
+                            mensaje,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                )
+            }
+        },
+        onBackClick = { controller.popBackStack() }
+    )
+}
+
+@Composable
+fun CreateRequestContent(
+    state: SolicitudState,
+    onLocationChange: (String) -> Unit,
+    onToggleMaterial: (MaterialType) -> Unit,
+    onDecrementWeight: () -> Unit,
+    onIncrementWeight: () -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    onSelectDate: (LocalDate) -> Unit,
+    onCreateClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -82,7 +142,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
             .padding(horizontal = 20.dp)
     ) {
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // ====================================================
         // HEADER: flecha + título
@@ -95,7 +155,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .size(24.dp)
-                    .clickable { controller.popBackStack() }
+                    .clickable { onBackClick() }
             )
 
             Text(
@@ -110,32 +170,27 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // ====================================================
         // UBICACIÓN
         // ====================================================
         OutlinedTextField(
             value = state.location,
-            onValueChange = { model.updateLocation(it) },
+            onValueChange = onLocationChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(50.dp),
             singleLine = true,
             leadingIcon = {
                 Image(
                     painter = painterResource(id = R.drawable.pin_location),
                     contentDescription = "Ubicación",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             },
             placeholder = { Text(text = "Dirección de recolección", color = TextMuted, fontSize = 14.sp) },
             isError = state.locationError.isNotEmpty(),
-           // supportingText = {
-              //  if (state.locationError.isNotEmpty()) {
-                 //   Text(text = state.locationError, color = Color.Red)
-                //}
-            //},
             shape = RoundedCornerShape(50),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color.Transparent,
@@ -145,10 +200,10 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
             )
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(15.dp))
 
         // ====================================================
-        // MATERIALES A ENTREGAR
+        // MATERIALES A ENTREGAR (4 y 4)
         // ====================================================
         SectionTitle(text = "Materiales a entregar")
 
@@ -158,10 +213,20 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CardWhite, shape = RoundedCornerShape(16.dp))
-                .padding(16.dp)
+                .padding(5.dp)
         ) {
-            val leftColumn = listOf(MaterialType.PLASTICO, MaterialType.PAPEL, MaterialType.CARTON, MaterialType.VIDRIO, MaterialType.METAL)
-            val rightColumn = listOf(MaterialType.ELECTRONICOS, MaterialType.MADERA, MaterialType.OTROS)
+            val leftColumn = listOf(
+                MaterialType.PLASTICO,
+                MaterialType.PAPEL,
+                MaterialType.CARTON,
+                MaterialType.VIDRIO
+            )
+            val rightColumn = listOf(
+                MaterialType.METAL,
+                MaterialType.ELECTRONICOS,
+                MaterialType.MADERA,
+                MaterialType.OTROS
+            )
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -169,44 +234,29 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                         MaterialCheckboxRow(
                             material = material,
                             checked = material in state.selectedMaterials,
-                            onCheckedChange = { model.toggleMaterial(material) }
+                            onCheckedChange = { onToggleMaterial(material) }
                         )
                     }
                 }
                 Column(
                     modifier = Modifier.weight(1f),
-                    //horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     rightColumn.forEach { material ->
                         MaterialCheckboxRow(
                             material = material,
                             checked = material in state.selectedMaterials,
-                            onCheckedChange = { model.toggleMaterial(material) }
+                            onCheckedChange = { onToggleMaterial(material) }
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Image(
-                        painter = painterResource(id = R.drawable.imagen_materiales),
-                        contentDescription = "Materiales reciclables",
-                        modifier = Modifier
-                            .width(115.dp)
-                            .height(70.dp)
-                            .align(Alignment.CenterHorizontally),
-                        contentScale = ContentScale.Fit
-                    )
                 }
             }
         }
 
         if (state.materialsError.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(4.dp))
             Text(text = state.materialsError, color = Color.Red, fontSize = 12.sp)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // ====================================================
         // PESO ESTIMADO
@@ -218,7 +268,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(50.dp)
                 .background(CardWhite, shape = RoundedCornerShape(50)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -228,16 +278,16 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                 fontSize = 22.sp,
                 color = DarkGreen,
                 modifier = Modifier
-                    .clickable { model.decrementWeight() }
+                    .clickable { onDecrementWeight() }
                     .padding(horizontal = 24.dp)
             )
 
             Box(
                 modifier = Modifier
                     .background(Color(0xFFEFEAE0), shape = RoundedCornerShape(50))
-                    .padding(horizontal = 20.dp, vertical = 6.dp)
+                    .padding(horizontal = 20.dp, vertical = 3.dp)
             ) {
-                Text(text = "${state.weightKg} Kg", fontSize = 16.sp, color = DarkGreen)
+                Text(text = "${state.weightKg} Kg", fontSize = 14.sp, color = DarkGreen)
             }
 
             Text(
@@ -245,12 +295,12 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                 fontSize = 22.sp,
                 color = DarkGreen,
                 modifier = Modifier
-                    .clickable { model.incrementWeight() }
+                    .clickable { onIncrementWeight() }
                     .padding(horizontal = 24.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // ====================================================
         // FECHA
@@ -261,67 +311,23 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
 
         CalendarCard(
             state = state,
-            onPreviousMonth = { model.previousMonth() },
-            onNextMonth = { model.nextMonth() },
-            onSelectDate = { model.selectDate(it) }
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+            onSelectDate = onSelectDate
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // ====================================================
         // BOTÓN SOLICITAR
         // ====================================================
         Button(
-            onClick = {
-                // Validación simple antes de enviar
-                if (state.location.isBlank()) {
-                    model.updateLocationError("Ingresa la dirección de recolección")
-                } else {
-                    model.updateLocationError("")
-                }
-
-                if (state.selectedMaterials.isEmpty()) {
-                    model.updateMaterialsError("Selecciona al menos un material")
-                } else {
-                    model.updateMaterialsError("")
-                }
-
-                if (state.location.isNotBlank() && state.selectedMaterials.isNotEmpty()) {
-
-                    model.crearSolicitud(
-                        onSuccess = {
-
-                            Toast.makeText(
-                                context,
-                                "Solicitud creada correctamente",
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            model.resetForm()
-
-                            controller.popBackStack()
-                        },
-
-                        onError = { mensaje ->
-
-                            Toast.makeText(
-                                context,
-                                mensaje,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    )
-                }
-            },
-
+            onClick = onCreateClick,
             enabled = !state.isLoading,
-
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-
+                .height(50.dp),
             shape = RoundedCornerShape(50),
-
             colors = ButtonDefaults.buttonColors(
                 containerColor = MainGreen
             )
@@ -346,7 +352,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }
 
@@ -392,7 +398,7 @@ private fun MaterialCheckboxRow(
 
         Spacer(modifier = Modifier.width(6.dp))
 
-        Text(text = material.label, color = DarkGreen, fontSize = 15.sp)
+        Text(text = material.label, color = DarkGreen, fontSize = 14.sp)
     }
 }
 
@@ -411,7 +417,7 @@ private fun CalendarCard(
         modifier = Modifier
             .fillMaxWidth()
             .background(CardWhite, shape = RoundedCornerShape(16.dp))
-            .padding(16.dp)
+            .padding(5.dp)
     ) {
 
         // Encabezado de mes con flechas
@@ -428,7 +434,7 @@ private fun CalendarCard(
             )
             Text(
                 text = monthYearLabel(state.displayedMonth),
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MainGreen
             )
@@ -440,7 +446,7 @@ private fun CalendarCard(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // Encabezado de días de la semana
         val weekdays = listOf("LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM")
@@ -457,7 +463,7 @@ private fun CalendarCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         // Grilla de días
         val days = buildCalendarGrid(state.displayedMonth)
@@ -470,7 +476,7 @@ private fun CalendarCard(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .padding(2.dp),
+                            .padding(1.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (date != null) {
@@ -493,7 +499,7 @@ private fun CalendarCard(
                                         isWeekend -> Color(0xFFD98555)
                                         else -> DarkGreen
                                     },
-                                    fontSize = 14.sp
+                                    fontSize = 12.sp
                                 )
                             }
                         }
@@ -504,8 +510,25 @@ private fun CalendarCard(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
-fun ShowRequest(){
-    CreateRequestScreen(controller = NavController(LocalContext.current))
+fun CreateRequestScreenPreview() {
+    RebottleTheme {
+        CreateRequestContent(
+            state = SolicitudState(
+                location = "Cra 15 # 136-32",
+                selectedMaterials = setOf(MaterialType.PLASTICO, MaterialType.VIDRIO),
+                weightKg = 15
+            ),
+            onLocationChange = {},
+            onToggleMaterial = {},
+            onDecrementWeight = {},
+            onIncrementWeight = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onSelectDate = {},
+            onCreateClick = {},
+            onBackClick = {}
+        )
+    }
 }
