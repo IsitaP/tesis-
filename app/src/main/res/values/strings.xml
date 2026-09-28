@@ -22,6 +22,10 @@
     <string name="priority_label">Prioridad</string>
     <string name="priority_low">Baja</string>
     <string name="assigned_collector_label">Recolector Asignado</string>
+    <string name="assign_collector_button">Asignar\nrecolector</string>
+    <string name="contact_user_button">Contactar\nusuario</string>
+    <string name="metal_text">Metal</string>
+    <string name="glass_text">Vidrio</string>
     <string name="accept_changes">Aceptar cambios</string>
     <string name="cancel_changes">Cancelar cambios</string>
     <string name="delete_collector">Eliminar recolector</string>
