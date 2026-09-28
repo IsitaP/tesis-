@@ -23,14 +23,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,7 +36,9 @@ import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.rebottle.app.model.AuthViewModel
+import com.rebottle.app.model.RegisterState
 import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.theme.RebottleTheme
 
 @Composable
 public fun RegisterScreen(controller: NavController, model: AuthViewModel = viewModel()) {
@@ -46,6 +46,32 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
     val context = LocalContext.current
     val authState by model.state.collectAsState()
     val user = authState.register
+
+    RegisterContent(
+        user = user,
+        onNameChange = { model.updateRegisterName(it) },
+        onEmailChange = { model.updateRegisterEmail(it) },
+        onPasswordChange = { model.updateRegisterPassword(it) },
+        onRoleChange = { model.updateRegisterRole(it) },
+        onRegisterClick = {
+            register(model, user.name, user.email, user.password, user.role, controller, context)
+        },
+        onLoginClick = {
+            controller.navigate(AppScreens.login.name)
+        }
+    )
+}
+
+@Composable
+fun RegisterContent(
+    user: RegisterState,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onRoleChange: (UserRole) -> Unit,
+    onRegisterClick: () -> Unit,
+    onLoginClick: () -> Unit
+) {
 
     Column(
         modifier = Modifier
@@ -61,7 +87,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
     ) {
 
         Spacer(
-            modifier = Modifier.height(45.dp)
+            modifier = Modifier.height(15.dp)
         )
 
 
@@ -69,7 +95,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(30.dp)
+            modifier = Modifier.height(5.dp)
         )
 
 
@@ -83,15 +109,13 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(14.dp)
+            modifier = Modifier.height(12.dp)
         )
 
 
         ReBottleTextField(
             value = user.name,
-            onValueChange = {
-                model.updateRegisterName(it)
-            },
+            onValueChange = onNameChange,
             placeholder = "Usuario",
             isError = user.nameError.isNotEmpty(),
             errorMessage = user.nameError
@@ -99,15 +123,13 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier = Modifier.height(5.dp)
         )
 
 
         ReBottleTextField(
             value = user.email,
-            onValueChange = {
-                model.updateRegisterEmail(it)
-            },
+            onValueChange = onEmailChange,
             placeholder = "Email",
             isError = user.emailError.isNotEmpty(),
             errorMessage = user.emailError
@@ -115,15 +137,13 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier = Modifier.height(5.dp)
         )
 
 
         ReBottleTextField(
             value = user.password,
-            onValueChange = {
-                model.updateRegisterPassword(it)
-            },
+            onValueChange = onPasswordChange,
             placeholder = "Contraseña",
             password = true,
             isError = user.passError.isNotEmpty(),
@@ -132,7 +152,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(17.dp)
+            modifier = Modifier.height(10.dp)
         )
 
 
@@ -161,7 +181,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRegisterRole(UserRole.CIUDADANO)
+                onRoleChange(UserRole.CIUDADANO)
             }
 
 
@@ -171,7 +191,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRegisterRole(UserRole.FUNDACION)
+                onRoleChange(UserRole.FUNDACION)
             }
 
 
@@ -181,7 +201,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
                 modifier = Modifier.weight(1f)
             ) {
 
-                model.updateRegisterRole(UserRole.RECOLECTOR)
+                onRoleChange(UserRole.RECOLECTOR)
             }
         }
 
@@ -207,9 +227,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Button(
-            onClick = {
-                register(model, user.name, user.email, user.password, user.role, controller, context)
-            },
+            onClick = onRegisterClick,
 
             enabled = !user.isLoading,
 
@@ -260,7 +278,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
                 text = "Iniciar Sesión",
 
                 modifier = Modifier.clickable {
-                    controller.navigate(AppScreens.login.name)
+                    onLoginClick()
                 },
 
                 color = MainGreen,
@@ -273,7 +291,7 @@ public fun RegisterScreen(controller: NavController, model: AuthViewModel = view
 
 
         Spacer(
-            modifier = Modifier.height(50.dp)
+            modifier = Modifier.height(68.dp)
         )
 
 
@@ -349,5 +367,26 @@ fun register(
             model.updateRegisterLoading(false)
             Toast.makeText(context, "Error en el registro: ${task.exception}", Toast.LENGTH_LONG).show()
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterScreenPreview() {
+    RebottleTheme {
+        RegisterContent(
+            user = RegisterState(
+                name = "Juan Pérez",
+                email = "juan@example.com",
+                password = "password123",
+                role = UserRole.CIUDADANO
+            ),
+            onNameChange = {},
+            onEmailChange = {},
+            onPasswordChange = {},
+            onRoleChange = {},
+            onRegisterClick = {},
+            onLoginClick = {}
+        )
     }
 }
