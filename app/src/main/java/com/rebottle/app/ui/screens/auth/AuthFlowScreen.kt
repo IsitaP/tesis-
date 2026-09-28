@@ -49,6 +49,7 @@ import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
 
 
 // ============================================================
@@ -82,7 +83,8 @@ private enum class AuthScreen {
     MODULE_THREE,
     MODULE_FOUR,
     MODULE_FIVE,
-    MODULE_SIX
+    MODULE_SIX,
+    MODULE_SEVEN
 
 }
 
@@ -201,6 +203,9 @@ fun AuthFlowScreen(controller: NavController) {
                 },
                 onM6Click = {
                     currentScreen = AuthScreen.MODULE_SIX
+                },
+                onM7Click = {
+                    currentScreen = AuthScreen.MODULE_SEVEN
                 }
             )
         }
@@ -231,6 +236,17 @@ fun AuthFlowScreen(controller: NavController) {
         AuthScreen.MODULE_SIX -> {
 
             ModuleSixFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
+        AuthScreen.MODULE_SEVEN-> {
+
+            ModuleSevenFlowScreen(
                 onBackToRoadmap = {
                     currentScreen = AuthScreen.LEARN
                 },

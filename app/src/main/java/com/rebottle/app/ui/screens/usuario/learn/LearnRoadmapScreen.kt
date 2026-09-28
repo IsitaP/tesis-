@@ -44,7 +44,8 @@ fun LearnRoadmapScreen(
     onM3Click: () -> Unit,
     onM4Click: () -> Unit,
     onM5Click: () -> Unit,
-    onM6Click: () -> Unit
+    onM6Click: () -> Unit,
+    onM7Click: () -> Unit,
 ) {
 
     Column(
@@ -172,7 +173,10 @@ fun LearnRoadmapScreen(
             ModuleButton(
                 text = "M7",
                 x = 5.dp,
-                y = 780.dp
+                y = 780.dp,
+                onClick={
+                    onM6Click()
+                }
             )
 
         }
