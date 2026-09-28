@@ -261,8 +261,9 @@ private fun ModuleSevenSpecialWasteScreen(
                 earphonesSelected &&
                 cableSelected &&
                 medicinesSelected &&
-                !boxSelected &&
-                !cutlerySelected
+                cutlerySelected &&
+                !boxSelected
+
 
 
     val hasWrongSelection =
@@ -438,7 +439,7 @@ private fun ModuleSevenSpecialWasteScreen(
                     imageRes = R.drawable.m7_cutlery,
                     description = "Cubiertos",
                     selected = cutlerySelected,
-                    wrong = cutlerySelected,
+                    wrong = false,
                     onClick = {
                         cutlerySelected = !cutlerySelected
                     }
