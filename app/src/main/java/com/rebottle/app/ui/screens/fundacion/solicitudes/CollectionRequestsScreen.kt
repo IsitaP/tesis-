@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
@@ -472,6 +473,18 @@ private fun navigationItemColors() = NavigationBarItemDefaults.colors(
 @Composable
 fun CollectionRequestsScreenPreview() {
     RebottleTheme {
-        //CollectionRequestsScreen()
+        CollectionRequestsScreen(
+            controller = rememberNavController()
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun CollectionRequestsScreenPreview2() {
+    RebottleTheme {
+        CollectionRequestsScreen(
+            controller = rememberNavController()
+        )
     }
 }
