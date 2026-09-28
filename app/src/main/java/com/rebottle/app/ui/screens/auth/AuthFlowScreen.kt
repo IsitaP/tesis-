@@ -53,6 +53,7 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
 
 
 // ============================================================
@@ -84,7 +85,9 @@ private enum class AuthScreen {
     MODULE_ONE,
     MODULE_TWO,
     MODULE_THREE,
-    MODULE_FOUR
+    MODULE_FOUR,
+
+    MODULE_FIVE
 
 }
 
@@ -197,6 +200,9 @@ fun AuthFlowScreen(controller: NavController) {
                 },
                 onM4Click = {
                     currentScreen = AuthScreen.MODULE_FOUR
+                },
+                onM5Click = {
+                    currentScreen = AuthScreen.MODULE_FIVE
                 }
             )
         }
@@ -206,6 +212,18 @@ fun AuthFlowScreen(controller: NavController) {
                 onBackToRoadmap = {
                     currentScreen = AuthScreen.LEARN
                 },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
+        AuthScreen.MODULE_FIVE -> {
+
+            ModuleFiveFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+
                 onFinish = {
                     currentScreen = AuthScreen.LEARN
                 }

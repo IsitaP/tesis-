@@ -436,7 +436,7 @@ private fun ModuleFourDragScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(480.dp)
             ) {
 
                 Image(
@@ -730,7 +730,7 @@ private fun ModuleFourDetectErrorScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(190.dp)
+                    .height(350.dp)
             ) {
 
                 Image(
