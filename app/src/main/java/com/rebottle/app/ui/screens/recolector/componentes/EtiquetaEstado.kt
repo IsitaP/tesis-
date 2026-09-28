@@ -18,6 +18,7 @@ fun EtiquetaEstado(estado: EstadoAsignacion) {
     val (texto, color) = when (estado) {
         EstadoAsignacion.COMPLETADA -> "Completada" to Color(0xFF536D45)
         EstadoAsignacion.PENDIENTE -> "Pendiente" to Color(0xFFDB9A3C)
+        EstadoAsignacion.CANCELADA -> "Cancelada" to Color(0xFFC94338)
     }
 
     Text(
