@@ -1,11 +1,13 @@
 package com.rebottle.app.ui.screens.recolector.solicitudes
 
+import android.R.attr.id
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,15 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -37,8 +37,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,35 +51,54 @@ import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.EtiquetaEstado
 import com.rebottle.app.ui.theme.RebottleTheme
 
-
 private val BackgroundColor = Color(0xFFFBF8F2)
-private val CardColor = Color(0xFFFBE9CF)
-private val MainGreen = Color(0xFF536D45)
 private val MainText = Color(0xFF34382F)
 private val SecondaryText = Color(0xFF7F887A)
-
+private val BrownIcon = Color(0xFFA55E37)
+private val ButtonBorder = Color(0xFF7F887A)
+private val ButtonText = Color(0xFF5A6255)
 
 @Composable
 fun PantallaDetalleAsignacionRecolector(
     controller: NavController,
     asignacionId: String
 ) {
-
-    val asignacion = asignacionesEjemplo.firstOrNull { it.id == asignacionId }
+    val asignacion = asignacionesEjemplo.firstOrNull { it.id.toString() == asignacionId }
         ?: asignacionesEjemplo.first()
 
     var estado by remember { mutableStateOf(asignacion.estado) }
+
+    val cardColor = when (estado) {
+        EstadoAsignacion.COMPLETADA -> Color(0xFFE3EDDB)
+        EstadoAsignacion.PENDIENTE -> Color(0xFFFEF3D7)
+        EstadoAsignacion.CANCELADA -> Color(0xFFFFD8D4)
+    }
+
+    val borderColor = when (estado) {
+        EstadoAsignacion.COMPLETADA -> Color(0xFFD5E3CD)
+        EstadoAsignacion.PENDIENTE -> Color(0xFFF5E1B8)
+        EstadoAsignacion.CANCELADA -> Color(0xFFF3A29B)
+    }
+
+    val primaryButtonColor = when (estado) {
+        EstadoAsignacion.COMPLETADA -> Color(0xFF536D45)
+        EstadoAsignacion.PENDIENTE -> Color(0xFFD99B4B)
+        EstadoAsignacion.CANCELADA -> Color(0xFFC94338)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundColor)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
-
         Column(
             modifier = Modifier
-                .padding(start = 18.dp, end = 18.dp, top = 48.dp, bottom = 20.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp)
         ) {
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -89,8 +110,9 @@ fun PantallaDetalleAsignacionRecolector(
                         .size(24.dp)
                         .clickable { controller.popBackStack() }
                 )
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = "  Asignación # ${asignacion.id}",
+                    text = "Asignación # ${asignacion.id}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MainText
@@ -99,15 +121,15 @@ fun PantallaDetalleAsignacionRecolector(
 
             Spacer(modifier = Modifier.height(18.dp))
 
+            // Tarjeta de detalles
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = CardColor),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
+                border = BorderStroke(1.dp, borderColor),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-
-                Column(modifier = Modifier.padding(16.dp)) {
-
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,103 +137,255 @@ fun PantallaDetalleAsignacionRecolector(
                     ) {
                         Text(
                             text = asignacion.codigo,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MainGreen,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MainText,
                             textDecoration = TextDecoration.Underline
                         )
                         EtiquetaEstado(estado = estado)
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    FilaDetalle(icono = Icons.Filled.LocationOn, texto = asignacion.direccion)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FilaDetalle(icono = Icons.Filled.CalendarToday, texto = asignacion.fecha)
-                    Spacer(modifier = Modifier.height(6.dp))
-                    FilaDetalle(icono = Icons.Filled.Schedule, texto = asignacion.hora)
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Text(
-                        text = "Materiales",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MainText
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                        asignacion.materiales.forEach { material ->
-                            Text(text = "•  $material", fontSize = 14.sp, color = SecondaryText)
-                        }
+                    // Dirección
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_location_pin),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = BrownIcon
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = asignacion.direccion,
+                            fontSize = 14.sp,
+                            color = MainText
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    FilaDetalle(icono = Icons.Filled.ShoppingBag, texto = "Peso estimado ${asignacion.pesoKg} KG")
+                    // Fecha y Hora
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_calendar),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = BrownIcon
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = asignacion.fecha,
+                                fontSize = 14.sp,
+                                color = MainText
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_clock),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = BrownIcon
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = asignacion.hora,
+                                fontSize = 14.sp,
+                                color = MainText
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    Text(
+                        text = "Materiales",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MainText
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Materiales
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(28.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_metal),
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = BrownIcon
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Metal",
+                                fontSize = 14.sp,
+                                color = SecondaryText
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_glass),
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = BrownIcon
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Vidrio",
+                                fontSize = 14.sp,
+                                color = SecondaryText
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Peso estimado
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_weight),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                            tint = BrownIcon
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Peso estimado",
+                                fontSize = 13.sp,
+                                color = SecondaryText
+                            )
+                            Text(
+                                text = "${asignacion.pesoKg} KG",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MainText
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Botones internos de Mapa y Contactar
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { /* TODO: abrir mapa con la dirección */ },
-                            modifier = Modifier.weight(1f)
+                            onClick = { /* TODO: Abrir mapa */ },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, ButtonBorder),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White,
+                                contentColor = ButtonText
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                         ) {
-                            Icon(Icons.Filled.Map, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.height(0.dp))
-                            Text(text = "  Ver mapa", color = MainGreen)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_location_pin),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = BrownIcon
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Ver\nmapa",
+                                    fontSize = 12.sp,
+                                    color = ButtonText,
+                                    lineHeight = 14.sp,
+                                    textAlign = TextAlign.Start
+                                )
+                            }
                         }
+
                         OutlinedButton(
-                            onClick = { /* TODO: abrir chat con el usuario */ },
-                            modifier = Modifier.weight(1f)
+                            onClick = { /* TODO: Contactar usuario */ },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, ButtonBorder),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = Color.White,
+                                contentColor = ButtonText
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                         ) {
-                            Icon(Icons.Filled.Chat, contentDescription = null, tint = MainGreen, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.height(0.dp))
-                            Text(text = "  Contactar", color = MainGreen)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.ChatBubble,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    tint = BrownIcon
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Contactar\nusuario",
+                                    fontSize = 12.sp,
+                                    color = ButtonText,
+                                    lineHeight = 14.sp,
+                                    textAlign = TextAlign.Start
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // El botón inferior solo se muestra si el estado es PENDIENTE
+            if (estado == EstadoAsignacion.PENDIENTE) {
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    estado = com.rebottle.app.ui.screens.recolector.solicitudes.EstadoAsignacion.COMPLETADA
-                    // TODO: al conectar Firestore, actualizar el documento acá
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MainGreen)
-            ) {
-                Text(text = "Completada", color = Color.White, fontSize = 17.sp)
+                Button(
+                    onClick = {
+                        estado = EstadoAsignacion.COMPLETADA
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = primaryButtonColor
+                    )
+                ) {
+                    Text(
+                        text = "Marcar como Completada",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
+        // Imagen del paisaje alineada abajo
         Image(
             painter = painterResource(id = R.drawable.solicitudes_paisaje),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(2000.dp)
+                .height(200.dp),
+            contentScale = ContentScale.FillWidth
         )
-    }
-}
-
-@Composable
-private fun FilaDetalle(icono: androidx.compose.ui.graphics.vector.ImageVector, texto: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icono, contentDescription = null, tint = MainGreen, modifier = Modifier.size(16.dp))
-        Text(text = "  $texto", fontSize = 14.sp, color = SecondaryText)
     }
 }
 
