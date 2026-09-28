@@ -51,7 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.rebottle.app.R
-
+import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
 
 
 // ============================================================
@@ -78,7 +79,12 @@ private enum class AuthScreen {
     REGISTER,
     LOGIN,
     HOME_FUNDACION,
-    HOME_USER
+    HOME_USER,
+    LEARN,
+    MODULE_ONE,
+    MODULE_TWO,
+    MODULE_THREE,
+    MODULE_FOUR
 
 }
 
@@ -171,6 +177,37 @@ fun AuthFlowScreen(controller: NavController) {
 
                 onButtonClick = {
                     currentScreen = AuthScreen.REGISTER
+                }
+            )
+        }
+        AuthScreen.LEARN -> {
+
+            LearnRoadmapScreen(
+                onBack = {
+                    currentScreen = AuthScreen.HOME_USER
+                },
+                onM1Click = {
+                    currentScreen = AuthScreen.MODULE_ONE
+                },
+                onM2Click = {
+                    currentScreen = AuthScreen.MODULE_TWO
+                },
+                onM3Click = {
+                    currentScreen = AuthScreen.MODULE_THREE
+                },
+                onM4Click = {
+                    currentScreen = AuthScreen.MODULE_FOUR
+                }
+            )
+        }
+        AuthScreen.MODULE_FOUR -> {
+
+            ModuleFourFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
                 }
             )
         }
