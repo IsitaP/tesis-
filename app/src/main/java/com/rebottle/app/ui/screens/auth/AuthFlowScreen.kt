@@ -1,11 +1,9 @@
 package com.rebottle.app.ui.screens.auth
 
-import com.rebottle.app.ui.screens.usuario.HomeUserScreen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -41,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -54,6 +48,7 @@ import com.rebottle.app.R
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 
 
 // ============================================================
@@ -86,8 +81,8 @@ private enum class AuthScreen {
     MODULE_TWO,
     MODULE_THREE,
     MODULE_FOUR,
-
-    MODULE_FIVE
+    MODULE_FIVE,
+    MODULE_SIX
 
 }
 
@@ -203,6 +198,9 @@ fun AuthFlowScreen(controller: NavController) {
                 },
                 onM5Click = {
                     currentScreen = AuthScreen.MODULE_FIVE
+                },
+                onM6Click = {
+                    currentScreen = AuthScreen.MODULE_SIX
                 }
             )
         }
@@ -230,6 +228,17 @@ fun AuthFlowScreen(controller: NavController) {
             )
         }
 
+        AuthScreen.MODULE_SIX -> {
+
+            ModuleSixFlowScreen(
+                onBackToRoadmap = {
+                    currentScreen = AuthScreen.LEARN
+                },
+                onFinish = {
+                    currentScreen = AuthScreen.LEARN
+                }
+            )
+        }
 
 
 
