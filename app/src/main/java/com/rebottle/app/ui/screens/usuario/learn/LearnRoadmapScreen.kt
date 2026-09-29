@@ -41,8 +41,11 @@ fun LearnRoadmapScreen(
     onBack: () -> Unit,
     onM1Click: () -> Unit,
     onM2Click: () -> Unit,
-    onM3Click: () -> Unit
-
+    onM3Click: () -> Unit,
+    onM4Click: () -> Unit,
+    onM5Click: () -> Unit,
+    onM6Click: () -> Unit,
+    onM7Click: () -> Unit,
 ) {
 
     Column(
@@ -143,25 +146,37 @@ fun LearnRoadmapScreen(
             ModuleButton(
                 text = "M4",
                 x = 260.dp,
-                y = 455.dp
+                y = 455.dp,
+                onClick={
+                    onM4Click()
+                }
             )
 
             ModuleButton(
                 text = "M5",
                 x = 20.dp,
-                y = 560.dp
+                y = 560.dp,
+                onClick={
+                    onM5Click()
+                }
             )
 
             ModuleButton(
                 text = "M6",
                 x = 265.dp,
-                y = 665.dp
+                y = 665.dp,
+                onClick={
+                    onM6Click()
+                }
             )
 
             ModuleButton(
                 text = "M7",
                 x = 5.dp,
-                y = 780.dp
+                y = 780.dp,
+                onClick={
+                    onM7Click()
+                }
             )
 
         }

@@ -39,4 +39,25 @@
     <string name="en_route_label">En ruta</string>
     <string name="create_request_label">Crear Solicitud</string>
     <string name="view_details_label">Ver detalles</string>
+    <string name="rejection_title">¡ Solicitud Rechazada !</string>
+    <string name="rejection_titleu">¡ Solicitud Cancelada !</string>
+    <string name="rejection_subtitle">Se le informará al usuario que su solicitud fue rechazada.</string>
+    <string name="rejection_subtitleu">Tu recolección fue cancelada correctamente.</string>
+    <string name="confirmation_title">¡ Solicitud confirmada !</string>
+    <string name="confirmation_subtitle">Tu recolección fue registrada correctamente.</string>
+    <string name="collection_date_title">Fecha de recolección</string>
+    <string name="collection_date_value">Agosto 24</string>
+    <string name="estimated_schedule_title">Horario estimado</string>
+    <string name="estimated_schedule_value">10:00 AM - 11:00 AM</string>
+    <string name="back_to_home">Volver al inicio</string>
+    <string name="go_to_my_requests">Ir a mis solicitudes</string>
+    <string name="approval_title">¡ Solicitud Aprobada !</string>
+    <string name="approval_titlec">¡ Solicitud Completada !</string>
+    <string name="approval_subtitle">Se le informara al usuario que la solicitud esta confirmada</string>
+    <string name="approval_subtitler">Se le informara al usuario que la solicitud fue completada</string>
+    <string name="finished_title">¡ Recorrido Finalizado !</string>
+    <string name="finished_subtitle">Gracias por tu trabajo el día de hoy.</string>
+    <string name="started_title">¡ Recorrido Iniciado !</string>
+    <string name="started_subtitle">Buena suerte con los trayectos de hoy.\nGracias por tu trabajo.</string>
+    <string name="view_first_route">Ver primera ruta</string>
 </resources>

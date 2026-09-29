@@ -23,8 +23,17 @@ import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRec
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
 import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
+
+import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleThreeFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
+import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
 
 enum class AppScreens{
 
@@ -41,16 +50,28 @@ enum class AppScreens{
 
     //CIUDADANO
     homeCiudadano,
+
     crearSolicitud,
 
     solicitudesUsuario,
     detallesSolicitud,
     editarSolicitud,
+    moduleOne,
+    moduleTwo,
+    moduleThree,
+    moduleFour,
+    moduleFive,
+    moduleSix,
+    moduleSeven,
+
 
     //RECOLECTOR
+    aprendizaje,
     homeRecolector,
+
     perfil,
     rutas,
+
     solicitudesRecolector,
     detalleAsignacionRecolector,
 }
@@ -123,24 +144,12 @@ fun Navigation() {
         composable(route = AppScreens.solicitudesUsuario.name){
             SolicitudesUsuarioScreen(navController)
         }
-        composable(route = AppScreens.homeRecolector.name) {
-            PantallaInicioRecolector(navController)
-        }
-        composable(route = AppScreens.solicitudesRecolector.name) {
-            PantallaSolicitudesRecolector(navController)
-        }
-        composable(
-            route = "${AppScreens.detalleAsignacionRecolector.name}/{asignacionId}",
-            arguments = listOf(navArgument("asignacionId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("asignacionId") ?: ""
-            PantallaDetalleAsignacionRecolector(navController, id)
-        }
+
         composable(
             route = "${AppScreens.detallesSolicitud.name}/{solicitudId}",
             arguments = listOf(navArgument("solicitudId") {
-                    type = NavType.StringType
-                }
+                type = NavType.StringType
+            }
             )
         ) { backStackEntry ->
 
@@ -159,6 +168,232 @@ fun Navigation() {
             val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
 
             EditRequestScreen(navController, solicitudId = id)
+        }
+
+
+        composable(route = AppScreens.homeRecolector.name) {
+            PantallaInicioRecolector(navController)
+        }
+        composable(route = AppScreens.solicitudesRecolector.name) {
+            PantallaSolicitudesRecolector(navController)
+        }
+        composable(
+            route = AppScreens.aprendizaje.name
+        ) {
+
+            LearnRoadmapScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+
+                onM1Click = {
+                    navController.navigate(
+                        AppScreens.moduleOne.name
+                    )
+                },
+
+                onM2Click = {
+                    navController.navigate(
+                        AppScreens.moduleTwo.name
+                    )
+                },
+
+                onM3Click = {
+                    navController.navigate(
+                        AppScreens.moduleThree.name
+                    )
+                },
+
+                onM4Click = {
+                    navController.navigate(
+                        AppScreens.moduleFour.name
+                    )
+                },
+
+                onM5Click = {
+                    navController.navigate(
+                        AppScreens.moduleFive.name
+                    )
+                },
+
+                onM6Click = {
+                    navController.navigate(
+                        AppScreens.moduleSix.name
+                    )
+                },
+
+                onM7Click = {
+                    navController.navigate(
+                        AppScreens.moduleSeven.name
+                    )
+                }
+            )
+        }
+        // ============================================================
+// MÓDULO 1
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleOne.name
+        ) {
+
+            ModuleOneFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 2
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleTwo.name
+        ) {
+
+            ModuleTwoFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 3
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleThree.name
+        ) {
+
+            ModuleThreeFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 4
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleFour.name
+        ) {
+
+            ModuleFourFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 5
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleFive.name
+        ) {
+
+            ModuleFiveFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 6
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleSix.name
+        ) {
+
+            ModuleSixFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
+        }
+
+
+// ============================================================
+// MÓDULO 7
+// ============================================================
+
+        composable(
+            route = AppScreens.moduleSeven.name
+        ) {
+
+            ModuleSevenFlowScreen(
+
+                onBackToRoadmap = {
+                    navController.popBackStack()
+                },
+
+                onFinish = {
+                    navController.popBackStack(
+                        AppScreens.aprendizaje.name,
+                        inclusive = false
+                    )
+                }
+            )
         }
     }
 }
