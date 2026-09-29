@@ -23,25 +23,34 @@ import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRec
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
+import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 
 enum class AppScreens{
+
+    //ONBOARDING REGISTER
     onboardingOne,
     onboardingTwo,
     onboardingThree,
     login,
     register,
-    homeFundacion,
-    homeCiudadano,
 
+    //FUNDACION
+    homeFundacion,
+    solicitudes,
+
+    //CIUDADANO
+    homeCiudadano,
     crearSolicitud,
 
     solicitudesUsuario,
-    homeRecolector,
-    solicitudes,
+    detallesSolicitud,
+    editarSolicitud,
 
+    //RECOLECTOR
+    homeRecolector,
     perfil,
     rutas,
-
     solicitudesRecolector,
     detalleAsignacionRecolector,
 }
@@ -126,6 +135,30 @@ fun Navigation() {
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("asignacionId") ?: ""
             PantallaDetalleAsignacionRecolector(navController, id)
+        }
+        composable(
+            route = "${AppScreens.detallesSolicitud.name}/{solicitudId}",
+            arguments = listOf(navArgument("solicitudId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
+
+            SolicitudDetalleScreenU(navController, solicitudId = id)
+        }
+        composable(
+            route = "${AppScreens.editarSolicitud.name}/{solicitudId}",
+            arguments = listOf(navArgument("solicitudId") {
+                type = NavType.StringType
+            }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
+
+            EditRequestScreen(navController, solicitudId = id)
         }
     }
 }
