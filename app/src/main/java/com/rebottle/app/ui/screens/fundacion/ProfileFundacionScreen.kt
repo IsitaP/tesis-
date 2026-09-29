@@ -72,15 +72,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.theme.RebottleTheme
 
 
 // ----------------------------------------------------
@@ -474,11 +477,6 @@ private fun ProfileHeader(
             .height(215.dp)
 
     ) {
-
-
-        // ------------------------------------------------
-        // IMAGEN SUPERIOR
-        // ------------------------------------------------
 
         Image(
 
@@ -1061,5 +1059,29 @@ private fun ReBottleProfileBottomBar(
                         )
             )
         }
+    }
+}
+
+
+// ----------------------------------------------------
+// PREVIEW
+// ----------------------------------------------------
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+private fun ProfileFundacionScreenPreview() {
+
+    val controller =
+        rememberNavController()
+
+
+    RebottleTheme {
+
+        ProfileFundacionScreen(
+            controller = controller
+        )
     }
 }

@@ -227,7 +227,7 @@ private fun HeaderPerfilRecolector(
                 .size(150.dp)
                 .align(Alignment.BottomCenter)
                 .clip(CircleShape)
-                .border(width = 2.dp, color = BackgroundColor, shape = CircleShape)
+                .border(width = 10.dp, color = BackgroundColor, shape = CircleShape)
                 .clickable { onPhotoClick() },
             contentAlignment = Alignment.Center
         ) {

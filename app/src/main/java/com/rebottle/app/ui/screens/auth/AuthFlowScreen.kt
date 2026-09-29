@@ -63,8 +63,7 @@ fun ReBottleTextField(
         onValueChange = onValueChange,
 
         modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
+            .fillMaxWidth(),
 
         singleLine = true,
 

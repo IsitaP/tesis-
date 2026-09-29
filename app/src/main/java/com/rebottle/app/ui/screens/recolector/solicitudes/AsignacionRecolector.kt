@@ -14,7 +14,8 @@ data class AsignacionRecolector(
 
 enum class EstadoAsignacion {
     PENDIENTE,
-    COMPLETADA
+    COMPLETADA,
+    CANCELADA
 }
 
 // Datos de ejemplo — cuando conectes Firestore, esta lista
