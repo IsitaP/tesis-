@@ -211,7 +211,11 @@ fun HomeUserScreen(
             )
 
 
-            LearnCard()
+            LearnCard(
+                onLearnClick = {
+                    controller.navigate(AppScreens.aprendizaje.name)
+                }
+            )
 
 
             Spacer(
@@ -439,7 +443,9 @@ private fun CollectionCard() {
 // ============================================================
 
 @Composable
-private fun LearnCard() {
+private fun LearnCard(
+    onLearnClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
@@ -504,7 +510,10 @@ private fun LearnCard() {
                     text = "Aprender más  →",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen
+                    color = MainGreen,
+                    modifier = Modifier.clickable {
+                        onLearnClick()
+                    }
                 )
             }
 

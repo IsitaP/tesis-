@@ -175,7 +175,7 @@ fun LearnRoadmapScreen(
                 x = 5.dp,
                 y = 780.dp,
                 onClick={
-                    onM6Click()
+                    onM7Click()
                 }
             )
 
