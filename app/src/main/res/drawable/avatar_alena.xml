@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="60dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+  <!-- Fondo circular rosado -->
+  <path android:fillColor="#FFD1DC" android:pathData="M30,0C46.568,0 60,13.432 60,30C60,46.568 46.568,60 30,60C13.432,60 0,46.568 0,30C0,13.432 13.432,0 30,0Z"/>
+  <!-- Ropa roja -->
+  <path android:fillColor="#E53935" android:pathData="M15,52C15,44.268 21.686,38 30,38C38.314,38 45,44.268 45,52V60H15V52Z"/>
+  <!-- Cabeza / Piel -->
+  <path android:fillColor="#F1C27D" android:pathData="M30,12C37.18,12 43,17.82 43,25C43,32.18 37.18,38 30,38C22.82,38 17,32.18 17,25C17,17.82 22.82,12 30,12Z"/>
+  <!-- Cabello castaño / Bob cut -->
+  <path android:fillColor="#4A3525" android:pathData="M16,23C16,15.268 22.268,9 30,9C37.732,9 44,15.268 44,23V34C44,34 42,39 30,39C18,39 16,34 16,34V23Z"/>
+</vector>
