@@ -119,7 +119,9 @@ fun ProfileUsuarioScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            ReBottleUsuarioProfileBottomBar(controller = controller)
+            ReBottleBottomBar(
+                controller = controller
+            )
         }
     ) { innerPadding ->
         Column(
@@ -385,8 +387,8 @@ private fun ReBottleUsuarioProfileBottomBar(
             tonalElevation = 0.dp
         ) {
             NavigationBarItem(
-                selected = currentRoute == AppScreens.homeFundacion.name,
-                onClick = { controller.navigate(AppScreens.homeFundacion.name) },
+                selected = currentRoute == AppScreens.perfilUsuario.name,
+                onClick = { controller.navigate(AppScreens.perfilUsuario.name) },
                 icon = {
                     Icon(
                         imageVector = Icons.Outlined.Home,
@@ -427,7 +429,7 @@ private fun ReBottleUsuarioProfileBottomBar(
                 onClick = { /* controller.navigate(...) */ },
                 icon = {
                     Image(
-                        painter = painterResource(id = R.drawable.icon_routes),
+                        painter = painterResource(id = R.drawable.icon_rewards),
                         contentDescription = "Recompensas",
                         modifier = Modifier.size(25.dp)
                     )

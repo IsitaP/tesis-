@@ -115,7 +115,9 @@ fun SolicitudesUsuarioScreenContent(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            UserBottomBar(controller = controller)
+            ReBottleBottomBar(
+                controller = controller
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -528,9 +530,9 @@ private fun UserBottomBar(controller: NavController) {
             onClick = { /* TODO: Recompensas */ },
             icon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.icon_routes),
+                    painter = painterResource(id = R.drawable.icon_rewards),
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             },
             label = { Text("Recompensas", fontSize = 12.sp) },
