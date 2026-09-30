@@ -342,7 +342,9 @@ fun register(
                 val userData = hashMapOf(
                     "name" to name,
                     "email" to email,
-                    "role" to role!!.firestoreValue
+                    "role" to role!!.firestoreValue,
+                    "telefono" to "",
+                    "direccion" to ""
                 )
 
                 Firebase.firestore.collection("users").document(uid)

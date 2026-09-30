@@ -17,7 +17,8 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
-import com.rebottle.app.ui.screens.usuario.ProfileUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.ProfileUserScreen
+import com.rebottle.app.ui.screens.usuario.EditarPerfilUsuarioScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
@@ -43,6 +44,7 @@ enum class AppScreens{
     homeFundacion,
     homeCiudadano,
     perfilUsuario,
+    editarPerfilUsuario,
 
     crearSolicitud,
 
@@ -127,10 +129,14 @@ fun Navigation() {
             HomeUserScreen(navController)
         }
 
+        composable(route = AppScreens.editarPerfilUsuario.name) {
+            EditarPerfilUsuarioScreen(navController)
+        }
+
         composable(
             route = AppScreens.perfilUsuario.name
         ) {
-            ProfileUsuarioScreen(navController)
+            ProfileUserScreen(navController)
         }
 
         composable(
