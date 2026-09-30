@@ -44,19 +44,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebottle.app.R
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
 
 // ----------------------------------------------------
 // COLORES GENERALES
 // ----------------------------------------------------
 
-private val BackgroundColor = Color(0xFFFBF8F2)
+private val BackgroundColor = RebottleColors.Background
 
-private val MainText = Color(0xFF34382F)
+private val MainText = RebottleColors.MainText
 
-private val SecondaryText = Color(0xFF7F887A)
+private val SecondaryText = RebottleColors.SecondaryText
 
-private val Brown = Color(0xFFA55E37)
+private val Brown = RebottleColors.Brown
 
 
 // ----------------------------------------------------
