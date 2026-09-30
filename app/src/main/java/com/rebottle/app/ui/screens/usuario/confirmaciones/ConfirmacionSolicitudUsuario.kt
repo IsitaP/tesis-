@@ -37,11 +37,12 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
-private val BackgroundColor = Color(0xFFFBF8F2)
+private val BackgroundColor = RebottleColors.Background
 private val PrimaryGreenColor = Color(0xFF597042)
-private val PrimaryTextColor = Color(0xFF34382F)
-private val SecondaryTextColor = Color(0xFF7F887A)
+private val PrimaryTextColor = RebottleColors.MainText
+private val SecondaryTextColor = RebottleColors.SecondaryText
 private val CardBackgroundColor = Color(0xFFEFF5E6)
 private val CardBorderColor = Color(0xFFDFE9D4)
 private val IconTerracottaColor = Color(0xFFCD693A)

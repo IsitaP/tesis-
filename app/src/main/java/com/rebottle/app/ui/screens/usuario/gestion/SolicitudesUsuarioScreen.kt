@@ -62,17 +62,15 @@ import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
-// ============================================================
-// COLORES
-// ============================================================
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF536D45)
-private val DarkGreen = Color(0xFF34382F)
-private val SecondaryText = Color(0xFF7F887A)
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val DarkGreen = RebottleColors.DarkGreen
+private val SecondaryText = RebottleColors.SecondaryText
 private val CardBorderColor = Color(0xFFD9DDD2)
-private val BrownIcon = Color(0xFFA55E37)
+private val BrownIcon = RebottleColors.Brown
 
 @Composable
 fun SolicitudesUsuarioScreen(

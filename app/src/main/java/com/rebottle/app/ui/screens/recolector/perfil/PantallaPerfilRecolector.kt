@@ -59,19 +59,19 @@ import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.theme.RebottleTheme
-
+import com.rebottle.app.ui.theme.RebottleColors
 
 // ----------------------------------------------------
 // COLORES
 // ----------------------------------------------------
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val DarkGreen = Color(0xFF394C31)
-private val MainGreen = Color(0xFF536D45)
-private val LightGreen = Color(0xFFF1F7E9)
-private val BorderGreen = Color(0xFFD5E3CD)
-private val SecondaryText = Color(0xFF7F887A)
-private val AccentOrange = Color(0xFFC96A3E)
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val DarkGreen = RebottleColors.DarkGreen
+private val LightGreen = RebottleColors.LightGreen
+private val BorderGreen = RebottleColors.BorderGreen
+private val SecondaryText = RebottleColors.SecondaryText
+private val AccentOrange = RebottleColors.AccentOrange
 
 
 // ----------------------------------------------------

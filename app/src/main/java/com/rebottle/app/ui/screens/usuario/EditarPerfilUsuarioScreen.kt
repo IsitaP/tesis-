@@ -35,10 +35,11 @@ import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import com.rebottle.app.ui.theme.RebottleColors
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF5F7D42)
-private val MainText = Color(0xFF34382F)
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val MainText = RebottleColors.MainText
 
 @Composable
 fun EditarPerfilUsuarioScreen(

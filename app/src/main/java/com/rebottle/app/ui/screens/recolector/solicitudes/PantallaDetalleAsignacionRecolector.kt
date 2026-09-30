@@ -50,11 +50,12 @@ import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.EtiquetaEstado
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainText = Color(0xFF34382F)
-private val SecondaryText = Color(0xFF7F887A)
-private val BrownIcon = Color(0xFFA55E37)
+private val BackgroundColor = RebottleColors.Background
+private val MainText = RebottleColors.MainText
+private val SecondaryText = RebottleColors.SecondaryText
+private val BrownIcon = RebottleColors.Brown
 private val ButtonBorder = Color(0xFF7F887A)
 private val ButtonText = Color(0xFF5A6255)
 
