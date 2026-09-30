@@ -17,6 +17,7 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.ProfileUsuarioScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
@@ -41,6 +42,7 @@ enum class AppScreens{
     register,
     homeFundacion,
     homeCiudadano,
+    perfilUsuario,
 
     crearSolicitud,
 
@@ -123,6 +125,12 @@ fun Navigation() {
             route = AppScreens.homeCiudadano.name
         ) {
             HomeUserScreen(navController)
+        }
+
+        composable(
+            route = AppScreens.perfilUsuario.name
+        ) {
+            ProfileUsuarioScreen(navController)
         }
 
         composable(

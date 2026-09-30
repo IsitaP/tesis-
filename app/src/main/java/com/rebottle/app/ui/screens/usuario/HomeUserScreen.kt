@@ -791,30 +791,25 @@ private fun ReBottleBottomBar(
         ReBottleBottomItem(
             title = "Perfil",
 
-            selected =
-                currentRoute == AppScreens.perfil.name,
+            selected = currentRoute == AppScreens.perfilUsuario.name,
 
-            imageVector =
-                Icons.Outlined.Person,
+            imageVector = Icons.Outlined.Person,
 
-            selectedColor =
-                selectedColor,
+            selectedColor = selectedColor,
 
-            unselectedColor =
-                unselectedColor,
+            unselectedColor = unselectedColor,
 
-            modifier =
-                Modifier.weight(1f),
+            modifier = Modifier.weight(1f),
 
             onClick = {
 
                 if (
                     currentRoute !=
-                    AppScreens.perfil.name
+                    AppScreens.perfilUsuario.name
                 ) {
 
                     controller.navigate(
-                        AppScreens.perfil.name
+                        AppScreens.perfilUsuario.name
                     )
                 }
             }

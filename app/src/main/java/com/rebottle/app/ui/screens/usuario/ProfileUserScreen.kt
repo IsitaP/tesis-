@@ -385,8 +385,12 @@ private fun ReBottleUsuarioProfileBottomBar(
             tonalElevation = 0.dp
         ) {
             NavigationBarItem(
-                selected = currentRoute == AppScreens.homeFundacion.name,
-                onClick = { controller.navigate(AppScreens.homeFundacion.name) },
+                selected = currentRoute == AppScreens.homeCiudadano.name,
+                onClick = {
+                    if (currentRoute != AppScreens.homeCiudadano.name) {
+                        controller.navigate(AppScreens.homeCiudadano.name)
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = Icons.Outlined.Home,
@@ -405,8 +409,12 @@ private fun ReBottleUsuarioProfileBottomBar(
             )
 
             NavigationBarItem(
-                selected = false,
-                onClick = { /* controller.navigate(...) */ },
+                selected = currentRoute == AppScreens.solicitudesUsuario.name,
+                onClick = {
+                    if (currentRoute != AppScreens.solicitudesUsuario.name) {
+                        controller.navigate(AppScreens.solicitudesUsuario.name)
+                    }
+                },
                 icon = {
                     Image(
                         painter = painterResource(id = R.drawable.icon_collection),
@@ -424,7 +432,9 @@ private fun ReBottleUsuarioProfileBottomBar(
 
             NavigationBarItem(
                 selected = false,
-                onClick = { /* controller.navigate(...) */ },
+                onClick = {
+                    // TODO: pantalla de recompensas aún no existe
+                },
                 icon = {
                     Image(
                         painter = painterResource(id = R.drawable.icon_routes),
@@ -441,8 +451,12 @@ private fun ReBottleUsuarioProfileBottomBar(
             )
 
             NavigationBarItem(
-                selected = true,
-                onClick = { /* controller.navigate(...) */ },
+                selected = currentRoute == AppScreens.perfilUsuario.name,
+                onClick = {
+                    if (currentRoute != AppScreens.perfilUsuario.name) {
+                        controller.navigate(AppScreens.perfilUsuario.name)
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = Icons.Outlined.Person,
