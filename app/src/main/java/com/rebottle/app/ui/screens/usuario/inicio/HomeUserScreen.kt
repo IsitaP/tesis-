@@ -190,9 +190,11 @@ fun HomeUserScreen(
 
 
             CollectionCard(
-                onDetailsClick = {
+                solicitudId = "1B98kIH6ntq5wieY7SV7"
+                ,
+                onDetailsClick = { id ->
                     controller.navigate(
-                        "${AppScreens.detalleSolicitudUsuario.name}/1"
+                        "${AppScreens.detalleSolicitudUsuario.name}/$id"
                     )
                 }
             )
@@ -318,7 +320,8 @@ private fun SectionTitle(
 
 @Composable
 private fun CollectionCard(
-    onDetailsClick: () -> Unit
+    solicitudId: String,
+    onDetailsClick: (String) -> Unit
 ) {
 
     Card(
@@ -412,7 +415,7 @@ private fun CollectionCard(
                     fontWeight = FontWeight.Medium,
                     color = MainGreen,
                     modifier = Modifier.clickable {
-                        onDetailsClick()
+                        onDetailsClick(solicitudId)
                     }
                 )
             }
