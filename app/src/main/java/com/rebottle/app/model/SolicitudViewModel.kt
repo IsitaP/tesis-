@@ -298,7 +298,7 @@ class SolicitudViewModel : ViewModel() {
     // ========================================================
 
     fun crearSolicitud(
-        onSuccess: () -> Unit,
+        onSuccess: (String) -> Unit,
         onError: (String) -> Unit
     ) {
 
@@ -425,8 +425,6 @@ class SolicitudViewModel : ViewModel() {
             firestore
                 .collection("contadores")
                 .document("solicitudes")
-
-
         firestore.runTransaction { transaction ->
 
             val contadorSnapshot =
@@ -479,7 +477,7 @@ class SolicitudViewModel : ViewModel() {
                 "Solicitud creada con ID: $nuevoId"
             )
 
-            onSuccess()
+            onSuccess(nuevoId)
 
         }.addOnFailureListener { exception ->
 

@@ -39,6 +39,8 @@ import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
+import com.rebottle.app.ui.screens.usuario.confirmaciones.ConfirmacionSolicitudUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.confirmaciones.RechazoSolicitudUsuario
 
 enum class AppScreens {
 
@@ -66,6 +68,8 @@ enum class AppScreens {
     detalleSolicitudUsuario,
     aprendizaje,
     misAportes,
+    confirmacionSolicitud,
+    rechazoSolicitud,
 
     moduleOne,
     moduleTwo,
@@ -131,6 +135,18 @@ fun Navigation() {
         composable(route = AppScreens.crearSolicitud.name) { CreateRequestScreen(navController) }
         composable(route = AppScreens.solicitudesUsuario.name) { SolicitudesUsuarioScreen(navController) }
         composable(route = AppScreens.misAportes.name) { MisAportesScreen(controller = navController) }
+       // composable(route = AppScreens.confirmacionSolicitud.name) { ConfirmacionSolicitudUsuarioScreen(navController) }
+        composable(route = AppScreens.rechazoSolicitud.name) { RechazoSolicitudUsuario(navController) }
+
+
+        composable(
+            route = "${AppScreens.confirmacionSolicitud.name}/{solicitudId}",
+            arguments = listOf(navArgument("solicitudId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
+            ConfirmacionSolicitudUsuarioScreen(navController, solicitudId = id)
+        }
+
 
         composable(
             route = "${AppScreens.detalleSolicitudUsuario.name}/{solicitudId}",
