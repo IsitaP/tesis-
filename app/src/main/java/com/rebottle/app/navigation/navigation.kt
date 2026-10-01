@@ -2,11 +2,9 @@ package com.rebottle.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.usuario.inicio.HomeUserScreen
 import com.rebottle.app.ui.screens.auth.LoginScreen
 import com.rebottle.app.ui.screens.auth.RegisterScreen
@@ -24,6 +22,16 @@ import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.gamificacion.MisAportesScreen
 import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 
+import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
+import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
+import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
+import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
+import com.rebottle.app.ui.screens.usuario.inicio.HomeUserScreen
+
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleThreeFlowScreen
@@ -33,17 +41,22 @@ import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
 
 enum class AppScreens{
+
+    //ONBOARDING REGISTER
     onboardingOne,
     onboardingTwo,
     onboardingThree,
     login,
     register,
+
+    //FUNDACION
     homeFundacion,
     homeCiudadano,
 
     crearSolicitud,
 
     solicitudesUsuario,
+    editarSolicitud,
     detalleSolicitudUsuario,
     aprendizaje,
 
@@ -64,8 +77,6 @@ enum class AppScreens{
 
     solicitudesRecolector,
     detalleAsignacionRecolector,
-
-
 }
 
 @Composable
@@ -122,10 +133,7 @@ fun Navigation() {
 
 
         //**CIUDADANO**/
-
-        composable(
-            route = AppScreens.homeCiudadano.name
-        ) {
+        composable(route = AppScreens.homeCiudadano.name) {
             HomeUserScreen(navController)
         }
         composable(
@@ -166,12 +174,42 @@ fun Navigation() {
             CreateRequestScreen(navController)
         }
 
-        composable(
-            route = AppScreens.solicitudesUsuario.name
-        ) {
+        composable(route = AppScreens.solicitudesUsuario.name){
             SolicitudesUsuarioScreen(navController)
         }
 
+        composable(
+            route = "${AppScreens.detalleSolicitudUsuario.name}/{solicitudId}",
+            arguments = listOf(navArgument("solicitudId") {
+                type = NavType.StringType
+            }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
+
+            SolicitudDetalleScreenU(navController, solicitudId = id)
+        }
+        composable(
+            route = "${AppScreens.editarSolicitud.name}/{solicitudId}",
+            arguments = listOf(navArgument("solicitudId") {
+                type = NavType.StringType
+            }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("solicitudId") ?: ""
+
+            EditRequestScreen(navController, solicitudId = id)
+        }
+
+
+        composable(route = AppScreens.homeRecolector.name) {
+            PantallaInicioRecolector(navController)
+        }
+        composable(route = AppScreens.solicitudesRecolector.name) {
+            PantallaSolicitudesRecolector(navController)
+        }
         composable(
             route = AppScreens.aprendizaje.name
         ) {

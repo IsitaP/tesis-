@@ -381,7 +381,6 @@ class SolicitudViewModel : ViewModel() {
             currentState
                 .selectedMaterials
                 .map {
-
                     it.name
                 }
 
@@ -419,37 +418,81 @@ class SolicitudViewModel : ViewModel() {
 
 
         // ====================================================
-        // GUARDAR EN FIRESTORE
+        // CREAR ID CONSECUTIVO Y GUARDAR
         // ====================================================
 
-        firestore
-            .collection("solicitudes")
-            .add(solicitud)
-
-            .addOnSuccessListener {
-
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false
-                    )
+        val contadorRef =
+            firestore
+                .collection("contadores")
+                .document("solicitudes")
 
 
-                onSuccess()
-            }
+        firestore.runTransaction { transaction ->
 
-            .addOnFailureListener { exception ->
+            val contadorSnapshot =
+                transaction.get(contadorRef)
 
-                _state.value =
-                    _state.value.copy(
-                        isLoading = false
-                    )
+            val ultimoId =
+                contadorSnapshot.getLong("ultimoId")
+                    ?: 0L
+
+            val nuevoNumero =
+                ultimoId + 1
+
+            val nuevoId =
+                "RB-${
+                    nuevoNumero
+                        .toString()
+                        .padStart(4, '0')
+                }"
+
+            val solicitudRef =
+                firestore
+                    .collection("solicitudes")
+                    .document(nuevoId)
 
 
-                onError(
-                    exception.message
-                        ?: "Error al crear la solicitud"
+            transaction.set(
+                solicitudRef,
+                solicitud
+            )
+
+
+            transaction.set(
+                contadorRef,
+                mapOf(
+                    "ultimoId" to nuevoNumero
                 )
-            }
+            )
+
+
+            nuevoId
+
+        }.addOnSuccessListener { nuevoId ->
+
+            _state.value =
+                _state.value.copy(
+                    isLoading = false
+                )
+
+            println(
+                "Solicitud creada con ID: $nuevoId"
+            )
+
+            onSuccess()
+
+        }.addOnFailureListener { exception ->
+
+            _state.value =
+                _state.value.copy(
+                    isLoading = false
+                )
+
+            onError(
+                exception.message
+                    ?: "Error al crear la solicitud"
+            )
+        }
     }
 
 
@@ -627,6 +670,243 @@ class SolicitudViewModel : ViewModel() {
                         )
                 }
     }
+
+    // ========================================================
+    // Cancelar Solicitud
+    // ========================================================
+
+    fun cancelarSolicitud(
+        solicitudId: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+
+        firestore
+            .collection("solicitudes")
+            .document(solicitudId)
+            .update(
+                "estado",
+                "CANCELADA"
+            )
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+
+                onError(
+                    exception.message
+                        ?: "Error al cancelar la solicitud"
+                )
+            }
+    }
+
+
+    fun cargarSolicitudParaEditar(
+        solicitudId: String
+    ) {
+
+        val solicitud =
+            _state.value.solicitudes.find {
+                it.id == solicitudId
+            }
+                ?: return
+
+
+        // ========================================================
+        // CONVERTIR MATERIALES
+        // ========================================================
+
+        val materiales =
+            solicitud.materiales
+                .mapNotNull { material ->
+
+                    try {
+
+                        MaterialType.valueOf(
+                            material
+                        )
+
+                    } catch (e: Exception) {
+
+                        null
+                    }
+                }
+                .toSet()
+
+
+        // ========================================================
+        // CONVERTIR FECHA
+        // ========================================================
+
+        val fecha =
+            try {
+
+                LocalDate.parse(
+                    solicitud.fechaRecoleccion
+                )
+
+            } catch (e: Exception) {
+
+                LocalDate.now()
+            }
+
+
+        // ========================================================
+        // CARGAR DATOS EN EL FORMULARIO
+        // ========================================================
+
+        _state.value =
+            _state.value.copy(
+
+                location =
+                    solicitud.direccion,
+
+                selectedMaterials =
+                    materiales,
+
+                weightKg =
+                    solicitud.pesoKg,
+
+                selectedDate =
+                    fecha,
+
+                displayedMonth =
+                    YearMonth.from(fecha),
+
+                locationError =
+                    "",
+
+                materialsError =
+                    ""
+            )
+    }
+
+    fun editarSolicitud(
+        solicitudId: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+
+        val currentState =
+            _state.value
+
+
+        // ========================================================
+        // VALIDAR DIRECCIÓN
+        // ========================================================
+
+        if (currentState.location.isBlank()) {
+
+            _state.value =
+                currentState.copy(
+                    locationError =
+                        "Ingresa la dirección de recolección"
+                )
+
+            return
+        }
+
+
+        // ========================================================
+        // VALIDAR MATERIALES
+        // ========================================================
+
+        if (
+            currentState
+                .selectedMaterials
+                .isEmpty()
+        ) {
+
+            _state.value =
+                currentState.copy(
+                    materialsError =
+                        "Selecciona al menos un material"
+                )
+
+            return
+        }
+
+
+        // ========================================================
+        // LOADING
+        // ========================================================
+
+        _state.value =
+            currentState.copy(
+                isLoading = true,
+                locationError = "",
+                materialsError = ""
+            )
+
+
+        // ========================================================
+        // MATERIALES
+        // ========================================================
+
+        val materiales =
+            currentState
+                .selectedMaterials
+                .map {
+                    it.name
+                }
+
+
+        // ========================================================
+        // CAMPOS A ACTUALIZAR
+        // ========================================================
+
+        val cambios =
+            mapOf(
+
+                "direccion" to
+                        currentState.location.trim(),
+
+                "materiales" to
+                        materiales,
+
+                "pesoKg" to
+                        currentState.weightKg,
+
+                "fechaRecoleccion" to
+                        currentState
+                            .selectedDate
+                            .toString()
+            )
+
+
+        // ========================================================
+        // ACTUALIZAR FIRESTORE
+        // ========================================================
+
+        firestore
+            .collection("solicitudes")
+            .document(solicitudId)
+            .update(cambios)
+
+            .addOnSuccessListener {
+
+                _state.value =
+                    _state.value.copy(
+                        isLoading = false
+                    )
+
+                onSuccess()
+            }
+
+            .addOnFailureListener { exception ->
+
+                _state.value =
+                    _state.value.copy(
+                        isLoading = false
+                    )
+
+                onError(
+                    exception.message
+                        ?: "Error al editar la solicitud"
+                )
+            }
+    }
+
 
 
     // ========================================================
