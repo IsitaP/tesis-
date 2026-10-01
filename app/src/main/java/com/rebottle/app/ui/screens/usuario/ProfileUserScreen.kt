@@ -2,7 +2,6 @@ package com.rebottle.app.ui.screens.usuario
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.util.Base64
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,7 +39,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,21 +67,23 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
-import kotlinx.coroutines.launch
-import java.io.ByteArrayOutputStream
 import com.rebottle.app.ui.theme.RebottleColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
-private val DarkGreen = RebottleColors.DarkGreen
-private val LightGreen = RebottleColors.LightGreen
-private val BorderGreen = RebottleColors.BorderGreen
-private val MainText = RebottleColors.MainText
-private val SecondaryText = RebottleColors.SecondaryText
+private val DarkGreen = Color(0xFF394C31)
+private val LightGreen = Color(0xFFF1F7E9)
+private val BorderGreen = Color(0xFFD5E3CD)
+private val MainText = Color(0xFF34382F)
+private val SecondaryText = Color(0xFF7F887A)
 
 
 @Composable
@@ -94,15 +94,16 @@ fun ProfileUserScreen(
     val coroutineScope = rememberCoroutineScope()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    // ------------------------------------------------
-    // DATOS CARGADOS DE FIRESTORE
-    // ------------------------------------------------
-
     var nombre by remember { mutableStateOf("") }
     var direccion by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
     var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var cargando by remember { mutableStateOf(true) }
+    var subiendoFoto by remember { mutableStateOf(false) }
+
+    // ------------------------------------------------
+    // CARGAR DATOS + FOTO DESDE STORAGE
+    // ------------------------------------------------
 
     LaunchedEffect(uid) {
         if (uid != null) {
@@ -111,19 +112,26 @@ fun ProfileUserScreen(
                     nombre = doc.getString("name") ?: ""
                     direccion = doc.getString("direccion") ?: ""
                     telefono = doc.getString("telefono") ?: ""
-
-                    val fotoBase64 = doc.getString("fotoBase64")
-                    if (!fotoBase64.isNullOrEmpty()) {
-                        selectedImageBitmap = base64ToImageBitmap(fotoBase64)
-                    }
                     cargando = false
+
+                    val fotoUrl = doc.getString("fotoUrl")
+                    if (!fotoUrl.isNullOrEmpty()) {
+                        runCatching {
+                            Firebase.storage.getReferenceFromUrl(fotoUrl)
+                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
+                            ?.addOnSuccessListener { bytes ->
+                                selectedImageBitmap = BitmapFactory
+                                    .decodeByteArray(bytes, 0, bytes.size)
+                                    .asImageBitmap()
+                            }
+                    }
                 }
                 .addOnFailureListener { cargando = false }
         }
     }
 
     // ------------------------------------------------
-    // SELECTOR DE FOTO
+    // SELECTOR + SUBIDA DE FOTO A STORAGE
     // ------------------------------------------------
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -135,13 +143,27 @@ fun ProfileUserScreen(
             }.getOrNull()
 
             if (bitmap != null) {
-                val redimensionado = Bitmap.createScaledBitmap(bitmap, 300, 300, true)
+                val redimensionado = Bitmap.createScaledBitmap(bitmap, 500, 500, true)
                 selectedImageBitmap = redimensionado.asImageBitmap()
+                subiendoFoto = true
 
-                val base64 = imageBitmapToBase64(redimensionado)
+                val stream = java.io.ByteArrayOutputStream()
+                redimensionado.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                val data = stream.toByteArray()
 
-                Firebase.firestore.collection("users").document(uid)
-                    .update("fotoBase64", base64)
+                val storageRef = Firebase.storage.reference.child("perfil_fotos/$uid.jpg")
+
+                storageRef.putBytes(data)
+                    .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { url ->
+                            Firebase.firestore.collection("users").document(uid)
+                                .update("fotoUrl", url.toString())
+                            subiendoFoto = false
+                        }
+                    }
+                    .addOnFailureListener {
+                        subiendoFoto = false
+                    }
             }
         }
     }
@@ -170,6 +192,7 @@ fun ProfileUserScreen(
 
             ProfileUsuarioHeader(
                 selectedImageBitmap = selectedImageBitmap,
+                subiendoFoto = subiendoFoto,
                 onTap = { openPhotoPicker() }
             )
 
@@ -184,7 +207,6 @@ fun ProfileUserScreen(
                     fontWeight = FontWeight.Bold,
                     color = DarkGreen
                 )
-
                 if (direccion.isNotEmpty()) {
                     Text(text = direccion, fontSize = 14.sp, color = SecondaryText)
                 }
@@ -206,6 +228,28 @@ fun ProfileUserScreen(
                 border = BorderStroke(width = 1.dp, color = MainGreen)
             ) {
                 Text(text = "Editar perfil", fontSize = 14.sp, color = MainGreen)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // ------------------------------------------------
+            // CERRAR SESIÓN — mismo estilo que "Editar perfil"
+            // ------------------------------------------------
+
+            OutlinedButton(
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    controller.navigate(AppScreens.login.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .width(230.dp)
+                    .height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(width = 1.dp, color = MainGreen)
+            ) {
+                Text(text = "Cerrar sesión", fontSize = 14.sp, color = MainGreen)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -236,12 +280,13 @@ fun ProfileUserScreen(
 
 
 // ----------------------------------------------------
-// HEADER — foto tocable (editar) y sostenible (ver grande, tipo IG)
+// HEADER — foto tocable, sostenible (ver grande), con loader al subir
 // ----------------------------------------------------
 
 @Composable
 private fun ProfileUsuarioHeader(
     selectedImageBitmap: ImageBitmap?,
+    subiendoFoto: Boolean,
     onTap: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -271,17 +316,14 @@ private fun ProfileUsuarioHeader(
                     detectTapGestures(
                         onPress = {
                             var fueSostenido = false
-
                             val job = coroutineScope.launch {
-                                kotlinx.coroutines.delay(350)
+                                delay(350)
                                 fueSostenido = true
                                 mostrarFotoGrande = true
                             }
-
                             tryAwaitRelease()
                             job.cancel()
                             mostrarFotoGrande = false
-
                             if (!fueSostenido) {
                                 onTap()
                             }
@@ -291,12 +333,19 @@ private fun ProfileUsuarioHeader(
             contentAlignment = Alignment.Center
         ) {
             FotoPerfilUsuario(selectedImageBitmap)
+
+            if (subiendoFoto) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.35f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
         }
     }
-
-    // ------------------------------------------------
-    // VISTA GRANDE (se muestra mientras se sostiene)
-    // ------------------------------------------------
 
     if (mostrarFotoGrande) {
         Dialog(
@@ -304,9 +353,7 @@ private fun ProfileUsuarioHeader(
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
+                modifier = Modifier.fillMaxSize().background(Color.Black),
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedImageBitmap != null) {
@@ -389,7 +436,7 @@ private fun ProfileUsuarioSummaryCard() {
 
 
 // ----------------------------------------------------
-// BARRA INFERIOR (igual que ya quedó corregida)
+// BARRA INFERIOR (sin cambios)
 // ----------------------------------------------------
 
 @Composable
@@ -458,26 +505,6 @@ private fun ReBottleUsuarioProfileBottomBar(
         }
     }
 }
-
-
-// ----------------------------------------------------
-// UTILIDADES BASE64 (compresión + conversión)
-// ----------------------------------------------------
-
-private fun imageBitmapToBase64(bitmap: Bitmap): String {
-    val stream = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream)
-    val bytes = stream.toByteArray()
-    return Base64.encodeToString(bytes, Base64.DEFAULT)
-}
-
-private fun base64ToImageBitmap(base64: String): ImageBitmap? {
-    return runCatching {
-        val bytes = Base64.decode(base64, Base64.DEFAULT)
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
-    }.getOrNull()
-}
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

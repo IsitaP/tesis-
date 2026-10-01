@@ -54,6 +54,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+    implementation("com.google.firebase:firebase-storage")
     implementation(libs.googleid)
     implementation(libs.androidx.compose.material.icons.extended)
     testImplementation(libs.junit)
