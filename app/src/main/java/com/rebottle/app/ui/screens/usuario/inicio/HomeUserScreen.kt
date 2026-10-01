@@ -1,4 +1,4 @@
-package com.rebottle.app.ui.screens.usuario
+package com.rebottle.app.ui.screens.usuario.inicio
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -189,7 +189,13 @@ fun HomeUserScreen(
             )
 
 
-            CollectionCard()
+            CollectionCard(
+                onDetailsClick = {
+                    controller.navigate(
+                        "${AppScreens.detalleSolicitudUsuario.name}/1"
+                    )
+                }
+            )
 
 
             Spacer(
@@ -311,7 +317,9 @@ private fun SectionTitle(
 // ============================================================
 
 @Composable
-private fun CollectionCard() {
+private fun CollectionCard(
+    onDetailsClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
@@ -402,7 +410,10 @@ private fun CollectionCard() {
                     text = "Ver más detalles →",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen
+                    color = MainGreen,
+                    modifier = Modifier.clickable {
+                        onDetailsClick()
+                    }
                 )
             }
 

@@ -61,6 +61,7 @@ import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.screens.usuario.inicio.ReBottleBottomBar
 import com.rebottle.app.ui.theme.RebottleTheme
 
 // ============================================================

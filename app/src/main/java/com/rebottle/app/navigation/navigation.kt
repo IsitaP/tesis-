@@ -2,10 +2,12 @@ package com.rebottle.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.rebottle.app.ui.screens.usuario.HomeUserScreen
+import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.usuario.inicio.HomeUserScreen
 import com.rebottle.app.ui.screens.auth.LoginScreen
 import com.rebottle.app.ui.screens.auth.RegisterScreen
 import com.rebottle.app.ui.screens.fundacion.HomeFundacionScreen
@@ -17,15 +19,10 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
-import com.rebottle.app.ui.screens.usuario.ProfileUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.inicio.ProfileUsuarioScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
-import com.rebottle.app.ui.screens.usuario.MisAportesScreen
-
-import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
-import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
-import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.usuario.gamificacion.MisAportesScreen
+import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -47,6 +44,7 @@ enum class AppScreens{
     crearSolicitud,
 
     solicitudesUsuario,
+    detalleSolicitudUsuario,
     aprendizaje,
 
     moduleOne,
@@ -129,6 +127,23 @@ fun Navigation() {
             route = AppScreens.homeCiudadano.name
         ) {
             HomeUserScreen(navController)
+        }
+        composable(
+            route = "${AppScreens.detalleSolicitudUsuario.name}/{solicitudId}",
+            arguments = listOf(
+                navArgument("solicitudId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val solicitudId =
+                backStackEntry.arguments?.getString("solicitudId") ?: ""
+
+            SolicitudDetalleScreenU(
+                controller = navController,
+                solicitudId = solicitudId
+            )
         }
         composable(
             route = AppScreens.perfilUsuario.name
