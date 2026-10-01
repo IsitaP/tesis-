@@ -458,7 +458,7 @@ private fun SolicitudCard(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { navController.navigate(
-                        "${AppScreens.detallesSolicitud.name}/${solicitud.id}"
+                        "${AppScreens.detalleSolicitudUsuario.name}/${solicitud.id}"
                     ) }
                 )
             }
