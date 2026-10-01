@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
 import androidx.compose.ui.Alignment
@@ -48,12 +49,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 
 import com.rebottle.app.R
+import com.rebottle.app.model.Solicitud
+import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
@@ -75,8 +80,21 @@ private val SecondaryText = RebottleColors.SecondaryText
 
 @Composable
 fun HomeUserScreen(
-    controller: NavController
+    controller: NavController,
+    viewModel: SolicitudViewModel = viewModel()
 ) {
+
+    val usuarioId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    val state by viewModel.state.collectAsState()
+
+    val ultimaSolicitud = state.solicitudes
+        .filter { it.usuarioId == usuarioId }
+        .maxByOrNull { solicitud ->
+            solicitud.id
+                .removePrefix("RB-")
+                .toIntOrNull() ?: 0
+        }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -186,13 +204,25 @@ fun HomeUserScreen(
             )
 
 
-            CollectionCard(
-                onDetailsClick = {
-                    controller.navigate(
-                        "${AppScreens.detalleSolicitudUsuario.name}/1"
-                    )
-                }
-            )
+            if (ultimaSolicitud != null) {
+
+                CollectionCard(
+                    solicitud = ultimaSolicitud,
+                    onDetailsClick = {
+                        controller.navigate(
+                            "${AppScreens.detalleSolicitudUsuario.name}/${ultimaSolicitud.id}"
+                        )
+                    }
+                )
+
+            } else {
+
+                Text(
+                    text = "Aún no tienes solicitudes",
+                    fontSize = 14.sp,
+                    color = SecondaryText
+                )
+            }
 
 
             Spacer(
@@ -315,6 +345,7 @@ private fun SectionTitle(
 
 @Composable
 private fun CollectionCard(
+    solicitud: Solicitud,
     onDetailsClick: () -> Unit
 ) {
 
@@ -375,7 +406,7 @@ private fun CollectionCard(
 
 
                 Text(
-                    text = "Estado: Programada",
+                    text = "Estado: ${solicitud.estado}",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
@@ -383,7 +414,7 @@ private fun CollectionCard(
 
 
                 Text(
-                    text = "Fecha: Agosto 24",
+                    text = "Fecha: ${solicitud.fechaRecoleccion}",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
@@ -994,8 +1025,8 @@ private fun HomeUserScreenPreview() {
 
     RebottleTheme {
 
-        HomeUserScreen(
-            controller = controller
-        )
+        //HomeUserScreen(
+            //controller = controller
+        //)
     }
 }
