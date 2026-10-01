@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,6 +63,7 @@ import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.screens.usuario.inicio.ReBottleBottomBar
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
 
@@ -113,7 +116,9 @@ fun SolicitudesUsuarioScreenContent(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            UserBottomBar(controller = controller)
+            ReBottleBottomBar(
+                controller = controller
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -170,16 +175,22 @@ fun SolicitudesUsuarioScreenContent(
                         color = DarkGreen
                     )
 
-                    Surface(
-                        onClick = onCreateClick,
-                        color = MainGreen,
-                        shape = RoundedCornerShape(8.dp)
+                    Button(
+                        onClick = {
+                            controller.navigate(AppScreens.crearSolicitud.name)
+                        },
+
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MainGreen
+                        ),
+
+                        shape = RoundedCornerShape(7.dp)
                     ) {
+
                         Text(
-                            text = "Crear Solicitud →",
+                            text = "Solicitar Recolección  →",
                             color = Color.White,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -230,7 +241,7 @@ fun SolicitudesUsuarioScreenContent(
                 ) { solicitud ->
                     SolicitudCard(
                         solicitud = solicitud,
-                        onDetailsClick = { onDetailsClick(solicitud) }
+                        navController = controller
                     )
                 }
             }
@@ -359,7 +370,7 @@ private fun ResumenRecolecciones(
 @Composable
 private fun SolicitudCard(
     solicitud: Solicitud,
-    onDetailsClick: () -> Unit = {}
+    navController: NavController
 ) {
     val estadoUpper = solicitud.estado.uppercase()
 
@@ -444,7 +455,9 @@ private fun SolicitudCard(
                     color = badgeColor, // El color del texto "Ver detalles" coincide exactamente con el estado (naranja, verde o rojo)
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { onDetailsClick() }
+                    modifier = Modifier.clickable { navController.navigate(
+                        "${AppScreens.detallesSolicitud.name}/${solicitud.id}"
+                    ) }
                 )
             }
         }
@@ -526,9 +539,9 @@ private fun UserBottomBar(controller: NavController) {
             onClick = { /* TODO: Recompensas */ },
             icon = {
                 Icon(
-                    painter = painterResource(id = R.drawable.icon_routes),
+                    painter = painterResource(id = R.drawable.icon_rewards),
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             },
             label = { Text("Recompensas", fontSize = 12.sp) },

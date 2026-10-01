@@ -1,4 +1,4 @@
-package com.rebottle.app.ui.screens.usuario
+package com.rebottle.app.ui.screens.usuario.inicio
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -76,7 +76,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
 private val DarkGreen = Color(0xFF394C31)
@@ -100,10 +99,6 @@ fun ProfileUserScreen(
     var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var cargando by remember { mutableStateOf(true) }
     var subiendoFoto by remember { mutableStateOf(false) }
-
-    // ------------------------------------------------
-    // CARGAR DATOS + FOTO DESDE STORAGE
-    // ------------------------------------------------
 
     LaunchedEffect(uid) {
         if (uid != null) {
@@ -129,10 +124,6 @@ fun ProfileUserScreen(
                 .addOnFailureListener { cargando = false }
         }
     }
-
-    // ------------------------------------------------
-    // SELECTOR + SUBIDA DE FOTO A STORAGE
-    // ------------------------------------------------
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -161,9 +152,7 @@ fun ProfileUserScreen(
                             subiendoFoto = false
                         }
                     }
-                    .addOnFailureListener {
-                        subiendoFoto = false
-                    }
+                    .addOnFailureListener { subiendoFoto = false }
             }
         }
     }
@@ -218,12 +207,8 @@ fun ProfileUserScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = {
-                    controller.navigate(AppScreens.editarPerfilUsuario.name)
-                },
-                modifier = Modifier
-                    .width(230.dp)
-                    .height(36.dp),
+                onClick = { controller.navigate(AppScreens.editarPerfilUsuario.name) },
+                modifier = Modifier.width(230.dp).height(36.dp),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(width = 1.dp, color = MainGreen)
             ) {
@@ -232,10 +217,6 @@ fun ProfileUserScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ------------------------------------------------
-            // CERRAR SESIÓN — mismo estilo que "Editar perfil"
-            // ------------------------------------------------
-
             OutlinedButton(
                 onClick = {
                     FirebaseAuth.getInstance().signOut()
@@ -243,9 +224,7 @@ fun ProfileUserScreen(
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                modifier = Modifier
-                    .width(230.dp)
-                    .height(36.dp),
+                modifier = Modifier.width(230.dp).height(36.dp),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(width = 1.dp, color = MainGreen)
             ) {
@@ -254,11 +233,7 @@ fun ProfileUserScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 27.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -267,21 +242,14 @@ fun ProfileUserScreen(
                     Text(text = "Impacto", fontSize = 22.sp, fontWeight = FontWeight.Medium, color = MainText)
                     Text(text = "Ver más →", fontSize = 14.sp, color = MainGreen)
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 ProfileUsuarioSummaryCard()
-
                 Spacer(modifier = Modifier.height(25.dp))
             }
         }
     }
 }
 
-
-// ----------------------------------------------------
-// HEADER — foto tocable, sostenible (ver grande), con loader al subir
-// ----------------------------------------------------
 
 @Composable
 private fun ProfileUsuarioHeader(
@@ -292,17 +260,11 @@ private fun ProfileUsuarioHeader(
     val coroutineScope = rememberCoroutineScope()
     var mostrarFotoGrande by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(215.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().height(215.dp)) {
         Image(
             painter = painterResource(id = R.drawable.fundacion_profile_header),
             contentDescription = "Fondo perfil Usuario",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(175.dp),
+            modifier = Modifier.fillMaxWidth().height(175.dp),
             contentScale = ContentScale.Crop
         )
 
@@ -324,9 +286,7 @@ private fun ProfileUsuarioHeader(
                             tryAwaitRelease()
                             job.cancel()
                             mostrarFotoGrande = false
-                            if (!fueSostenido) {
-                                onTap()
-                            }
+                            if (!fueSostenido) onTap()
                         }
                     )
                 },
@@ -336,9 +296,7 @@ private fun ProfileUsuarioHeader(
 
             if (subiendoFoto) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.35f)),
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
@@ -352,10 +310,7 @@ private fun ProfileUsuarioHeader(
             onDismissRequest = { mostrarFotoGrande = false },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
                 if (selectedImageBitmap != null) {
                     Image(
                         bitmap = selectedImageBitmap,
@@ -396,10 +351,6 @@ private fun FotoPerfilUsuario(selectedImageBitmap: ImageBitmap?) {
 }
 
 
-// ----------------------------------------------------
-// CARD RESUMEN DE IMPACTO (sin cambios)
-// ----------------------------------------------------
-
 @Composable
 private fun ProfileUsuarioSummaryCard() {
     Card(
@@ -435,10 +386,6 @@ private fun ProfileUsuarioSummaryCard() {
 }
 
 
-// ----------------------------------------------------
-// BARRA INFERIOR (sin cambios)
-// ----------------------------------------------------
-
 @Composable
 private fun ReBottleUsuarioProfileBottomBar(
     controller: NavController
@@ -446,9 +393,7 @@ private fun ReBottleUsuarioProfileBottomBar(
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Box(
-        modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(top = 3.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(top = 3.dp)) {
         NavigationBar(
             modifier = Modifier.fillMaxWidth(),
             containerColor = Color.White,
@@ -483,7 +428,7 @@ private fun ReBottleUsuarioProfileBottomBar(
             NavigationBarItem(
                 selected = false,
                 onClick = { /* TODO: recompensas */ },
-                icon = { Image(painter = painterResource(id = R.drawable.icon_routes), contentDescription = "Recompensas", modifier = Modifier.size(25.dp)) },
+                icon = { Image(painter = painterResource(id = R.drawable.icon_rewards), contentDescription = "Recompensas", modifier = Modifier.size(25.dp)) },
                 label = { Text(text = "Recompensas", fontSize = 12.sp) },
                 colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
             )

@@ -1,4 +1,4 @@
-package com.rebottle.app.ui.screens.usuario
+package com.rebottle.app.ui.screens.usuario.inicio
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -186,7 +186,13 @@ fun HomeUserScreen(
             )
 
 
-            CollectionCard()
+            CollectionCard(
+                onDetailsClick = {
+                    controller.navigate(
+                        "${AppScreens.detalleSolicitudUsuario.name}/1"
+                    )
+                }
+            )
 
 
             Spacer(
@@ -234,7 +240,7 @@ fun HomeUserScreen(
             )
 
 
-            MoreActionsSection()
+            MoreActionsSection(controller=controller)
         }
     }
 }
@@ -308,7 +314,9 @@ private fun SectionTitle(
 // ============================================================
 
 @Composable
-private fun CollectionCard() {
+private fun CollectionCard(
+    onDetailsClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
@@ -399,7 +407,10 @@ private fun CollectionCard() {
                     text = "Ver más detalles →",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen
+                    color = MainGreen,
+                    modifier = Modifier.clickable {
+                        onDetailsClick()
+                    }
                 )
             }
 
@@ -552,7 +563,7 @@ private fun LearnCard(
 // ============================================================
 
 @Composable
-private fun MoreActionsSection() {
+private fun MoreActionsSection(controller: NavController) {
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -565,7 +576,12 @@ private fun MoreActionsSection() {
         ActionCard(
             title = "Mis aportes",
             imageRes = R.drawable.home_impact,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = {
+                controller.navigate(
+                    AppScreens.misAportes.name
+                )
+            }
         )
 
 
@@ -586,12 +602,16 @@ private fun MoreActionsSection() {
 private fun ActionCard(
     title: String,
     imageRes: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
         modifier = modifier
-            .height(150.dp),
+            .height(150.dp)
+            .clickable {
+                onClick()
+            },
 
         shape = RoundedCornerShape(8.dp),
 
@@ -614,9 +634,11 @@ private fun ActionCard(
                 .fillMaxSize()
                 .padding(10.dp),
 
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
 
-            verticalArrangement = Arrangement.Center
+            verticalArrangement =
+                Arrangement.Center
         ) {
 
             Image(
@@ -655,7 +677,7 @@ private fun ActionCard(
 // ============================================================
 
 @Composable
-private fun ReBottleBottomBar(
+fun ReBottleBottomBar(
     controller: NavController
 ) {
 

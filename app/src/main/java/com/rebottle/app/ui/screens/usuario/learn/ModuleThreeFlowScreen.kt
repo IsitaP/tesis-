@@ -668,6 +668,15 @@ private fun ModuleThreeCompleteScreen(
                 .padding(horizontal = 45.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.modulo3),
+                contentDescription = "Ilustración de completado",
+                modifier = Modifier
+                    .size(320.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
 
             Text(
                 text = "Felicidades estas un paso\n" +
