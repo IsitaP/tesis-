@@ -19,6 +19,7 @@ import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.ProfileUsuarioScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.MisAportesScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
@@ -61,9 +62,12 @@ enum class AppScreens{
     perfil,
     rutas,
     perfilUsuario,
+    misAportes,
 
     solicitudesRecolector,
     detalleAsignacionRecolector,
+
+
 }
 
 @Composable
@@ -130,6 +134,13 @@ fun Navigation() {
             route = AppScreens.perfilUsuario.name
         ) {
             ProfileUsuarioScreen(
+                controller = navController
+            )
+        }
+        composable(
+            route = AppScreens.misAportes.name
+        ) {
+            MisAportesScreen(
                 controller = navController
             )
         }
