@@ -86,9 +86,20 @@ import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
 
-// ----------------------------------------------------
-// COLORES
-// ----------------------------------------------------
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 private val BackgroundColor = RebottleColors.Background
 
@@ -107,61 +118,84 @@ private val SecondaryText = RebottleColors.SecondaryText
 @Composable
 fun ProfileFundacionScreen(
     controller: NavController
-
 ) {
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
+    var nombre by remember { mutableStateOf("") }
+    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var cargando by remember { mutableStateOf(true) }
+    var subiendoFoto by remember { mutableStateOf(false) }
 
-    var selectedImageBitmap by remember {
-        mutableStateOf<ImageBitmap?>(null)
+    // ------------------------------------------------
+    // CARGAR DATOS + FOTO DESDE STORAGE
+    // ------------------------------------------------
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            Firebase.firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    nombre = doc.getString("name") ?: ""
+                    cargando = false
+
+                    val fotoUrl = doc.getString("fotoUrl")
+                    if (!fotoUrl.isNullOrEmpty()) {
+                        runCatching {
+                            Firebase.storage.getReferenceFromUrl(fotoUrl)
+                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
+                            ?.addOnSuccessListener { bytes ->
+                                selectedImageBitmap = BitmapFactory
+                                    .decodeByteArray(bytes, 0, bytes.size)
+                                    .asImageBitmap()
+                            }
+                    }
+                }
+                .addOnFailureListener { cargando = false }
+        }
     }
 
-
     // ------------------------------------------------
-    // SELECTOR DE FOTO
+    // SELECTOR + SUBIDA DE FOTO A STORAGE
     // ------------------------------------------------
 
-    val photoPickerLauncher =
-        rememberLauncherForActivityResult(
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null && uid != null) {
+            val bitmap = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            }.getOrNull()
 
-            contract =
-                ActivityResultContracts.PickVisualMedia()
+            if (bitmap != null) {
+                selectedImageBitmap = bitmap.asImageBitmap()
+                subiendoFoto = true
 
-        ) { uri ->
+                val stream = java.io.ByteArrayOutputStream()
+                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, stream)
+                val data = stream.toByteArray()
 
-            if (uri != null) {
+                val storageRef = Firebase.storage.reference.child("perfil_fotos/$uid.jpg")
 
-                selectedImageBitmap = runCatching {
-
-                    context
-                        .contentResolver
-                        .openInputStream(uri)
-                        ?.use { inputStream ->
-
-                            BitmapFactory
-                                .decodeStream(inputStream)
-                                ?.asImageBitmap()
+                storageRef.putBytes(data)
+                    .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { url ->
+                            Firebase.firestore.collection("users").document(uid)
+                                .update("fotoUrl", url.toString())
+                            subiendoFoto = false
                         }
-
-                }.getOrNull()
+                    }
+                    .addOnFailureListener {
+                        subiendoFoto = false
+                    }
             }
         }
-
-
-    // ------------------------------------------------
-    // ABRIR SELECTOR
-    // ------------------------------------------------
+    }
 
     val openPhotoPicker = {
-
         photoPickerLauncher.launch(
-
-            PickVisualMediaRequest(
-                ActivityResultContracts
-                    .PickVisualMedia
-                    .ImageOnly
-            )
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
     }
 
@@ -209,13 +243,9 @@ fun ProfileFundacionScreen(
             // ------------------------------------------------
 
             ProfileHeader(
-
-                selectedImageBitmap =
-                    selectedImageBitmap,
-
-                onPhotoClick = {
-                    openPhotoPicker()
-                }
+                selectedImageBitmap = selectedImageBitmap,
+                subiendoFoto = subiendoFoto,
+                onPhotoClick = { openPhotoPicker() }
             )
 
 
@@ -229,25 +259,21 @@ fun ProfileFundacionScreen(
             // NOMBRE FUNDACIÓN
             // ------------------------------------------------
 
-            Text(
-                text = "EcoAlianza",
-
-                fontSize = 24.sp,
-
-                fontWeight =
-                    FontWeight.Bold,
-
-                color = DarkGreen
-            )
-
-
-            Text(
-                text = "Sede principal",
-
-                fontSize = 14.sp,
-
-                color = SecondaryText
-            )
+            if (cargando) {
+                CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(20.dp))
+            } else {
+                Text(
+                    text = nombre.ifEmpty { "Fundación" },
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen
+                )
+                Text(
+                    text = "Sede principal",
+                    fontSize = 14.sp,
+                    color = SecondaryText
+                )
+            }
 
 
             Spacer(
@@ -289,12 +315,28 @@ fun ProfileFundacionScreen(
                 )
             }
 
+            // CERRAR SESIÓN
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    controller.navigate(AppScreens.login.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.width(230.dp).height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(width = 1.dp, color = MainGreen)
+            ) {
+                Text(text = "Cerrar sesión", fontSize = 14.sp, color = MainGreen)
+            }
 
             Spacer(
                 modifier =
                     Modifier.height(32.dp)
             )
-
 
             // ------------------------------------------------
             // CONTENIDO
@@ -463,108 +505,102 @@ fun ProfileFundacionScreen(
 
 @Composable
 private fun ProfileHeader(
-
     selectedImageBitmap: ImageBitmap?,
-
+    subiendoFoto: Boolean,
     onPhotoClick: () -> Unit
-
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    var mostrarFotoGrande by remember { mutableStateOf(false) }
 
     Box(
-
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(215.dp)
-
+        modifier = Modifier.fillMaxWidth().height(215.dp)
     ) {
 
         Image(
-
-            painter =
-                painterResource(
-                    id =
-                        R.drawable.fundacion_profile_header
-                ),
-
-            contentDescription =
-                "Fondo perfil Fundación",
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(175.dp),
-
-            contentScale =
-                ContentScale.Crop
+            painter = painterResource(id = R.drawable.fundacion_profile_header),
+            contentDescription = "Fondo perfil Fundación",
+            modifier = Modifier.fillMaxWidth().height(175.dp),
+            contentScale = ContentScale.Crop
         )
 
-
-        // ------------------------------------------------
-        // FOTO CIRCULAR
-        // ------------------------------------------------
-
         Box(
-
             modifier = Modifier
                 .size(150.dp)
-                .align(
-                    Alignment.BottomCenter
-                )
+                .align(Alignment.BottomCenter)
                 .clip(CircleShape)
-                .border(
-                    width = 2.dp,
-                    color = BackgroundColor,
-                    shape = CircleShape
-                )
-                .clickable {
-                    onPhotoClick()
+                .border(width = 2.dp, color = BackgroundColor, shape = CircleShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            var fueSostenido = false
+                            val job = coroutineScope.launch {
+                                delay(350)
+                                fueSostenido = true
+                                mostrarFotoGrande = true
+                            }
+                            tryAwaitRelease()
+                            job.cancel()
+                            mostrarFotoGrande = false
+                            if (!fueSostenido) {
+                                onPhotoClick()
+                            }
+                        }
+                    )
                 },
-
-            contentAlignment =
-                Alignment.Center
-
+            contentAlignment = Alignment.Center
         ) {
 
-
-            // ------------------------------------------------
-            // FOTO ELEGIDA POR EL USUARIO
-            // ------------------------------------------------
-
             if (selectedImageBitmap != null) {
-
                 Image(
-
-                    bitmap =
-                        selectedImageBitmap,
-
-                    contentDescription =
-                        "Foto seleccionada",
-
-                    modifier =
-                        Modifier.fillMaxSize(),
-
-                    contentScale =
-                        ContentScale.Crop
+                    bitmap = selectedImageBitmap,
+                    contentDescription = "Foto seleccionada",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
-
             } else {
-
                 Image(
-
-                    painter =
-                        painterResource(
-                            id =
-                                R.drawable.fundacion_profile
-                        ),
-
-                    contentDescription =
-                        "Foto de Fundación",
-
-                    modifier =
-                        Modifier.fillMaxSize(),
-
-                    contentScale =
-                        ContentScale.Crop
+                    painter = painterResource(id = R.drawable.fundacion_profile),
+                    contentDescription = "Foto de Fundación",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
+            }
+
+            if (subiendoFoto) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+    }
+
+    if (mostrarFotoGrande) {
+        Dialog(
+            onDismissRequest = { mostrarFotoGrande = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                if (selectedImageBitmap != null) {
+                    Image(
+                        bitmap = selectedImageBitmap,
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.fundacion_profile),
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
     }
