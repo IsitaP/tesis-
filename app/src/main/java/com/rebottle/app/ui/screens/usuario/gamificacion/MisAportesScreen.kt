@@ -186,12 +186,18 @@ fun MisAportesScreen(
         // FILTRO DE TIEMPO
         // ====================================================
 
-        PeriodSelector(
-            selected = selectedRange,
-            onSelected = {
-                selectedRange = it
-            }
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+
+            PeriodSelector(
+                selected = selectedRange,
+                onSelected = {
+                    selectedRange = it
+                }
+            )
+        }
 
 
         Spacer(
