@@ -11,6 +11,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Rebottle">
+        <meta-data
+            android:name="com.rebottle.app.PLACES_API_KEY"
+            android:value="${PLACES_API_KEY}" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

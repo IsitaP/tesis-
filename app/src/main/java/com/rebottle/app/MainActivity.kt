@@ -1,28 +1,46 @@
 package com.rebottle.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
+import com.google.android.libraries.places.api.Places
 import com.rebottle.app.navigation.Navigation
 import com.rebottle.app.ui.theme.RebottleTheme
-import com.rebottle.app.ui.screens.usuario.HomeUserScreen
-import com.rebottle.app.ui.screens.auth.LoginScreen
-
+import android.content.pm.PackageManager
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val appInfo = packageManager.getApplicationInfo(
+            packageName,
+            PackageManager.GET_META_DATA
+        )
+
+        val apiKey = appInfo.metaData
+            ?.getString("com.rebottle.app.PLACES_API_KEY")
+            .orEmpty()
+
+        if (apiKey.isBlank()) {
+            Log.e("Places", "No se encontró la API Key de Places")
+        } else {
+
+            Places.initializeWithNewPlacesApiEnabled(
+                applicationContext,
+                apiKey
+            )
+
+            Places.createClient(this)
+
+            Log.d(
+                "Places",
+                "Google Places inicializado correctamente"
+            )
+        }
+
         setContent {
             RebottleTheme {
                 Navigation()

@@ -1,8 +1,15 @@
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
 }
+
+val localProperties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
+}
+
+val placesApiKey = localProperties.getProperty("PLACES_API_KEY") ?: ""
 
 android {
     namespace = "com.rebottle.app"
@@ -18,6 +25,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders["PLACES_API_KEY"] = placesApiKey
     }
 
     buildTypes {
@@ -36,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -64,4 +74,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
+    implementation(libs.places)
 }
