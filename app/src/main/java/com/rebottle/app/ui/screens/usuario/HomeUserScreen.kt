@@ -658,7 +658,7 @@ private fun ActionCard(
 // ============================================================
 
 @Composable
-private fun ReBottleBottomBar(
+fun ReBottleBottomBar(
     controller: NavController
 ) {
 
@@ -792,7 +792,7 @@ private fun ReBottleBottomBar(
             title = "Perfil",
 
             selected =
-                currentRoute == AppScreens.perfil.name,
+                currentRoute == AppScreens.perfilUsuario.name,
 
             imageVector =
                 Icons.Outlined.Person,
@@ -810,11 +810,11 @@ private fun ReBottleBottomBar(
 
                 if (
                     currentRoute !=
-                    AppScreens.perfil.name
+                    AppScreens.perfilUsuario.name
                 ) {
 
                     controller.navigate(
-                        AppScreens.perfil.name
+                        AppScreens.perfilUsuario.name
                     )
                 }
             }

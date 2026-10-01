@@ -639,6 +639,15 @@ private fun ModuleOneCompleteScreen(
                 .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.modulo1),
+                contentDescription = "Ilustración de completado",
+                modifier = Modifier
+                    .size(320.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             Text(
                 text = "Felicidades estas un paso\nmás en el mundo del\nreciclaje !!",
                 fontSize = 18.sp,

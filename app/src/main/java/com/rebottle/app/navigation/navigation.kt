@@ -17,6 +17,8 @@ import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingTwoScreen
 import com.rebottle.app.ui.screens.usuario.CreateRequestScreen
 import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.ProfileUsuarioScreen
+import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
@@ -56,6 +58,8 @@ enum class AppScreens{
     solicitudesUsuario,
     detallesSolicitud,
     editarSolicitud,
+    perfilUsuario,
+
     moduleOne,
     moduleTwo,
     moduleThree,
@@ -69,8 +73,10 @@ enum class AppScreens{
     aprendizaje,
     homeRecolector,
 
+
     perfil,
     rutas,
+
 
     solicitudesRecolector,
     detalleAsignacionRecolector,
@@ -115,10 +121,7 @@ fun Navigation() {
         composable(route = AppScreens.homeFundacion.name){
             HomeFundacionScreen(navController)
         }
-        composable(route = AppScreens.homeCiudadano.name) {
-            HomeUserScreen(navController)
 
-        }
         composable(route = AppScreens.solicitudes.name){
             CollectionRequestsScreen(navController)
         }
@@ -135,9 +138,18 @@ fun Navigation() {
         //**CIUDADANO**/
         composable(route = AppScreens.homeCiudadano.name) {
             HomeUserScreen(navController)
-
         }
-        composable(route = AppScreens.crearSolicitud.name){
+        composable(
+            route = AppScreens.perfilUsuario.name
+        ) {
+            ProfileUsuarioScreen(
+                controller = navController
+            )
+        }
+
+        composable(
+            route = AppScreens.crearSolicitud.name
+        ) {
             CreateRequestScreen(navController)
         }
 

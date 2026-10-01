@@ -1002,6 +1002,14 @@ private fun ModuleSevenCompleteScreen(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.modulo7),
+                contentDescription = "Ilustración de completado",
+                modifier = Modifier
+                    .size(320.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text =

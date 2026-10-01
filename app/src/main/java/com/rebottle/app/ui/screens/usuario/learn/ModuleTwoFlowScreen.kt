@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebottle.app.R
+import com.rebottle.app.ui.theme.RebottleTheme
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.unit.IntOffset
@@ -802,6 +803,14 @@ private fun ModuleTwoCompleteScreen(
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.modulo2),
+                contentDescription = "Ilustración modulo 2",
+                modifier = Modifier
+                    .size(320.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "Felicidades estas un paso\n" +
