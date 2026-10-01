@@ -1,5 +1,6 @@
 package com.rebottle.app.ui.screens.recolector.perfil
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -8,12 +9,11 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,14 +31,17 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -54,16 +58,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import com.rebottle.app.R
+import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-// ----------------------------------------------------
-// COLORES
-// ----------------------------------------------------
 
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
@@ -82,43 +92,72 @@ private val AccentOrange = RebottleColors.AccentOrange
 fun PantallaPerfilRecolector(
     controller: NavController
 ) {
-
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    var selectedImageBitmap by remember {
-        mutableStateOf<ImageBitmap?>(null)
+    var nombre by remember { mutableStateOf("") }
+    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var cargando by remember { mutableStateOf(true) }
+    var subiendoFoto by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            Firebase.firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    nombre = doc.getString("name") ?: ""
+                    cargando = false
+
+                    val fotoUrl = doc.getString("fotoUrl")
+                    if (!fotoUrl.isNullOrEmpty()) {
+                        runCatching {
+                            Firebase.storage.getReferenceFromUrl(fotoUrl)
+                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
+                            ?.addOnSuccessListener { bytes ->
+                                selectedImageBitmap = BitmapFactory
+                                    .decodeByteArray(bytes, 0, bytes.size)
+                                    .asImageBitmap()
+                            }
+                    }
+                }
+                .addOnFailureListener { cargando = false }
+        }
     }
 
-    // ------------------------------------------------
-    // SELECTOR DE FOTO
-    // ------------------------------------------------
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null && uid != null) {
+            val bitmap = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            }.getOrNull()
 
-    val photoPickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickVisualMedia()
-        ) { uri ->
+            if (bitmap != null) {
+                selectedImageBitmap = bitmap.asImageBitmap()
+                subiendoFoto = true
 
-            if (uri != null) {
+                val stream = java.io.ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                val data = stream.toByteArray()
 
-                selectedImageBitmap = runCatching {
+                val storageRef = Firebase.storage.reference.child("perfil_fotos/$uid.jpg")
 
-                    context.contentResolver
-                        .openInputStream(uri)
-                        ?.use { inputStream ->
-                            BitmapFactory
-                                .decodeStream(inputStream)
-                                ?.asImageBitmap()
+                storageRef.putBytes(data)
+                    .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { url ->
+                            Firebase.firestore.collection("users").document(uid)
+                                .update("fotoUrl", url.toString())
+                            subiendoFoto = false
                         }
-
-                }.getOrNull()
+                    }
+                    .addOnFailureListener { subiendoFoto = false }
             }
         }
+    }
 
     val openPhotoPicker = {
         photoPickerLauncher.launch(
-            PickVisualMediaRequest(
-                ActivityResultContracts.PickVisualMedia.ImageOnly
-            )
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )
     }
 
@@ -140,17 +179,22 @@ fun PantallaPerfilRecolector(
 
             HeaderPerfilRecolector(
                 selectedImageBitmap = selectedImageBitmap,
+                subiendoFoto = subiendoFoto,
                 onPhotoClick = { openPhotoPicker() }
             )
 
             Spacer(modifier = Modifier.height(5.dp))
 
-            Text(
-                text = "Recolector",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkGreen
-            )
+            if (cargando) {
+                CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(20.dp))
+            } else {
+                Text(
+                    text = nombre.ifEmpty { "Recolector" },
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen
+                )
+            }
 
             Text(
                 text = "Fundación X",
@@ -161,33 +205,40 @@ fun PantallaPerfilRecolector(
             Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedButton(
-                onClick = { openPhotoPicker() },
-                modifier = Modifier
-                    .width(230.dp)
-                    .height(36.dp),
+                onClick = { /* TODO: pantalla de edición cuando exista */ },
+                modifier = Modifier.width(230.dp).height(36.dp),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(width = 1.dp, color = MainGreen)
             ) {
                 Text(text = "Editar perfil", fontSize = 14.sp, color = MainGreen)
             }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    controller.navigate(AppScreens.login.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.width(230.dp).height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(width = 1.dp, color = MainGreen)
+            ) {
+                Text(text = "Cerrar sesión", fontSize = 14.sp, color = MainGreen)
+            }
+
             Spacer(modifier = Modifier.height(28.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
-            ) {
-
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp)) {
                 Text(
                     text = "Información laboral",
                     fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = DarkGreen
                 )
-
                 Spacer(modifier = Modifier.height(10.dp))
-
                 InfoLaboralCard()
             }
 
@@ -197,28 +248,21 @@ fun PantallaPerfilRecolector(
 }
 
 
-// ----------------------------------------------------
-// CABECERA — FOTO CIRCULAR SOBRE FONDO ILUSTRADO
-// ----------------------------------------------------
-
 @Composable
 private fun HeaderPerfilRecolector(
     selectedImageBitmap: ImageBitmap?,
+    subiendoFoto: Boolean,
     onPhotoClick: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    var mostrarFotoGrande by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(215.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().height(215.dp)) {
 
         Image(
             painter = painterResource(id = R.drawable.fundacion_profile_header),
             contentDescription = "Fondo perfil Recolector",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(175.dp),
+            modifier = Modifier.fillMaxWidth().height(175.dp),
             contentScale = ContentScale.Crop
         )
 
@@ -227,41 +271,86 @@ private fun HeaderPerfilRecolector(
                 .size(150.dp)
                 .align(Alignment.BottomCenter)
                 .clip(CircleShape)
-                .border(width = 10.dp, color = BackgroundColor, shape = CircleShape)
-                .clickable { onPhotoClick() },
+                .border(width = 2.dp, color = BackgroundColor, shape = CircleShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            var fueSostenido = false
+                            val job = coroutineScope.launch {
+                                delay(350)
+                                fueSostenido = true
+                                mostrarFotoGrande = true
+                            }
+                            tryAwaitRelease()
+                            job.cancel()
+                            mostrarFotoGrande = false
+                            if (!fueSostenido) {
+                                onPhotoClick()
+                            }
+                        }
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
-
             if (selectedImageBitmap != null) {
-
                 Image(
                     bitmap = selectedImageBitmap,
                     contentDescription = "Foto seleccionada",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-
             } else {
-
                 Image(
-                    painter = painterResource(id = R.drawable.recolector_perfil),
+                    painter = painterResource(id = R.drawable.fundacion_profile),
                     contentDescription = "Foto del recolector",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+            }
+
+            if (subiendoFoto) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+    }
+
+    if (mostrarFotoGrande) {
+        Dialog(
+            onDismissRequest = { mostrarFotoGrande = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                if (selectedImageBitmap != null) {
+                    Image(
+                        bitmap = selectedImageBitmap,
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.fundacion_profile),
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
     }
 }
 
 
-// ----------------------------------------------------
-// TARJETA — INFORMACIÓN LABORAL
-// ----------------------------------------------------
-
 @Composable
 private fun InfoLaboralCard() {
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(13.dp),
@@ -269,13 +358,7 @@ private fun InfoLaboralCard() {
         colors = CardDefaults.cardColors(containerColor = LightGreen),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-        ) {
-
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp)) {
             FilaInfoLaboral(icono = Icons.Filled.Badge, texto = "Código de recolector: 001")
             Spacer(modifier = Modifier.height(14.dp))
             FilaInfoLaboral(icono = Icons.Filled.LocationOn, texto = "Zona asignada: Teusaquillo")
@@ -288,27 +371,11 @@ private fun InfoLaboralCard() {
 }
 
 @Composable
-private fun FilaInfoLaboral(
-    icono: ImageVector,
-    texto: String
-) {
-
+private fun FilaInfoLaboral(icono: ImageVector, texto: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-
-        Icon(
-            imageVector = icono,
-            contentDescription = null,
-            tint = AccentOrange,
-            modifier = Modifier.size(20.dp)
-        )
-
+        Icon(imageVector = icono, contentDescription = null, tint = AccentOrange, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(10.dp))
-
-        Text(
-            text = texto,
-            fontSize = 15.sp,
-            color = Color(0xFF3F433A)
-        )
+        Text(text = texto, fontSize = 15.sp, color = Color(0xFF3F433A))
     }
 }
 

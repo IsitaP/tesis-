@@ -103,12 +103,12 @@ fun BarraNavegacionRecolector(
         // PERFIL
         ItemBarraRecolector(
             title = "Perfil",
-            selected = currentRoute == AppScreens.perfil.name,
+            selected = currentRoute == AppScreens.perfilRecolector.name,
             imageVector = Icons.Outlined.Person,
             modifier = Modifier.weight(1f),
             onClick = {
-                if (currentRoute != AppScreens.perfil.name) {
-                    controller.navigate(AppScreens.perfil.name)
+                if (currentRoute != AppScreens.perfilRecolector.name) {
+                    controller.navigate(AppScreens.perfilRecolector.name)
                 }
             }
         )

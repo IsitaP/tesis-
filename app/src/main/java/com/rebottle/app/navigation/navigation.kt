@@ -24,6 +24,7 @@ import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
+import com.rebottle.app.ui.screens.recolector.perfil.PantallaPerfilRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 
@@ -34,6 +35,7 @@ import com.rebottle.app.ui.screens.usuario.learn.ModuleFourFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleFiveFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
+import com.rebottle.app.ui.screens.fundacion.EditarPerfilFundacionScreen
 
 enum class AppScreens{
     onboardingOne,
@@ -42,6 +44,7 @@ enum class AppScreens{
     login,
     register,
     homeFundacion,
+    editarPerfilFundacion,
     homeCiudadano,
     perfilUsuario,
     editarPerfilUsuario,
@@ -60,6 +63,7 @@ enum class AppScreens{
     moduleSeven,
     homeRecolector,
     solicitudes,
+    perfilRecolector,
 
     perfil,
     rutas,
@@ -118,8 +122,29 @@ fun Navigation() {
         composable(route = AppScreens.rutas.name) {
             ProfileFundacionScreen(navController)
         }
+        composable(route = AppScreens.editarPerfilFundacion.name) {
+            EditarPerfilFundacionScreen(navController)
+        }
+        //**Recolector**/
+        composable(route = AppScreens.homeRecolector.name) {
+            PantallaInicioRecolector(navController)
+        }
 
+        composable(route = AppScreens.solicitudesRecolector.name) {
+            PantallaSolicitudesRecolector(navController)
+        }
 
+        composable(
+            route = "${AppScreens.detalleAsignacionRecolector.name}/{asignacionId}",
+            arguments = listOf(navArgument("asignacionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("asignacionId") ?: ""
+            PantallaDetalleAsignacionRecolector(navController, id)
+        }
+
+        composable(route = AppScreens.perfilRecolector.name) {
+            PantallaPerfilRecolector(navController)
+        }
 
         //**CIUDADANO**/
 

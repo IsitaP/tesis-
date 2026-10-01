@@ -289,7 +289,7 @@ fun ProfileFundacionScreen(
             OutlinedButton(
 
                 onClick = {
-                    openPhotoPicker()
+                    controller.navigate(AppScreens.editarPerfilFundacion.name)
                 },
 
                 modifier = Modifier
