@@ -20,7 +20,7 @@ import com.rebottle.app.ui.screens.usuario.EditarPerfilUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.inicio.HomeUserScreen
 import com.rebottle.app.ui.screens.usuario.inicio.ProfileUserScreen
 import com.rebottle.app.ui.screens.usuario.gamificacion.MisAportesScreen
-import com.rebottle.app.ui.screens.usuario.gestion.SolicitudesUsuarioScreen
+import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
