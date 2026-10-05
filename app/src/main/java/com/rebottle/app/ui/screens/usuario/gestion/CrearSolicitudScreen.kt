@@ -329,8 +329,27 @@ fun CreateRequestScreen(
 
 
                 // Guardamos la dirección en el ViewModel.
-                model.updateLocation(
-                    direccion
+                model.updateLocationFromPlaces(
+
+                    nombreLugar =
+                        prediction
+                            .getPrimaryText(null)
+                            .toString(),
+
+                    direccion =
+                        direccion,
+
+                    placeId =
+                        place.id
+                            ?: prediction.placeId,
+
+                    latitud =
+                        ubicacion?.latitude
+                            ?: 0.0,
+
+                    longitud =
+                        ubicacion?.longitude
+                            ?: 0.0
                 )
 
 
@@ -433,9 +452,7 @@ fun CreateRequestScreen(
             // No guardamos texto libre como ubicación.
             // Solo se vuelve a guardar cuando selecciona
             // una predicción de Google.
-            model.updateLocation(
-                ""
-            )
+            model.clearLocationSelection()
 
 
             model.updateLocationError(
@@ -549,7 +566,7 @@ fun CreateRequestScreen(
 
 
             // ====================================================
-            // CREAR SOLICITUD SI TODO ES VÁLIDO
+            // CREAR SOLICITUD SI TO DO ES VÁLIDO
             // ====================================================
 
             if (

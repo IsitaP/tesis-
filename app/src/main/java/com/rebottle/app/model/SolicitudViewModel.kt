@@ -30,18 +30,58 @@ enum class MaterialType(val label: String) {
 
 
 // ============================================================
+// ESTADOS DE SOLICITUD
+// ============================================================
+
+enum class EstadoSolicitud {
+    PUBLICADA,
+    EN_RUTA,
+    RECOLECTADA,
+    CANCELADA
+}
+
+
+// ============================================================
 // MODELO DE SOLICITUD
 // ============================================================
 
 data class Solicitud(
+
     val id: String = "",
+
     val usuarioId: String = "",
-    val direccion: String = "",
-    val materiales: List<String> = emptyList(),
+
+    val materiales: List<String> =
+        emptyList(),
+
     val pesoKg: Int = 0,
+
     val fechaRecoleccion: String = "",
+
     val estado: String = "",
-    val creadaEn: Timestamp? = null
+
+    val creadaEn: Timestamp? = null,
+
+    // ========================================================
+    // UBICACIÓN GOOGLE PLACES
+    // ========================================================
+
+    val nombreLugar: String = "",
+
+    val direccion: String = "",
+
+    val placeId: String = "",
+
+    val latitud: Double = 0.0,
+
+    val longitud: Double = 0.0,
+
+    // ========================================================
+    // RUTA
+    // ========================================================
+
+    // null = todavía no pertenece a ninguna ruta.
+    val rutaId: String? = null
 )
 
 
@@ -52,10 +92,18 @@ data class Solicitud(
 data class SolicitudState(
 
     // ========================================================
-    // CREAR SOLICITUD
+    // CREAR / EDITAR SOLICITUD
     // ========================================================
 
     val location: String = "",
+
+    val nombreLugar: String = "",
+
+    val placeId: String = "",
+
+    val latitud: Double = 0.0,
+
+    val longitud: Double = 0.0,
 
     val selectedMaterials: Set<MaterialType> =
         emptySet(),
@@ -76,7 +124,7 @@ data class SolicitudState(
 
 
     // ========================================================
-    // HISTORIAL DE SOLICITUDES
+    // HISTORIAL
     // ========================================================
 
     val solicitudes: List<Solicitud> =
@@ -147,8 +195,83 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                location = newLocation,
-                locationError = ""
+
+                location =
+                    newLocation,
+
+                locationError =
+                    ""
+            )
+    }
+
+
+    // ========================================================
+    // UBICACIÓN SELECCIONADA DESDE GOOGLE PLACES
+    // ========================================================
+
+    fun updateLocationFromPlaces(
+
+        nombreLugar: String,
+
+        direccion: String,
+
+        placeId: String,
+
+        latitud: Double,
+
+        longitud: Double
+    ) {
+
+        _state.value =
+            _state.value.copy(
+
+                location =
+                    direccion,
+
+                nombreLugar =
+                    nombreLugar,
+
+                placeId =
+                    placeId,
+
+                latitud =
+                    latitud,
+
+                longitud =
+                    longitud,
+
+                locationError =
+                    ""
+            )
+    }
+
+
+    // ========================================================
+    // BORRAR UBICACIÓN SELECCIONADA
+    // ========================================================
+
+    fun clearLocationSelection() {
+
+        _state.value =
+            _state.value.copy(
+
+                location =
+                    "",
+
+                nombreLugar =
+                    "",
+
+                placeId =
+                    "",
+
+                latitud =
+                    0.0,
+
+                longitud =
+                    0.0,
+
+                locationError =
+                    ""
             )
     }
 
@@ -179,8 +302,12 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                selectedMaterials = updated,
-                materialsError = ""
+
+                selectedMaterials =
+                    updated,
+
+                materialsError =
+                    ""
             )
     }
 
@@ -193,6 +320,7 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
+
                 weightKg =
                     _state.value.weightKg + 1
             )
@@ -208,7 +336,9 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                weightKg = newWeight
+
+                weightKg =
+                    newWeight
             )
     }
 
@@ -223,7 +353,9 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                selectedDate = date
+
+                selectedDate =
+                    date
             )
     }
 
@@ -232,6 +364,7 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
+
                 displayedMonth =
                     _state.value
                         .displayedMonth
@@ -244,6 +377,7 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
+
                 displayedMonth =
                     _state.value
                         .displayedMonth
@@ -262,7 +396,9 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                locationError = error
+
+                locationError =
+                    error
             )
     }
 
@@ -273,7 +409,9 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                materialsError = error
+
+                materialsError =
+                    error
             )
     }
 
@@ -288,7 +426,9 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             _state.value.copy(
-                isLoading = loading
+
+                isLoading =
+                    loading
             )
     }
 
@@ -298,7 +438,9 @@ class SolicitudViewModel : ViewModel() {
     // ========================================================
 
     fun crearSolicitud(
+
         onSuccess: (String) -> Unit,
+
         onError: (String) -> Unit
     ) {
 
@@ -310,12 +452,34 @@ class SolicitudViewModel : ViewModel() {
         // VALIDAR DIRECCIÓN
         // ====================================================
 
-        if (currentState.location.isBlank()) {
+        if (
+            currentState.location.isBlank()
+        ) {
 
             _state.value =
                 currentState.copy(
+
                     locationError =
                         "Ingresa la dirección de recolección"
+                )
+
+            return
+        }
+
+
+        // ====================================================
+        // VALIDAR UBICACIÓN GOOGLE PLACES
+        // ====================================================
+
+        if (
+            currentState.placeId.isBlank()
+        ) {
+
+            _state.value =
+                currentState.copy(
+
+                    locationError =
+                        "Selecciona una dirección válida de la lista"
                 )
 
             return
@@ -334,6 +498,7 @@ class SolicitudViewModel : ViewModel() {
 
             _state.value =
                 currentState.copy(
+
                     materialsError =
                         "Selecciona al menos un material"
                 )
@@ -350,7 +515,9 @@ class SolicitudViewModel : ViewModel() {
             auth.currentUser
 
 
-        if (usuarioActual == null) {
+        if (
+            usuarioActual == null
+        ) {
 
             onError(
                 "No hay un usuario autenticado"
@@ -366,9 +533,15 @@ class SolicitudViewModel : ViewModel() {
 
         _state.value =
             currentState.copy(
-                isLoading = true,
-                locationError = "",
-                materialsError = ""
+
+                isLoading =
+                    true,
+
+                locationError =
+                    "",
+
+                materialsError =
+                    ""
             )
 
 
@@ -381,6 +554,7 @@ class SolicitudViewModel : ViewModel() {
             currentState
                 .selectedMaterials
                 .map {
+
                     it.name
                 }
 
@@ -389,14 +563,47 @@ class SolicitudViewModel : ViewModel() {
         // CREAR MAP DE FIRESTORE
         // ====================================================
 
+        /*
+         * IMPORTANTE:
+         *
+         * usamos Any? en vez de Any
+         * porque rutaId comienza en null.
+         */
+
         val solicitud =
-            hashMapOf<String, Any>(
+            hashMapOf<String, Any?>(
 
                 "usuarioId" to
                         usuarioActual.uid,
 
+
+                // =============================================
+                // GOOGLE PLACES
+                // =============================================
+
+                "nombreLugar" to
+                        currentState
+                            .nombreLugar
+                            .trim(),
+
                 "direccion" to
-                        currentState.location.trim(),
+                        currentState
+                            .location
+                            .trim(),
+
+                "placeId" to
+                        currentState.placeId,
+
+                "latitud" to
+                        currentState.latitud,
+
+                "longitud" to
+                        currentState.longitud,
+
+
+                // =============================================
+                // SOLICITUD
+                // =============================================
 
                 "materiales" to
                         materiales,
@@ -409,11 +616,23 @@ class SolicitudViewModel : ViewModel() {
                             .selectedDate
                             .toString(),
 
+
+                // Toda solicitud nueva se publica
+                // automáticamente.
                 "estado" to
-                        "PENDIENTE",
+                        EstadoSolicitud
+                            .PUBLICADA
+                            .name,
+
+
+                // Todavía no pertenece a ninguna ruta.
+                "rutaId" to
+                        null,
+
 
                 "creadaEn" to
-                        FieldValue.serverTimestamp()
+                        FieldValue
+                            .serverTimestamp()
             )
 
 
@@ -422,75 +641,119 @@ class SolicitudViewModel : ViewModel() {
         // ====================================================
 
         val contadorRef =
+
             firestore
-                .collection("contadores")
-                .document("solicitudes")
-        firestore.runTransaction { transaction ->
-
-            val contadorSnapshot =
-                transaction.get(contadorRef)
-
-            val ultimoId =
-                contadorSnapshot.getLong("ultimoId")
-                    ?: 0L
-
-            val nuevoNumero =
-                ultimoId + 1
-
-            val nuevoId =
-                "RB-${
-                    nuevoNumero
-                        .toString()
-                        .padStart(4, '0')
-                }"
-
-            val solicitudRef =
-                firestore
-                    .collection("solicitudes")
-                    .document(nuevoId)
-
-
-            transaction.set(
-                solicitudRef,
-                solicitud
-            )
-
-
-            transaction.set(
-                contadorRef,
-                mapOf(
-                    "ultimoId" to nuevoNumero
+                .collection(
+                    "contadores"
                 )
-            )
-
-
-            nuevoId
-
-        }.addOnSuccessListener { nuevoId ->
-
-            _state.value =
-                _state.value.copy(
-                    isLoading = false
+                .document(
+                    "solicitudes"
                 )
 
-            println(
-                "Solicitud creada con ID: $nuevoId"
-            )
 
-            onSuccess(nuevoId)
+        firestore
+            .runTransaction { transaction ->
 
-        }.addOnFailureListener { exception ->
 
-            _state.value =
-                _state.value.copy(
-                    isLoading = false
+                val contadorSnapshot =
+                    transaction.get(
+                        contadorRef
+                    )
+
+
+                val ultimoId =
+                    contadorSnapshot
+                        .getLong(
+                            "ultimoId"
+                        )
+                        ?: 0L
+
+
+                val nuevoNumero =
+                    ultimoId + 1
+
+
+                val nuevoId =
+                    "RB-${
+                        nuevoNumero
+                            .toString()
+                            .padStart(
+                                4,
+                                '0'
+                            )
+                    }"
+
+
+                val solicitudRef =
+
+                    firestore
+                        .collection(
+                            "solicitudes"
+                        )
+                        .document(
+                            nuevoId
+                        )
+
+
+                transaction.set(
+
+                    solicitudRef,
+
+                    solicitud
                 )
 
-            onError(
-                exception.message
-                    ?: "Error al crear la solicitud"
-            )
-        }
+
+                transaction.set(
+
+                    contadorRef,
+
+                    mapOf(
+                        "ultimoId" to
+                                nuevoNumero
+                    )
+                )
+
+
+                nuevoId
+
+            }
+            .addOnSuccessListener { nuevoId ->
+
+
+                _state.value =
+                    _state.value.copy(
+
+                        isLoading =
+                            false
+                    )
+
+
+                println(
+                    "Solicitud creada con ID: $nuevoId"
+                )
+
+
+                onSuccess(
+                    nuevoId
+                )
+            }
+            .addOnFailureListener { exception ->
+
+
+                _state.value =
+                    _state.value.copy(
+
+                        isLoading =
+                            false
+                    )
+
+
+                onError(
+
+                    exception.message
+                        ?: "Error al crear la solicitud"
+                )
+            }
     }
 
 
@@ -500,20 +763,28 @@ class SolicitudViewModel : ViewModel() {
 
     fun escucharSolicitudesUsuario() {
 
-        // Evita crear varios listeners
-        solicitudesListener?.remove()
+        // Evita crear varios listeners.
+        solicitudesListener
+            ?.remove()
 
 
         val usuarioActual =
             auth.currentUser
 
 
-        if (usuarioActual == null) {
+        if (
+            usuarioActual == null
+        ) {
 
             _state.value =
                 _state.value.copy(
-                    solicitudes = emptyList(),
-                    isHistoryLoading = false,
+
+                    solicitudes =
+                        emptyList(),
+
+                    isHistoryLoading =
+                        false,
+
                     historyError =
                         "No hay un usuario autenticado"
                 )
@@ -522,20 +793,27 @@ class SolicitudViewModel : ViewModel() {
         }
 
 
-        // Indicar carga
         _state.value =
             _state.value.copy(
-                isHistoryLoading = true,
-                historyError = ""
+
+                isHistoryLoading =
+                    true,
+
+                historyError =
+                    ""
             )
 
 
         solicitudesListener =
 
             firestore
-                .collection("solicitudes")
+                .collection(
+                    "solicitudes"
+                )
                 .whereEqualTo(
+
                     "usuarioId",
+
                     usuarioActual.uid
                 )
                 .addSnapshotListener { snapshot, error ->
@@ -545,11 +823,16 @@ class SolicitudViewModel : ViewModel() {
                     // ERROR
                     // =========================================
 
-                    if (error != null) {
+                    if (
+                        error != null
+                    ) {
 
                         _state.value =
                             _state.value.copy(
-                                isHistoryLoading = false,
+
+                                isHistoryLoading =
+                                    false,
+
                                 historyError =
                                     error.message
                                         ?: "Error al cargar solicitudes"
@@ -570,14 +853,12 @@ class SolicitudViewModel : ViewModel() {
                             ?.map { document ->
 
 
-                                // Materiales guardados en Firestore
                                 val materiales =
 
                                     (
                                             document.get(
                                                 "materiales"
-                                            )
-                                                    as? List<*>
+                                            ) as? List<*>
                                             )
                                         ?.mapNotNull {
 
@@ -591,18 +872,46 @@ class SolicitudViewModel : ViewModel() {
                                     id =
                                         document.id,
 
+
                                     usuarioId =
                                         document.getString(
                                             "usuarioId"
                                         ) ?: "",
+
+
+                                    nombreLugar =
+                                        document.getString(
+                                            "nombreLugar"
+                                        ) ?: "",
+
 
                                     direccion =
                                         document.getString(
                                             "direccion"
                                         ) ?: "",
 
+
+                                    placeId =
+                                        document.getString(
+                                            "placeId"
+                                        ) ?: "",
+
+
+                                    latitud =
+                                        document.getDouble(
+                                            "latitud"
+                                        ) ?: 0.0,
+
+
+                                    longitud =
+                                        document.getDouble(
+                                            "longitud"
+                                        ) ?: 0.0,
+
+
                                     materiales =
                                         materiales,
+
 
                                     pesoKg =
                                         document.getLong(
@@ -611,15 +920,28 @@ class SolicitudViewModel : ViewModel() {
                                             ?.toInt()
                                             ?: 0,
 
+
                                     fechaRecoleccion =
                                         document.getString(
                                             "fechaRecoleccion"
                                         ) ?: "",
 
+
                                     estado =
                                         document.getString(
                                             "estado"
                                         ) ?: "",
+
+
+                                    // =================================
+                                    // RUTA
+                                    // =================================
+
+                                    rutaId =
+                                        document.getString(
+                                            "rutaId"
+                                        ),
+
 
                                     creadaEn =
                                         document.getTimestamp(
@@ -640,12 +962,14 @@ class SolicitudViewModel : ViewModel() {
 
                             compareByDescending<Solicitud> {
 
-                                it.creadaEn?.seconds
+                                it.creadaEn
+                                    ?.seconds
                                     ?: 0L
 
                             }.thenByDescending {
 
-                                it.creadaEn?.nanoseconds
+                                it.creadaEn
+                                    ?.nanoseconds
                                     ?: 0
                             }
                         )
@@ -657,6 +981,7 @@ class SolicitudViewModel : ViewModel() {
 
                     _state.value =
                         _state.value.copy(
+
                             solicitudes =
                                 solicitudesOrdenadas,
 
@@ -669,29 +994,46 @@ class SolicitudViewModel : ViewModel() {
                 }
     }
 
+
     // ========================================================
-    // Cancelar Solicitud
+    // CANCELAR SOLICITUD
     // ========================================================
 
     fun cancelarSolicitud(
+
         solicitudId: String,
-        onSuccess: () -> Unit = {},
-        onError: (String) -> Unit = {}
+
+        onSuccess: () -> Unit =
+            {},
+
+        onError: (String) -> Unit =
+            {}
     ) {
 
         firestore
-            .collection("solicitudes")
-            .document(solicitudId)
+            .collection(
+                "solicitudes"
+            )
+            .document(
+                solicitudId
+            )
             .update(
+
                 "estado",
-                "CANCELADA"
+
+                EstadoSolicitud
+                    .CANCELADA
+                    .name
             )
             .addOnSuccessListener {
+
                 onSuccess()
             }
             .addOnFailureListener { exception ->
 
+
                 onError(
+
                     exception.message
                         ?: "Error al cancelar la solicitud"
                 )
@@ -699,32 +1041,47 @@ class SolicitudViewModel : ViewModel() {
     }
 
 
+    // ========================================================
+    // CARGAR SOLICITUD PARA EDITAR
+    // ========================================================
+
     fun cargarSolicitudParaEditar(
         solicitudId: String
     ) {
 
         val solicitud =
-            _state.value.solicitudes.find {
-                it.id == solicitudId
-            }
+
+            _state.value
+                .solicitudes
+                .find {
+
+                    it.id ==
+                            solicitudId
+                }
                 ?: return
 
 
-        // ========================================================
+        // ====================================================
         // CONVERTIR MATERIALES
-        // ========================================================
+        // ====================================================
 
         val materiales =
-            solicitud.materiales
+
+            solicitud
+                .materiales
                 .mapNotNull { material ->
+
 
                     try {
 
-                        MaterialType.valueOf(
-                            material
-                        )
+                        MaterialType
+                            .valueOf(
+                                material
+                            )
 
-                    } catch (e: Exception) {
+                    } catch (
+                        e: Exception
+                    ) {
 
                         null
                     }
@@ -732,32 +1089,47 @@ class SolicitudViewModel : ViewModel() {
                 .toSet()
 
 
-        // ========================================================
+        // ====================================================
         // CONVERTIR FECHA
-        // ========================================================
+        // ====================================================
 
         val fecha =
+
             try {
 
                 LocalDate.parse(
                     solicitud.fechaRecoleccion
                 )
 
-            } catch (e: Exception) {
+            } catch (
+                e: Exception
+            ) {
 
                 LocalDate.now()
             }
 
 
-        // ========================================================
+        // ====================================================
         // CARGAR DATOS EN EL FORMULARIO
-        // ========================================================
+        // ====================================================
 
         _state.value =
             _state.value.copy(
 
                 location =
                     solicitud.direccion,
+
+                nombreLugar =
+                    solicitud.nombreLugar,
+
+                placeId =
+                    solicitud.placeId,
+
+                latitud =
+                    solicitud.latitud,
+
+                longitud =
+                    solicitud.longitud,
 
                 selectedMaterials =
                     materiales,
@@ -769,7 +1141,9 @@ class SolicitudViewModel : ViewModel() {
                     fecha,
 
                 displayedMonth =
-                    YearMonth.from(fecha),
+                    YearMonth.from(
+                        fecha
+                    ),
 
                 locationError =
                     "",
@@ -779,9 +1153,17 @@ class SolicitudViewModel : ViewModel() {
             )
     }
 
+
+    // ========================================================
+    // EDITAR SOLICITUD
+    // ========================================================
+
     fun editarSolicitud(
+
         solicitudId: String,
+
         onSuccess: () -> Unit,
+
         onError: (String) -> Unit
     ) {
 
@@ -789,14 +1171,17 @@ class SolicitudViewModel : ViewModel() {
             _state.value
 
 
-        // ========================================================
+        // ====================================================
         // VALIDAR DIRECCIÓN
-        // ========================================================
+        // ====================================================
 
-        if (currentState.location.isBlank()) {
+        if (
+            currentState.location.isBlank()
+        ) {
 
             _state.value =
                 currentState.copy(
+
                     locationError =
                         "Ingresa la dirección de recolección"
                 )
@@ -805,9 +1190,28 @@ class SolicitudViewModel : ViewModel() {
         }
 
 
-        // ========================================================
+        // ====================================================
+        // VALIDAR UBICACIÓN GOOGLE PLACES
+        // ====================================================
+
+        if (
+            currentState.placeId.isBlank()
+        ) {
+
+            _state.value =
+                currentState.copy(
+
+                    locationError =
+                        "Selecciona una dirección válida de la lista"
+                )
+
+            return
+        }
+
+
+        // ====================================================
         // VALIDAR MATERIALES
-        // ========================================================
+        // ====================================================
 
         if (
             currentState
@@ -817,6 +1221,7 @@ class SolicitudViewModel : ViewModel() {
 
             _state.value =
                 currentState.copy(
+
                     materialsError =
                         "Selecciona al menos un material"
                 )
@@ -825,39 +1230,63 @@ class SolicitudViewModel : ViewModel() {
         }
 
 
-        // ========================================================
+        // ====================================================
         // LOADING
-        // ========================================================
+        // ====================================================
 
         _state.value =
             currentState.copy(
-                isLoading = true,
-                locationError = "",
-                materialsError = ""
+
+                isLoading =
+                    true,
+
+                locationError =
+                    "",
+
+                materialsError =
+                    ""
             )
 
 
-        // ========================================================
+        // ====================================================
         // MATERIALES
-        // ========================================================
+        // ====================================================
 
         val materiales =
+
             currentState
                 .selectedMaterials
                 .map {
+
                     it.name
                 }
 
 
-        // ========================================================
+        // ====================================================
         // CAMPOS A ACTUALIZAR
-        // ========================================================
+        // ====================================================
 
         val cambios =
             mapOf(
 
+                "nombreLugar" to
+                        currentState
+                            .nombreLugar
+                            .trim(),
+
                 "direccion" to
-                        currentState.location.trim(),
+                        currentState
+                            .location
+                            .trim(),
+
+                "placeId" to
+                        currentState.placeId,
+
+                "latitud" to
+                        currentState.latitud,
+
+                "longitud" to
+                        currentState.longitud,
 
                 "materiales" to
                         materiales,
@@ -872,39 +1301,51 @@ class SolicitudViewModel : ViewModel() {
             )
 
 
-        // ========================================================
+        // ====================================================
         // ACTUALIZAR FIRESTORE
-        // ========================================================
+        // ====================================================
 
         firestore
-            .collection("solicitudes")
-            .document(solicitudId)
-            .update(cambios)
-
+            .collection(
+                "solicitudes"
+            )
+            .document(
+                solicitudId
+            )
+            .update(
+                cambios
+            )
             .addOnSuccessListener {
+
 
                 _state.value =
                     _state.value.copy(
-                        isLoading = false
+
+                        isLoading =
+                            false
                     )
+
 
                 onSuccess()
             }
-
             .addOnFailureListener { exception ->
+
 
                 _state.value =
                     _state.value.copy(
-                        isLoading = false
+
+                        isLoading =
+                            false
                     )
 
+
                 onError(
+
                     exception.message
                         ?: "Error al editar la solicitud"
                 )
             }
     }
-
 
 
     // ========================================================
@@ -914,9 +1355,7 @@ class SolicitudViewModel : ViewModel() {
     fun resetForm() {
 
         /*
-         * Importante:
-         *
-         * NO hacemos:
+         * No hacemos:
          *
          * _state.value = SolicitudState()
          *
@@ -927,12 +1366,26 @@ class SolicitudViewModel : ViewModel() {
         _state.value =
             _state.value.copy(
 
-                location = "",
+                location =
+                    "",
+
+                nombreLugar =
+                    "",
+
+                placeId =
+                    "",
+
+                latitud =
+                    0.0,
+
+                longitud =
+                    0.0,
 
                 selectedMaterials =
                     emptySet(),
 
-                weightKg = 20,
+                weightKg =
+                    20,
 
                 selectedDate =
                     LocalDate.now(),
@@ -940,11 +1393,14 @@ class SolicitudViewModel : ViewModel() {
                 displayedMonth =
                     YearMonth.now(),
 
-                locationError = "",
+                locationError =
+                    "",
 
-                materialsError = "",
+                materialsError =
+                    "",
 
-                isLoading = false
+                isLoading =
+                    false
             )
     }
 
@@ -955,7 +1411,8 @@ class SolicitudViewModel : ViewModel() {
 
     override fun onCleared() {
 
-        solicitudesListener?.remove()
+        solicitudesListener
+            ?.remove()
 
         super.onCleared()
     }
