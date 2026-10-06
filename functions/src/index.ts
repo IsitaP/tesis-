@@ -1,6 +1,5 @@
-import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
-
 import {defineSecret} from "firebase-functions/params";
 
 import {initializeApp} from "firebase-admin/app";
@@ -31,28 +30,24 @@ const routesApiKey =
 // CONSTANTES
 // ============================================================
 
-const DISTANCIA_MAXIMA_METROS =
-  6000;
+const DISTANCIA_MAXIMA_METROS = 6000;
 
-const CANTIDAD_SOLICITUDES_RUTA =
-  5;
+const CANTIDAD_SOLICITUDES_RUTA = 5;
 
 /*
- * Google permite como máximo:
+ * Matriz completa:
  *
  * 25 orígenes + 25 destinos = 50 Place IDs
  * 25 x 25 = 625 elementos
  */
-const MAX_CANDIDATAS_MATRIZ =
-  25;
+const MAX_CANDIDATAS_MATRIZ = 25;
 
 /*
- * Para la búsqueda inicial:
+ * Prefiltro:
  *
  * 1 origen + 49 destinos = 50 Place IDs.
  */
-const TAMANO_LOTE_PREFILTRO =
-  49;
+const TAMANO_LOTE_PREFILTRO = 49;
 
 
 // ============================================================
@@ -60,7 +55,6 @@ const TAMANO_LOTE_PREFILTRO =
 // ============================================================
 
 interface SolicitudDisponible {
-
   id: string;
 
   placeId: string;
@@ -68,11 +62,12 @@ interface SolicitudDisponible {
   latitud: number;
 
   longitud: number;
+
+  fechaRecoleccion: string;
 }
 
 
 interface ElementoMatriz {
-
   originIndex?: number;
 
   destinationIndex?: number;
@@ -89,7 +84,6 @@ interface ElementoMatriz {
 
 
 interface RutaGoogle {
-
   distanceMeters?: number;
 
   duration?: string;
@@ -103,21 +97,18 @@ interface RutaGoogle {
 
 
 interface RespuestaComputeRoutes {
-
   routes?: RutaGoogle[];
 }
 
 
 // ============================================================
-// CREAR WAYPOINT PARA GOOGLE ROUTES
+// CREAR WAYPOINT
 // ============================================================
 
 function crearWaypoint(
   solicitud: SolicitudDisponible
 ) {
-
   return {
-
     placeId:
       solicitud.placeId,
   };
@@ -129,22 +120,15 @@ function crearWaypoint(
 // ============================================================
 
 async function calcularMatrizDistancias(
-
   origenes: SolicitudDisponible[],
-
   destinos: SolicitudDisponible[]
-
 ): Promise<ElementoMatriz[]> {
-
 
   const origins =
     origenes.map(
       (solicitud) => ({
-
         waypoint:
-          crearWaypoint(
-            solicitud
-          ),
+          crearWaypoint(solicitud),
       })
     );
 
@@ -152,29 +136,20 @@ async function calcularMatrizDistancias(
   const destinations =
     destinos.map(
       (solicitud) => ({
-
         waypoint:
-          crearWaypoint(
-            solicitud
-          ),
+          crearWaypoint(solicitud),
       })
     );
 
 
   const response =
     await fetch(
-
       "https://routes.googleapis.com/" +
       "distanceMatrix/v2:computeRouteMatrix",
-
       {
-
-        method:
-          "POST",
-
+        method: "POST",
 
         headers: {
-
           "Content-Type":
             "application/json",
 
@@ -189,10 +164,8 @@ async function calcularMatrizDistancias(
             "distanceMeters",
         },
 
-
         body:
           JSON.stringify({
-
             origins:
               origins,
 
@@ -222,46 +195,35 @@ async function calcularMatrizDistancias(
 
 
     throw new Error(
-
       "Error Google Route Matrix " +
       `${response.status}: ${errorText}`
     );
   }
 
 
-  return await response.json() as ElementoMatriz[];
+  return (await response.json()) as ElementoMatriz[];
 }
 
 
 // ============================================================
-// OBTENER UNA DISTANCIA DE LA MATRIZ
+// OBTENER DISTANCIA
 // ============================================================
 
 function obtenerDistancia(
-
   matriz: ElementoMatriz[],
-
   origenIndex: number,
-
   destinoIndex: number
-
 ): number | null {
-
 
   const elemento =
     matriz.find(
       (item) =>
-
-        item.originIndex ===
-          origenIndex &&
-
-        item.destinationIndex ===
-          destinoIndex
+        item.originIndex === origenIndex &&
+        item.destinationIndex === destinoIndex
     );
 
 
   if (!elemento) {
-
     return null;
   }
 
@@ -270,7 +232,6 @@ function obtenerDistancia(
     elemento.condition !==
     "ROUTE_EXISTS"
   ) {
-
     return null;
   }
 
@@ -279,7 +240,6 @@ function obtenerDistancia(
     typeof elemento.distanceMeters !==
     "number"
   ) {
-
     return null;
   }
 
@@ -289,33 +249,23 @@ function obtenerDistancia(
 
 
 // ============================================================
-// DISTANCIA SIMÉTRICA
+// DISTANCIA EN AMBOS SENTIDOS
 // ============================================================
 
 /*
- * ESTA ES LA REGLA QUE DEFINIMOS:
+ * Regla ReBottle:
  *
  * Math.max(
- *     distanciaA_B,
- *     distanciaB_A
+ *   distanciaA_B,
+ *   distanciaB_A
  * ) <= 6000
- *
- * Es decir:
- *
- * A -> B debe cumplir.
- * B -> A debe cumplir.
  */
 
 function obtenerDistanciaSimetrica(
-
   matriz: ElementoMatriz[],
-
   indiceA: number,
-
   indiceB: number
-
 ): number | null {
-
 
   const distanciaAB =
     obtenerDistancia(
@@ -337,7 +287,6 @@ function obtenerDistanciaSimetrica(
     distanciaAB === null ||
     distanciaBA === null
   ) {
-
     return null;
   }
 
@@ -350,35 +299,24 @@ function obtenerDistanciaSimetrica(
 
 
 // ============================================================
-// COMPROBAR SI DOS SOLICITUDES CUMPLEN LOS 6 KM
+// COMPROBAR LOS 6 KM
 // ============================================================
 
 function cumplenDistanciaMaxima(
-
   matriz: ElementoMatriz[],
-
   indiceA: number,
-
   indiceB: number
-
 ): boolean {
-
 
   const distancia =
     obtenerDistanciaSimetrica(
-
       matriz,
-
       indiceA,
-
       indiceB
     );
 
 
-  if (
-    distancia === null
-  ) {
-
+  if (distancia === null) {
     return false;
   }
 
@@ -391,33 +329,13 @@ function cumplenDistanciaMaxima(
 
 
 // ============================================================
-// VALIDAR GRUPO COMPLETO
+// VALIDAR TODAS LAS PAREJAS DE UN GRUPO
 // ============================================================
 
-/*
- * Para 5 solicitudes comprobamos
- * todas las parejas:
- *
- * A-B
- * A-C
- * A-D
- * A-E
- * B-C
- * B-D
- * B-E
- * C-D
- * C-E
- * D-E
- */
-
 function grupoCumpleDistancia(
-
   indices: number[],
-
   matriz: ElementoMatriz[]
-
 ): boolean {
-
 
   for (
     let i = 0;
@@ -425,25 +343,19 @@ function grupoCumpleDistancia(
     i++
   ) {
 
-
     for (
       let j = i + 1;
       j < indices.length;
       j++
     ) {
 
-
       if (
         !cumplenDistanciaMaxima(
-
           matriz,
-
           indices[i],
-
           indices[j]
         )
       ) {
-
         return false;
       }
     }
@@ -455,39 +367,28 @@ function grupoCumpleDistancia(
 
 
 // ============================================================
-// BUSCAR GRUPO DE 5
+// BUSCAR GRUPO DE CINCO
 // ============================================================
 
 /*
- * La solicitud nueva siempre queda
- * en la posición 0.
+ * La posición 0 siempre corresponde a la solicitud
+ * que acaba de crearse o modificarse.
  *
- * Por eso buscamos otras 4 solicitudes
- * que junto con ella formen un grupo válido.
+ * Buscamos otras cuatro.
  */
 
 function buscarGrupoDeCinco(
-
   candidatas: SolicitudDisponible[],
-
   matriz: ElementoMatriz[]
-
 ): number[] | null {
-
 
   if (
     candidatas.length <
     CANTIDAD_SOLICITUDES_RUTA
   ) {
-
     return null;
   }
 
-
-  /*
-   * Índice 0 =
-   * solicitud que activó la Cloud Function.
-   */
 
   for (
     let a = 1;
@@ -495,13 +396,11 @@ function buscarGrupoDeCinco(
     a++
   ) {
 
-
     for (
       let b = a + 1;
       b < candidatas.length - 2;
       b++
     ) {
-
 
       for (
         let c = b + 1;
@@ -509,13 +408,11 @@ function buscarGrupoDeCinco(
         c++
       ) {
 
-
         for (
           let d = c + 1;
           d < candidatas.length;
           d++
         ) {
-
 
           const grupo = [
             0,
@@ -532,7 +429,6 @@ function buscarGrupoDeCinco(
               matriz
             )
           ) {
-
             return grupo;
           }
         }
@@ -546,46 +442,23 @@ function buscarGrupoDeCinco(
 
 
 // ============================================================
-// PREFILTRO CON GOOGLE ROUTES
+// PREFILTRO DE SOLICITUDES CERCANAS
 // ============================================================
 
-/*
- * Antes de mandar hasta 25 x 25,
- * buscamos cuáles solicitudes están
- * realmente cerca de la solicitud nueva.
- *
- * También usamos Google Routes aquí.
- *
- * NO usamos Haversine.
- */
-
 async function buscarSolicitudesCercanas(
-
-  nuevaSolicitud:
-    SolicitudDisponible,
-
-  otrasSolicitudes:
-    SolicitudDisponible[]
-
+  solicitudActual: SolicitudDisponible,
+  otrasSolicitudes: SolicitudDisponible[]
 ): Promise<Array<{
   solicitud: SolicitudDisponible;
   distanciaMaxima: number;
 }>> {
 
-
   const resultados:
     Array<{
-      solicitud:
-        SolicitudDisponible;
-
-      distanciaMaxima:
-        number;
+      solicitud: SolicitudDisponible;
+      distanciaMaxima: number;
     }> = [];
 
-
-  // ==========================================================
-  // PROCESAR EN LOTES DE 49
-  // ==========================================================
 
   for (
     let inicio = 0;
@@ -593,28 +466,18 @@ async function buscarSolicitudesCercanas(
     inicio += TAMANO_LOTE_PREFILTRO
   ) {
 
-
     const lote =
       otrasSolicitudes.slice(
-
         inicio,
-
-        inicio +
-          TAMANO_LOTE_PREFILTRO
+        inicio + TAMANO_LOTE_PREFILTRO
       );
 
 
     /*
-     * Calculamos:
+     * Calculamos ambos sentidos:
      *
-     * nueva -> lote
-     *
-     * y
-     *
-     * lote -> nueva
-     *
-     * porque las carreteras no son
-     * necesariamente simétricas.
+     * actual -> otras
+     * otras  -> actual
      */
 
     const [
@@ -624,13 +487,13 @@ async function buscarSolicitudesCercanas(
       await Promise.all([
 
         calcularMatrizDistancias(
-          [nuevaSolicitud],
+          [solicitudActual],
           lote
         ),
 
         calcularMatrizDistancias(
           lote,
-          [nuevaSolicitud]
+          [solicitudActual]
         ),
       ]);
 
@@ -641,13 +504,10 @@ async function buscarSolicitudesCercanas(
       i++
     ) {
 
-
       const ida =
         matrizIda.find(
           (item) =>
-
             item.originIndex === 0 &&
-
             item.destinationIndex === i
         );
 
@@ -655,9 +515,7 @@ async function buscarSolicitudesCercanas(
       const regreso =
         matrizRegreso.find(
           (item) =>
-
             item.originIndex === i &&
-
             item.destinationIndex === 0
         );
 
@@ -668,9 +526,9 @@ async function buscarSolicitudesCercanas(
             "ROUTE_EXISTS" &&
           typeof ida.distanceMeters ===
             "number"
-        ) ?
-          ida.distanceMeters :
-          null;
+        )
+          ? ida.distanceMeters
+          : null;
 
 
       const distanciaRegreso =
@@ -679,36 +537,25 @@ async function buscarSolicitudesCercanas(
             "ROUTE_EXISTS" &&
           typeof regreso.distanceMeters ===
             "number"
-        ) ?
-          regreso.distanceMeters :
-          null;
+        )
+          ? regreso.distanceMeters
+          : null;
 
 
       if (
         distanciaIda === null ||
         distanciaRegreso === null
       ) {
-
         continue;
       }
 
 
-      // ======================================================
-      // Math.max(A -> B, B -> A)
-      // ======================================================
-
       const distanciaMaxima =
         Math.max(
-
           distanciaIda,
-
           distanciaRegreso
         );
 
-
-      // ======================================================
-      // SOLO CONSERVAR <= 6 KM
-      // ======================================================
 
       if (
         distanciaMaxima <=
@@ -716,7 +563,6 @@ async function buscarSolicitudesCercanas(
       ) {
 
         resultados.push({
-
           solicitud:
             lote[i],
 
@@ -728,13 +574,9 @@ async function buscarSolicitudesCercanas(
   }
 
 
-  // ==========================================================
-  // MÁS CERCANAS PRIMERO
-  // ==========================================================
-
+  // Más cercanas primero.
   resultados.sort(
     (a, b) =>
-
       a.distanciaMaxima -
       b.distanciaMaxima
   );
@@ -745,31 +587,22 @@ async function buscarSolicitudesCercanas(
 
 
 // ============================================================
-// ELEGIR EXTREMOS DE LA RUTA
+// ELEGIR EXTREMOS
 // ============================================================
 
 /*
- * Todavía no tenemos un punto de salida
- * del recolector.
- *
- * Por eso, dentro del grupo de 5,
- * elegimos como origen y destino
- * las dos solicitudes más alejadas entre sí.
- *
- * Las otras tres serán intermediarias.
+ * Como todavía no tenemos definido un depósito/punto
+ * de salida del recolector, usamos como extremos las
+ * dos solicitudes más alejadas dentro del grupo.
  */
 
 function elegirExtremos(
-
   indicesGrupo: number[],
-
   matriz: ElementoMatriz[]
-
 ): {
   origen: number;
   destino: number;
 } {
-
 
   let origen =
     indicesGrupo[0];
@@ -779,8 +612,7 @@ function elegirExtremos(
       indicesGrupo.length - 1
     ];
 
-  let mayorDistancia =
-    -1;
+  let mayorDistancia = -1;
 
 
   for (
@@ -789,21 +621,16 @@ function elegirExtremos(
     i++
   ) {
 
-
     for (
       let j = i + 1;
       j < indicesGrupo.length;
       j++
     ) {
 
-
       const distancia =
         obtenerDistanciaSimetrica(
-
           matriz,
-
           indicesGrupo[i],
-
           indicesGrupo[j]
         );
 
@@ -838,44 +665,24 @@ function elegirExtremos(
 // ============================================================
 
 async function calcularRutaOptimizada(
-
   origen: SolicitudDisponible,
-
   destino: SolicitudDisponible,
-
   intermedias: SolicitudDisponible[]
-
 ): Promise<{
-
-  ordenIntermedias:
-    number[];
-
-  distanciaTotalMetros:
-    number;
-
-  duracionTotalSegundos:
-    number;
-
-  polyline:
-    string;
-
+  ordenIntermedias: number[];
+  distanciaTotalMetros: number;
+  duracionTotalSegundos: number;
+  polyline: string;
 }> {
-
 
   const response =
     await fetch(
-
       "https://routes.googleapis.com/" +
       "directions/v2:computeRoutes",
-
       {
-
-        method:
-          "POST",
-
+        method: "POST",
 
         headers: {
-
           "Content-Type":
             "application/json",
 
@@ -889,27 +696,18 @@ async function calcularRutaOptimizada(
             "routes.optimizedIntermediateWaypointIndex",
         },
 
-
         body:
           JSON.stringify({
-
             origin:
-              crearWaypoint(
-                origen
-              ),
+              crearWaypoint(origen),
 
             destination:
-              crearWaypoint(
-                destino
-              ),
+              crearWaypoint(destino),
 
             intermediates:
               intermedias.map(
                 (solicitud) =>
-
-                  crearWaypoint(
-                    solicitud
-                  )
+                  crearWaypoint(solicitud)
               ),
 
             travelMode:
@@ -938,7 +736,6 @@ async function calcularRutaOptimizada(
 
 
     throw new Error(
-
       "Error Google Compute Routes " +
       `${response.status}: ${errorText}`
     );
@@ -946,7 +743,7 @@ async function calcularRutaOptimizada(
 
 
   const resultado =
-    await response.json() as RespuestaComputeRoutes;
+    (await response.json()) as RespuestaComputeRoutes;
 
 
   const ruta =
@@ -961,23 +758,13 @@ async function calcularRutaOptimizada(
   }
 
 
-  // ==========================================================
-  // ORDEN DE INTERMEDIAS
-  // ==========================================================
-
   const ordenIntermedias =
+    ruta.optimizedIntermediateWaypointIndex
+    ??
+    intermedias.map(
+      (_, index) => index
+    );
 
-    ruta
-      .optimizedIntermediateWaypointIndex
-      ??
-      intermedias.map(
-        (_, index) => index
-      );
-
-
-  // ==========================================================
-  // DURACIÓN
-  // ==========================================================
 
   const duracionTexto =
     ruta.duration ?? "0s";
@@ -985,9 +772,7 @@ async function calcularRutaOptimizada(
 
   const duracionTotalSegundos =
     Math.round(
-
       Number.parseFloat(
-
         duracionTexto.replace(
           "s",
           ""
@@ -997,7 +782,6 @@ async function calcularRutaOptimizada(
 
 
   return {
-
     ordenIntermedias:
       ordenIntermedias,
 
@@ -1019,42 +803,25 @@ async function calcularRutaOptimizada(
 // ============================================================
 
 async function crearRutaEnFirestore(
-
-  solicitudes:
-    SolicitudDisponible[],
-
-  ordenSolicitudes:
-    string[],
-
-  distanciaTotalMetros:
-    number,
-
-  duracionTotalSegundos:
-    number,
-
-  polyline:
-    string
-
+  solicitudes: SolicitudDisponible[],
+  fechaRecoleccion: string,
+  ordenSolicitudes: string[],
+  distanciaTotalMetros: number,
+  duracionTotalSegundos: number,
+  polyline: string
 ): Promise<string> {
 
-
   const contadorRef =
-
     db
-      .collection(
-        "contadores"
-      )
-      .doc(
-        "rutas"
-      );
+      .collection("contadores")
+      .doc("rutas");
 
 
   return await db.runTransaction(
     async (transaction) => {
 
-
       // ======================================================
-      // LEER CONTADOR
+      // CONTADOR
       // ======================================================
 
       const contadorSnapshot =
@@ -1064,10 +831,9 @@ async function crearRutaEnFirestore(
 
 
       const ultimoId =
-        contadorSnapshot
-          .get(
-            "ultimoId"
-          ) as number | undefined;
+        contadorSnapshot.get(
+          "ultimoId"
+        ) as number | undefined;
 
 
       const nuevoNumero =
@@ -1086,26 +852,20 @@ async function crearRutaEnFirestore(
 
 
       // ======================================================
-      // REFERENCIAS DE LAS 5 SOLICITUDES
+      // REFERENCIAS
       // ======================================================
 
       const referencias =
-
         solicitudes.map(
           (solicitud) =>
-
             db
-              .collection(
-                "solicitudes"
-              )
-              .doc(
-                solicitud.id
-              )
+              .collection("solicitudes")
+              .doc(solicitud.id)
         );
 
 
       // ======================================================
-      // LEER LAS 5 ANTES DE ESCRIBIR
+      // LEER LAS CINCO SOLICITUDES
       // ======================================================
 
       const snapshots = [];
@@ -1115,27 +875,27 @@ async function crearRutaEnFirestore(
         const referencia of referencias
       ) {
 
-        const snapshot =
+        const solicitudSnapshot =
           await transaction.get(
             referencia
           );
 
+
         snapshots.push(
-          snapshot
+          solicitudSnapshot
         );
       }
 
 
       // ======================================================
-      // COMPROBAR QUE SIGAN DISPONIBLES
+      // VOLVER A VALIDAR ANTES DE ESCRIBIR
       // ======================================================
 
       for (
-        const snapshot of snapshots
+        const solicitudSnapshot of snapshots
       ) {
 
-
-        if (!snapshot.exists) {
+        if (!solicitudSnapshot.exists) {
 
           throw new Error(
             "Una solicitud ya no existe."
@@ -1144,7 +904,7 @@ async function crearRutaEnFirestore(
 
 
         const data =
-          snapshot.data();
+          solicitudSnapshot.data();
 
 
         if (
@@ -1153,7 +913,7 @@ async function crearRutaEnFirestore(
         ) {
 
           throw new Error(
-            `La solicitud ${snapshot.id} ` +
+            `La solicitud ${solicitudSnapshot.id} ` +
             "ya no está PUBLICADA."
           );
         }
@@ -1165,37 +925,50 @@ async function crearRutaEnFirestore(
         ) {
 
           throw new Error(
-            `La solicitud ${snapshot.id} ` +
+            `La solicitud ${solicitudSnapshot.id} ` +
             "ya pertenece a otra ruta."
+          );
+        }
+
+
+        // ====================================================
+        // VALIDAR FECHA NUEVAMENTE
+        // ====================================================
+
+        if (
+          data?.fechaRecoleccion !==
+          fechaRecoleccion
+        ) {
+
+          throw new Error(
+            `La solicitud ${solicitudSnapshot.id} ` +
+            "no tiene la misma fecha de recolección."
           );
         }
       }
 
 
       // ======================================================
-      // CREAR DOCUMENTO DE RUTA
+      // CREAR RUTA
       // ======================================================
 
       const rutaRef =
-
         db
-          .collection(
-            "rutas"
-          )
-          .doc(
-            rutaId
-          );
+          .collection("rutas")
+          .doc(rutaId);
 
 
       transaction.set(
         rutaRef,
         {
-
           solicitudesIds:
             solicitudes.map(
               (solicitud) =>
                 solicitud.id
             ),
+
+          fechaRecoleccion:
+            fechaRecoleccion,
 
           estado:
             "PUBLICADA",
@@ -1216,25 +989,22 @@ async function crearRutaEnFirestore(
             polyline,
 
           creadaEn:
-            FieldValue
-              .serverTimestamp(),
+            FieldValue.serverTimestamp(),
         }
       );
 
 
       // ======================================================
-      // ACTUALIZAR LAS 5 SOLICITUDES
+      // ACTUALIZAR SOLICITUDES
       // ======================================================
 
       for (
         const referencia of referencias
       ) {
 
-
         transaction.update(
           referencia,
           {
-
             estado:
               "EN_RUTA",
 
@@ -1251,12 +1021,10 @@ async function crearRutaEnFirestore(
 
       transaction.set(
         contadorRef,
-
         {
           ultimoId:
             nuevoNumero,
         },
-
         {
           merge:
             true,
@@ -1275,9 +1043,8 @@ async function crearRutaEnFirestore(
 // ============================================================
 
 export const procesarSolicitudPublicada =
-  onDocumentCreated(
+  onDocumentWritten(
     {
-
       document:
         "solicitudes/{solicitudId}",
 
@@ -1288,22 +1055,61 @@ export const procesarSolicitudPublicada =
 
     async (event) => {
 
-
       try {
 
-
         // ====================================================
-        // SOLICITUD NUEVA
+        // DATOS DEL EVENTO
         // ====================================================
 
-        const snapshot =
+        const cambio =
           event.data;
 
 
-        if (!snapshot) {
+        if (!cambio) {
 
           logger.warn(
-            "No se encontraron datos."
+            "No se encontraron datos del evento."
+          );
+
+          return;
+        }
+
+
+        const antes =
+          cambio.before;
+
+
+        const despues =
+          cambio.after;
+
+
+        const solicitudId =
+          event.params.solicitudId;
+
+
+        // ====================================================
+        // IGNORAR ELIMINACIONES
+        // ====================================================
+
+        /*
+         * onDocumentWritten se ejecuta al:
+         *
+         * - crear
+         * - modificar
+         * - eliminar
+         *
+         * Para formar rutas no necesitamos procesar
+         * eliminaciones.
+         */
+
+        if (!despues.exists) {
+
+          logger.info(
+            "Solicitud eliminada. No se procesa para rutas.",
+            {
+              solicitudId:
+                solicitudId,
+            }
           );
 
           return;
@@ -1311,19 +1117,104 @@ export const procesarSolicitudPublicada =
 
 
         const data =
-          snapshot.data();
+          despues.data();
 
 
-        const solicitudId =
-          event.params.solicitudId;
+        if (!data) {
 
+          logger.warn(
+            "La solicitud no contiene datos."
+          );
+
+          return;
+        }
+
+
+        // ====================================================
+        // CREACIÓN O MODIFICACIÓN
+        // ====================================================
+
+        const esCreacion =
+          !antes.exists;
+
+
+        const dataAnterior =
+          antes.exists
+            ? antes.data()
+            : undefined;
+
+
+        // ====================================================
+        // DETERMINAR SI EL CAMBIO AFECTA LAS RUTAS
+        // ====================================================
+
+        /*
+         * Queremos recalcular solamente si cambia:
+         *
+         * - fechaRecoleccion
+         * - placeId
+         * - latitud
+         * - longitud
+         * - estado
+         * - rutaId
+         *
+         * Cambiar peso o materiales no necesita
+         * consultar nuevamente Google Routes.
+         */
+
+        const cambioRelevante =
+          esCreacion ||
+
+          dataAnterior?.fechaRecoleccion !==
+            data.fechaRecoleccion ||
+
+          dataAnterior?.placeId !==
+            data.placeId ||
+
+          dataAnterior?.latitud !==
+            data.latitud ||
+
+          dataAnterior?.longitud !==
+            data.longitud ||
+
+          dataAnterior?.estado !==
+            data.estado ||
+
+          dataAnterior?.rutaId !==
+            data.rutaId;
+
+
+        if (!cambioRelevante) {
+
+          logger.info(
+            "La solicitud fue modificada, " +
+            "pero el cambio no afecta la creación de rutas.",
+            {
+              solicitudId:
+                solicitudId,
+            }
+          );
+
+          return;
+        }
+
+
+        // ====================================================
+        // LOG
+        // ====================================================
 
         logger.info(
-          "Nueva solicitud detectada",
+          esCreacion
+            ? "Nueva solicitud detectada"
+            : "Solicitud modificada detectada",
           {
-
             solicitudId:
               solicitudId,
+
+            tipoEvento:
+              esCreacion
+                ? "CREACION"
+                : "MODIFICACION",
 
             estado:
               data.estado,
@@ -1333,31 +1224,82 @@ export const procesarSolicitudPublicada =
 
             placeId:
               data.placeId,
+
+            fechaRecoleccion:
+              data.fechaRecoleccion,
+
+            latitud:
+              data.latitud,
+
+            longitud:
+              data.longitud,
           }
         );
 
 
         // ====================================================
-        // VALIDACIONES
+        // VALIDAR ESTADO
         // ====================================================
+
+        /*
+         * Esto evita ciclos.
+         *
+         * Cuando creamos una ruta hacemos:
+         *
+         * PUBLICADA -> EN_RUTA
+         *
+         * El trigger vuelve a ejecutarse,
+         * pero termina aquí.
+         */
 
         if (
           data.estado !==
           "PUBLICADA"
         ) {
 
+          logger.info(
+            "La solicitud no está PUBLICADA. " +
+            "No se intenta crear una ruta.",
+            {
+              solicitudId:
+                solicitudId,
+
+              estado:
+                data.estado,
+            }
+          );
+
           return;
         }
 
+
+        // ====================================================
+        // VALIDAR RUTA ID
+        // ====================================================
 
         if (
           data.rutaId !== null &&
           data.rutaId !== undefined
         ) {
 
+          logger.info(
+            "La solicitud ya pertenece a una ruta.",
+            {
+              solicitudId:
+                solicitudId,
+
+              rutaId:
+                data.rutaId,
+            }
+          );
+
           return;
         }
 
+
+        // ====================================================
+        // VALIDAR PLACE ID
+        // ====================================================
 
         if (
           typeof data.placeId !==
@@ -1368,7 +1310,11 @@ export const procesarSolicitudPublicada =
         ) {
 
           logger.warn(
-            "La solicitud nueva no tiene Place ID."
+            "La solicitud no tiene un Place ID válido.",
+            {
+              solicitudId:
+                solicitudId,
+            }
           );
 
           return;
@@ -1376,30 +1322,104 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // BUSCAR SOLICITUDES DISPONIBLES
+        // VALIDAR COORDENADAS
+        // ====================================================
+
+        if (
+          typeof data.latitud !==
+            "number" ||
+
+          typeof data.longitud !==
+            "number"
+        ) {
+
+          logger.warn(
+            "La solicitud no tiene coordenadas válidas.",
+            {
+              solicitudId:
+                solicitudId,
+            }
+          );
+
+          return;
+        }
+
+
+        // ====================================================
+        // VALIDAR FECHA
+        // ====================================================
+
+        if (
+          typeof data.fechaRecoleccion !==
+            "string" ||
+
+          data.fechaRecoleccion.trim() ===
+            ""
+        ) {
+
+          logger.warn(
+            "La solicitud no tiene " +
+            "fecha de recolección válida.",
+            {
+              solicitudId:
+                solicitudId,
+            }
+          );
+
+          return;
+        }
+
+
+        const fechaRecoleccion =
+          data.fechaRecoleccion.trim();
+
+
+        logger.info(
+          "Buscando solicitudes para la misma fecha",
+          {
+            solicitudId:
+              solicitudId,
+
+            fechaRecoleccion:
+              fechaRecoleccion,
+          }
+        );
+
+
+        // ====================================================
+        // BUSCAR SOLICITUDES DE LA MISMA FECHA
         // ====================================================
 
         const disponiblesSnapshot =
-
           await db
-            .collection(
-              "solicitudes"
-            )
+            .collection("solicitudes")
+
             .where(
               "estado",
               "==",
               "PUBLICADA"
             )
+
             .where(
               "rutaId",
               "==",
               null
             )
+
+            .where(
+              "fechaRecoleccion",
+              "==",
+              fechaRecoleccion
+            )
+
             .get();
 
 
-        const solicitudesDisponibles:
+        // ====================================================
+        // CONVERTIR A SolicitudDisponible
+        // ====================================================
 
+        const solicitudesDisponibles:
           SolicitudDisponible[] =
 
           disponiblesSnapshot
@@ -1407,13 +1427,11 @@ export const procesarSolicitudPublicada =
             .map(
               (document) => {
 
-
                 const solicitud =
                   document.data();
 
 
                 return {
-
                   id:
                     document.id,
 
@@ -1425,6 +1443,9 @@ export const procesarSolicitudPublicada =
 
                   longitud:
                     solicitud.longitud,
+
+                  fechaRecoleccion:
+                    solicitud.fechaRecoleccion,
                 };
               }
             )
@@ -1441,13 +1462,21 @@ export const procesarSolicitudPublicada =
                   "number" &&
 
                 typeof solicitud.longitud ===
-                  "number"
+                  "number" &&
+
+                typeof solicitud.fechaRecoleccion ===
+                  "string" &&
+
+                solicitud.fechaRecoleccion ===
+                  fechaRecoleccion
             );
 
 
         logger.info(
-          "Solicitudes disponibles",
+          "Solicitudes disponibles para la misma fecha",
           {
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             cantidad:
               solicitudesDisponibles.length,
@@ -1456,7 +1485,7 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // NECESITAMOS AL MENOS 5
+        // NECESITAMOS CINCO
         // ====================================================
 
         if (
@@ -1465,7 +1494,18 @@ export const procesarSolicitudPublicada =
         ) {
 
           logger.info(
-            "Todavía no hay 5 solicitudes disponibles."
+            "Todavía no hay 5 solicitudes " +
+            "disponibles para esta fecha.",
+            {
+              fechaRecoleccion:
+                fechaRecoleccion,
+
+              disponibles:
+                solicitudesDisponibles.length,
+
+              necesarias:
+                CANTIDAD_SOLICITUDES_RUTA,
+            }
           );
 
           return;
@@ -1473,24 +1513,26 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // ENCONTRAR LA SOLICITUD NUEVA
+        // ENCONTRAR LA SOLICITUD ACTUAL
         // ====================================================
 
-        const nuevaSolicitud =
-
+        const solicitudActual =
           solicitudesDisponibles.find(
             (solicitud) =>
-
               solicitud.id ===
               solicitudId
           );
 
 
-        if (!nuevaSolicitud) {
+        if (!solicitudActual) {
 
           logger.warn(
-            "No se encontró la solicitud nueva " +
-            "entre las disponibles."
+            "No se encontró la solicitud que activó " +
+            "el evento entre las disponibles.",
+            {
+              solicitudId:
+                solicitudId,
+            }
           );
 
           return;
@@ -1498,10 +1540,8 @@ export const procesarSolicitudPublicada =
 
 
         const otrasSolicitudes =
-
           solicitudesDisponibles.filter(
             (solicitud) =>
-
               solicitud.id !==
               solicitudId
           );
@@ -1512,19 +1552,18 @@ export const procesarSolicitudPublicada =
         // ====================================================
 
         const cercanas =
-
           await buscarSolicitudesCercanas(
-
-            nuevaSolicitud,
-
+            solicitudActual,
             otrasSolicitudes
           );
 
 
         logger.info(
-          "Solicitudes a máximo 6 km " +
-          "de la solicitud nueva en ambos sentidos",
+          "Solicitudes de la misma fecha a máximo " +
+          "6 km de la solicitud actual en ambos sentidos",
           {
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             cantidad:
               cercanas.length,
@@ -1532,7 +1571,6 @@ export const procesarSolicitudPublicada =
             solicitudes:
               cercanas.map(
                 (item) => ({
-
                   id:
                     item.solicitud.id,
 
@@ -1544,14 +1582,17 @@ export const procesarSolicitudPublicada =
         );
 
 
-        // Necesitamos nueva + otras 4.
+        // ====================================================
+        // NECESITAMOS OTRAS CUATRO
+        // ====================================================
+
         if (
           cercanas.length < 4
         ) {
 
           logger.info(
-            "La nueva solicitud no tiene " +
-            "otras 4 solicitudes compatibles."
+            "La solicitud no tiene otras " +
+            "4 solicitudes compatibles para la misma fecha."
           );
 
           return;
@@ -1559,17 +1600,16 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // ARMAR CANDIDATAS PARA MATRIZ COMPLETA
+        // CANDIDATAS
         // ====================================================
 
         /*
-         * Posición 0 siempre será
-         * la solicitud nueva.
+         * La solicitud que activó el evento
+         * siempre va en posición 0.
          */
 
         const candidatas = [
-
-          nuevaSolicitud,
+          solicitudActual,
 
           ...cercanas
             .slice(
@@ -1586,6 +1626,8 @@ export const procesarSolicitudPublicada =
         logger.info(
           "Calculando matriz completa",
           {
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             cantidad:
               candidatas.length,
@@ -1594,15 +1636,12 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // MATRIZ COMPLETA NxN
+        // MATRIZ NxN
         // ====================================================
 
         const matrizCompleta =
-
           await calcularMatrizDistancias(
-
             candidatas,
-
             candidatas
           );
 
@@ -1612,11 +1651,8 @@ export const procesarSolicitudPublicada =
         // ====================================================
 
         const indicesGrupo =
-
           buscarGrupoDeCinco(
-
             candidatas,
-
             matrizCompleta
           );
 
@@ -1625,8 +1661,12 @@ export const procesarSolicitudPublicada =
 
           logger.info(
             "No existe todavía un grupo de " +
-            "5 solicitudes donde todas las parejas " +
-            "cumplan la regla de 6 km."
+            "5 solicitudes de la misma fecha donde " +
+            "todas las parejas cumplan la regla de 6 km.",
+            {
+              fechaRecoleccion:
+                fechaRecoleccion,
+            }
           );
 
           return;
@@ -1634,16 +1674,40 @@ export const procesarSolicitudPublicada =
 
 
         const grupo =
-
           indicesGrupo.map(
             (indice) =>
               candidatas[indice]
           );
 
 
+        // ====================================================
+        // VALIDACIÓN EXTRA DE FECHA
+        // ====================================================
+
+        const todasMismaFecha =
+          grupo.every(
+            (solicitud) =>
+              solicitud.fechaRecoleccion ===
+              fechaRecoleccion
+          );
+
+
+        if (!todasMismaFecha) {
+
+          logger.error(
+            "Se intentó formar una ruta con " +
+            "fechas de recolección diferentes."
+          );
+
+          return;
+        }
+
+
         logger.info(
           "Grupo válido encontrado",
           {
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             solicitudes:
               grupo.map(
@@ -1655,15 +1719,12 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // ELEGIR ORIGEN Y DESTINO
+        // EXTREMOS
         // ====================================================
 
         const extremos =
-
           elegirExtremos(
-
             indicesGrupo,
-
             matrizCompleta
           );
 
@@ -1681,11 +1742,9 @@ export const procesarSolicitudPublicada =
 
 
         const intermedias =
-
           indicesGrupo
             .filter(
               (indice) =>
-
                 indice !==
                   extremos.origen &&
 
@@ -1701,7 +1760,6 @@ export const procesarSolicitudPublicada =
         logger.info(
           "Extremos elegidos",
           {
-
             origen:
               origen.id,
 
@@ -1718,27 +1776,22 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // OPTIMIZAR ORDEN CON COMPUTE ROUTES
+        // GOOGLE COMPUTE ROUTES
         // ====================================================
 
         const rutaOptimizada =
-
           await calcularRutaOptimizada(
-
             origen,
-
             destino,
-
             intermedias
           );
 
 
         // ====================================================
-        // CONSTRUIR ORDEN FINAL
+        // ORDEN FINAL
         // ====================================================
 
         const intermediasOrdenadas =
-
           rutaOptimizada
             .ordenIntermedias
             .map(
@@ -1748,7 +1801,6 @@ export const procesarSolicitudPublicada =
 
 
         const ordenSolicitudes = [
-
           origen.id,
 
           ...intermediasOrdenadas.map(
@@ -1763,6 +1815,8 @@ export const procesarSolicitudPublicada =
         logger.info(
           "Orden optimizado por Google Routes",
           {
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             orden:
               ordenSolicitudes,
@@ -1779,14 +1833,14 @@ export const procesarSolicitudPublicada =
 
 
         // ====================================================
-        // CREAR RUTA TRANSACCIONALMENTE
+        // CREAR RUTA
         // ====================================================
 
         const rutaId =
-
           await crearRutaEnFirestore(
-
             grupo,
+
+            fechaRecoleccion,
 
             ordenSolicitudes,
 
@@ -1808,9 +1862,11 @@ export const procesarSolicitudPublicada =
         logger.info(
           "Ruta creada correctamente",
           {
-
             rutaId:
               rutaId,
+
+            fechaRecoleccion:
+              fechaRecoleccion,
 
             solicitudes:
               grupo.map(
@@ -1825,7 +1881,6 @@ export const procesarSolicitudPublicada =
 
 
       } catch (error) {
-
 
         logger.error(
           "Error procesando la solicitud",

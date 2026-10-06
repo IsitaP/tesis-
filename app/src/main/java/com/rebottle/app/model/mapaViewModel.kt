@@ -11,31 +11,24 @@ enum class EstadoRuta {
 }
 
 data class Ruta(
-
     val id: String = "",
 
-    val solicitudesIds: List<String> =
-        emptyList(),
+    val solicitudesIds: List<String> = emptyList(),
 
-    val estado: String =
-        EstadoRuta.PUBLICADA.name,
+    val fechaRecoleccion: String = "",
 
-    val recolectorId: String? =
-        null,
+    val estado: String = EstadoRuta.PUBLICADA.name,
 
-    val ordenSolicitudes: List<String> =
-        emptyList(),
+    val recolectorId: String? = null,
 
-    val distanciaTotalMetros: Long? =
-        null,
+    val ordenSolicitudes: List<String> = emptyList(),
 
-    val duracionTotalSegundos: Long? =
-        null,
+    val distanciaTotalMetros: Long? = null,
 
-    val polyline: String? =
-        null,
+    val duracionTotalSegundos: Long? = null,
 
-    val creadaEn: Timestamp? =
-        null
+    val polyline: String? = null,
+
+    val creadaEn: Timestamp? = null
 )
 
