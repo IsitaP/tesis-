@@ -32,37 +32,30 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val PrimaryGreenColor = Color(0xFF597042)
-private val PrimaryTextColor = Color(0xFF34382F)
-private val SecondaryTextColor = Color(0xFF7F887A)
+private val BackgroundColor = RebottleColors.Background
+private val PrimaryGreenColor = RebottleColors.MainGreen
+private val PrimaryTextColor = RebottleColors.MainText
+private val SecondaryTextColor = RebottleColors.SecondaryText
 
 @Composable
 fun RechazoSolicitudUsuario(
-    modifier: Modifier = Modifier,
-    navController: NavController? = null,
-    onBackToHomeClick: () -> Unit = {
-        navController?.navigate(AppScreens.homeCiudadano.name) {
-            popUpTo(AppScreens.homeCiudadano.name) { inclusive = true }
-        }
-    },
-    onGoToRequestsClick: () -> Unit = {
-        navController?.navigate(AppScreens.solicitudesUsuario.name)
-    },
+    controller: NavController,
+    modifier: Modifier = Modifier
+
 ) {
     RechazoSolicitudUsuarioScreen(
         modifier = modifier,
-        onBackToHomeClick = onBackToHomeClick,
-        onGoToRequestsClick = onGoToRequestsClick
+        controller = controller
+
     )
 }
 
 @Composable
 fun RechazoSolicitudUsuarioScreen(
     modifier: Modifier = Modifier,
-    onBackToHomeClick: () -> Unit = {},
-    onGoToRequestsClick: () -> Unit = {},
+    controller: NavController
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -114,7 +107,7 @@ fun RechazoSolicitudUsuarioScreen(
                 Spacer(modifier = Modifier.height(40.dp))
 
                 Button(
-                    onClick = onBackToHomeClick,
+                    onClick = { controller.navigate(AppScreens.homeCiudadano.name) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -135,7 +128,7 @@ fun RechazoSolicitudUsuarioScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedButton(
-                    onClick = onGoToRequestsClick,
+                    onClick = { controller.navigate(AppScreens.solicitudesUsuario.name) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -176,6 +169,6 @@ private fun RechazoIllustration(
 @Composable
 private fun RechazoSolicitudUsuarioPreview() {
     RebottleTheme {
-        RechazoSolicitudUsuarioScreen()
+       // RechazoSolicitudUsuarioScreen(navController = NavController(LocalContext.current))
     }
 }

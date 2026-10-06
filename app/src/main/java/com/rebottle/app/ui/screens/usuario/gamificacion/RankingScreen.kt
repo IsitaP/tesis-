@@ -61,18 +61,17 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 import androidx.compose.foundation.shape.GenericShape
 import java.util.Locale
 
-// ============================================================
-// COLORES
-// ============================================================
+
 
 private val ScreenBackground = Color(0xFFB5C99A) // Verde claro de fondo
-private val CardBackground = Color(0xFFFBF8F2)   // Crema del panel inferior
-private val MainGreen = Color(0xFF536D45)        // Verde corporativo
+private val CardBackground = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
 private val DarkText = Color(0xFF34382F)
-private val SecondaryText = Color(0xFF7F887A)
+private val SecondaryText = RebottleColors.SecondaryText
 private val AvatarBackground = Color(0xFFE8F0E0)
 
 private val Gold = Color(0xFFFFC83D)

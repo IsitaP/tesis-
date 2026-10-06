@@ -47,10 +47,10 @@ import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.screens.recolector.componentes.TarjetaAsignacionRecolector
 import com.rebottle.app.ui.theme.RebottleTheme
-
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF536D45)
-private val MainText = Color(0xFF34382F)
+import com.rebottle.app.ui.theme.RebottleColors
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val MainText = RebottleColors.MainText
 
 
 @Composable

@@ -23,9 +23,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,51 +36,54 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.rebottle.app.R
+import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
-private val BackgroundColor = Color(0xFFFBF8F2)
+private val BackgroundColor = RebottleColors.Background
 private val PrimaryGreenColor = Color(0xFF597042)
-private val PrimaryTextColor = Color(0xFF34382F)
-private val SecondaryTextColor = Color(0xFF7F887A)
+private val PrimaryTextColor = RebottleColors.MainText
+private val SecondaryTextColor = RebottleColors.SecondaryText
 private val CardBackgroundColor = Color(0xFFEFF5E6)
 private val CardBorderColor = Color(0xFFDFE9D4)
 private val IconTerracottaColor = Color(0xFFCD693A)
 
-@Composable
+/*@Composable
 fun ConfirmacionSolicitudUsuario(
+    NavController: NavController,
     modifier: Modifier = Modifier,
-    navController: NavController? = null,
-    fechaRecoleccion: String = stringResource(id = R.string.collection_date_value),
     horarioEstimado: String = stringResource(id = R.string.estimated_schedule_value),
-    onBackToHomeClick: () -> Unit = {
-        navController?.navigate(AppScreens.homeCiudadano.name) {
-            popUpTo(AppScreens.homeCiudadano.name) { inclusive = true }
-        }
-    },
-    onGoToRequestsClick: () -> Unit = {
-        navController?.navigate(AppScreens.solicitudesUsuario.name)
-    },
 ) {
     ConfirmacionSolicitudUsuarioScreen(
         modifier = modifier,
-        fechaRecoleccion = fechaRecoleccion,
         horarioEstimado = horarioEstimado,
-        onBackToHomeClick = onBackToHomeClick,
-        onGoToRequestsClick = onGoToRequestsClick,
+        controller = NavController,
+        idSolicitud = ""
     )
 }
-
+*/
 @Composable
 fun ConfirmacionSolicitudUsuarioScreen(
+    controller: NavController,
     modifier: Modifier = Modifier,
-    fechaRecoleccion: String = stringResource(id = R.string.collection_date_value),
     horarioEstimado: String = stringResource(id = R.string.estimated_schedule_value),
-    onBackToHomeClick: () -> Unit = {},
-    onGoToRequestsClick: () -> Unit = {},
+    solicitudId: String,
+    viewModel: SolicitudViewModel = viewModel()
 ) {
+
+    val state by viewModel.state.collectAsState()
+
+
+
+    val solicitud = state.solicitudes.find {
+        it.id == solicitudId
+    }
+
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = BackgroundColor,
@@ -132,7 +138,7 @@ fun ConfirmacionSolicitudUsuarioScreen(
                 InfoCard(
                     iconRes = R.drawable.ic_calendar,
                     label = stringResource(id = R.string.collection_date_title),
-                    value = fechaRecoleccion,
+                    value = solicitud?.fechaRecoleccion ?: "Cargando...",
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -148,7 +154,7 @@ fun ConfirmacionSolicitudUsuarioScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = onBackToHomeClick,
+                    onClick = { controller.navigate(AppScreens.homeCiudadano.name) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -169,7 +175,7 @@ fun ConfirmacionSolicitudUsuarioScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedButton(
-                    onClick = onGoToRequestsClick,
+                    onClick = { controller.navigate(AppScreens.solicitudesUsuario.name) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -248,6 +254,6 @@ private fun InfoCard(
 @Composable
 private fun ConfirmacionSolicitudUsuarioPreview() {
     RebottleTheme {
-        ConfirmacionSolicitudUsuarioScreen()
+        //ConfirmacionSolicitudUsuarioScreen(controller = NavController(LocalContext.current))
     }
 }

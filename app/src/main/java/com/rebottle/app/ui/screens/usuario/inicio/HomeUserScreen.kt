@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
 import androidx.compose.ui.Alignment
@@ -48,28 +49,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 
 import com.rebottle.app.R
+import com.rebottle.app.model.Solicitud
+import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
 
 
-// ============================================================
-// COLORES
-// ============================================================
-
-private val BackgroundColor = Color(0xFFFBF9F3)
-private val MainGreen = Color(0xFF536D45)
-private val DarkGreen = Color(0xFF394C31)
-private val LightGreen = Color(0xFFF2F7ED)
-private val BorderGreen = Color(0xFFD5E3CD)
-private val Brown = Color(0xFFA55E37)
-private val MainText = Color(0xFF3D433A)
-private val SecondaryText = Color(0xFF7F887A)
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val DarkGreen = RebottleColors.DarkGreen
+private val LightGreen = RebottleColors.LightGreen
+private val BorderGreen = RebottleColors.BorderGreen
+private val Brown = RebottleColors.Brown
+private val MainText = RebottleColors.MainText
+private val SecondaryText = RebottleColors.SecondaryText
 
 
 // ============================================================
@@ -78,8 +80,21 @@ private val SecondaryText = Color(0xFF7F887A)
 
 @Composable
 fun HomeUserScreen(
-    controller: NavController
+    controller: NavController,
+    viewModel: SolicitudViewModel = viewModel()
 ) {
+
+    val usuarioId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    val state by viewModel.state.collectAsState()
+
+    val ultimaSolicitud = state.solicitudes
+        .filter { it.usuarioId == usuarioId }
+        .maxByOrNull { solicitud ->
+            solicitud.id
+                .removePrefix("RB-")
+                .toIntOrNull() ?: 0
+        }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -189,15 +204,25 @@ fun HomeUserScreen(
             )
 
 
-            CollectionCard(
-                solicitudId = "1B98kIH6ntq5wieY7SV7"
-                ,
-                onDetailsClick = { id ->
-                    controller.navigate(
-                        "${AppScreens.detalleSolicitudUsuario.name}/$id"
-                    )
-                }
-            )
+            if (ultimaSolicitud != null) {
+
+                CollectionCard(
+                    solicitud = ultimaSolicitud,
+                    onDetailsClick = {
+                        controller.navigate(
+                            "${AppScreens.detalleSolicitudUsuario.name}/${ultimaSolicitud.id}"
+                        )
+                    }
+                )
+
+            } else {
+
+                Text(
+                    text = "Aún no tienes solicitudes",
+                    fontSize = 14.sp,
+                    color = SecondaryText
+                )
+            }
 
 
             Spacer(
@@ -320,8 +345,8 @@ private fun SectionTitle(
 
 @Composable
 private fun CollectionCard(
-    solicitudId: String,
-    onDetailsClick: (String) -> Unit
+    solicitud: Solicitud,
+    onDetailsClick: () -> Unit
 ) {
 
     Card(
@@ -381,7 +406,7 @@ private fun CollectionCard(
 
 
                 Text(
-                    text = "Estado: Programada",
+                    text = "Estado: ${solicitud.estado}",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
@@ -389,7 +414,7 @@ private fun CollectionCard(
 
 
                 Text(
-                    text = "Fecha: Agosto 24",
+                    text = "Fecha: ${solicitud.fechaRecoleccion}",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
@@ -415,7 +440,7 @@ private fun CollectionCard(
                     fontWeight = FontWeight.Medium,
                     color = MainGreen,
                     modifier = Modifier.clickable {
-                        onDetailsClick(solicitudId)
+                        onDetailsClick()
                     }
                 )
             }
@@ -816,20 +841,15 @@ fun ReBottleBottomBar(
         ReBottleBottomItem(
             title = "Perfil",
 
-            selected =
-                currentRoute == AppScreens.perfilUsuario.name,
+            selected = currentRoute == AppScreens.perfilUsuario.name,
 
-            imageVector =
-                Icons.Outlined.Person,
+            imageVector = Icons.Outlined.Person,
 
-            selectedColor =
-                selectedColor,
+            selectedColor = selectedColor,
 
-            unselectedColor =
-                unselectedColor,
+            unselectedColor = unselectedColor,
 
-            modifier =
-                Modifier.weight(1f),
+            modifier = Modifier.weight(1f),
 
             onClick = {
 
@@ -1005,8 +1025,8 @@ private fun HomeUserScreenPreview() {
 
     RebottleTheme {
 
-        HomeUserScreen(
-            controller = controller
-        )
+        //HomeUserScreen(
+            //controller = controller
+        //)
     }
 }

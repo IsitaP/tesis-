@@ -52,15 +52,15 @@ import com.rebottle.app.components.buildCalendarGrid
 import android.widget.Toast
 import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.theme.RebottleColors
 import com.rebottle.app.ui.theme.RebottleTheme
 
-// ============================================================
-// COLORES (mismos que el resto de la app)
-// ============================================================
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF536D45)
-private val DarkGreen = Color(0xFF2E3F1F)
+
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
+private val DarkGreen = RebottleColors.DarkGreen
 private val CardWhite = Color.White
 private val PinOrange = Color(0xFFD98555)
 private val TextMuted = Color(0xFF8A8A8A)
@@ -96,7 +96,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
 
             if (state.location.isNotBlank() && state.selectedMaterials.isNotEmpty()) {
                 model.crearSolicitud(
-                    onSuccess = {
+                    onSuccess = { solicitudId ->
                         Toast.makeText(
                             context,
                             "Solicitud creada correctamente",
@@ -104,6 +104,9 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                         ).show()
                         model.resetForm()
                         controller.popBackStack()
+                        controller.navigate(
+                            "${AppScreens.confirmacionSolicitud.name}/$solicitudId"
+                        )
                     },
                     onError = { mensaje ->
                         Toast.makeText(
@@ -111,6 +114,7 @@ fun CreateRequestScreen(controller: NavController, model: SolicitudViewModel = v
                             mensaje,
                             Toast.LENGTH_LONG
                         ).show()
+                        controller.navigate(AppScreens.rechazoSolicitud.name)
                     }
                 )
             }

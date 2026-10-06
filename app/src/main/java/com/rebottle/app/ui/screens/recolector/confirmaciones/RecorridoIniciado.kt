@@ -30,11 +30,11 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
-
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val PrimaryGreenColor = Color(0xFF597042)
-private val PrimaryTextColor = Color(0xFF34382F)
-private val SecondaryTextColor = Color(0xFF7F887A)
+import com.rebottle.app.ui.theme.RebottleColors
+private val BackgroundColor = RebottleColors.Background
+private val PrimaryGreenColor = RebottleColors.MainGreen
+private val PrimaryTextColor = RebottleColors.MainText
+private val SecondaryTextColor = RebottleColors.SecondaryText
 
 @Composable
 fun RecorridoIniciado(

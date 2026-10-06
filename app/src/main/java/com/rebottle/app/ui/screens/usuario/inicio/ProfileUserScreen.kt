@@ -1,5 +1,6 @@
 package com.rebottle.app.ui.screens.usuario.inicio
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -8,7 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,9 +39,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -54,53 +59,103 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import com.rebottle.app.R
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.rebottle.app.ui.theme.RebottleColors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-// ----------------------------------------------------
-// COLORES
-// ----------------------------------------------------
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainGreen = Color(0xFF5F7D42)
+private val BackgroundColor = RebottleColors.Background
+private val MainGreen = RebottleColors.MainGreen
 private val DarkGreen = Color(0xFF394C31)
 private val LightGreen = Color(0xFFF1F7E9)
 private val BorderGreen = Color(0xFFD5E3CD)
 private val MainText = Color(0xFF34382F)
 private val SecondaryText = Color(0xFF7F887A)
 
+
 @Composable
-fun ProfileUsuarioScreen(
+fun ProfileUserScreen(
     controller: NavController
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    var selectedImageBitmap by remember {
-        mutableStateOf<ImageBitmap?>(null)
+    var nombre by remember { mutableStateOf("") }
+    var direccion by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
+    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var cargando by remember { mutableStateOf(true) }
+    var subiendoFoto by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            Firebase.firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { doc ->
+                    nombre = doc.getString("name") ?: ""
+                    direccion = doc.getString("direccion") ?: ""
+                    telefono = doc.getString("telefono") ?: ""
+                    cargando = false
+
+                    val fotoUrl = doc.getString("fotoUrl")
+                    if (!fotoUrl.isNullOrEmpty()) {
+                        runCatching {
+                            Firebase.storage.getReferenceFromUrl(fotoUrl)
+                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
+                            ?.addOnSuccessListener { bytes ->
+                                selectedImageBitmap = BitmapFactory
+                                    .decodeByteArray(bytes, 0, bytes.size)
+                                    .asImageBitmap()
+                            }
+                    }
+                }
+                .addOnFailureListener { cargando = false }
+        }
     }
 
-    // ------------------------------------------------
-    // SELECTOR DE FOTO
-    // ------------------------------------------------
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null && uid != null) {
+            val bitmap = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+            }.getOrNull()
 
-    val photoPickerLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickVisualMedia()
-        ) { uri ->
-            if (uri != null) {
-                selectedImageBitmap = runCatching {
-                    context.contentResolver
-                        .openInputStream(uri)
-                        ?.use { inputStream ->
-                            BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+            if (bitmap != null) {
+                val redimensionado = Bitmap.createScaledBitmap(bitmap, 500, 500, true)
+                selectedImageBitmap = redimensionado.asImageBitmap()
+                subiendoFoto = true
+
+                val stream = java.io.ByteArrayOutputStream()
+                redimensionado.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+                val data = stream.toByteArray()
+
+                val storageRef = Firebase.storage.reference.child("perfil_fotos/$uid.jpg")
+
+                storageRef.putBytes(data)
+                    .addOnSuccessListener {
+                        storageRef.downloadUrl.addOnSuccessListener { url ->
+                            Firebase.firestore.collection("users").document(uid)
+                                .update("fotoUrl", url.toString())
+                            subiendoFoto = false
                         }
-                }.getOrNull()
+                    }
+                    .addOnFailureListener { subiendoFoto = false }
             }
         }
+    }
 
     val openPhotoPicker = {
         photoPickerLauncher.launch(
@@ -108,19 +163,14 @@ fun ProfileUsuarioScreen(
         )
     }
 
-    // ------------------------------------------------
-    // SCAFFOLD
-    // ------------------------------------------------
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            ReBottleBottomBar(
-                controller = controller
-            )
+            ReBottleUsuarioProfileBottomBar(controller = controller)
         }
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -128,242 +178,213 @@ fun ProfileUsuarioScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ------------------------------------------------
-            // CABECERA
-            // ------------------------------------------------
 
             ProfileUsuarioHeader(
                 selectedImageBitmap = selectedImageBitmap,
-                onPhotoClick = { openPhotoPicker() }
+                subiendoFoto = subiendoFoto,
+                onTap = { openPhotoPicker() }
             )
 
             Spacer(modifier = Modifier.height(5.dp))
 
-            // ------------------------------------------------
-            // DATOS DEL USUARIO
-            // ------------------------------------------------
-
-            Text(
-                text = "Usuario",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkGreen
-            )
-
-            Text(
-                text = "Cl 131a # 53-31, Bogotá",
-                fontSize = 14.sp,
-                color = SecondaryText
-            )
-
-            Text(
-                text = "+57 3112229987",
-                fontSize = 14.sp,
-                color = SecondaryText
-            )
+            if (cargando) {
+                CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(20.dp))
+            } else {
+                Text(
+                    text = nombre.ifEmpty { "Usuario" },
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen
+                )
+                if (direccion.isNotEmpty()) {
+                    Text(text = direccion, fontSize = 14.sp, color = SecondaryText)
+                }
+                if (telefono.isNotEmpty()) {
+                    Text(text = telefono, fontSize = 14.sp, color = SecondaryText)
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ------------------------------------------------
-            // EDITAR PERFIL
-            // ------------------------------------------------
-
             OutlinedButton(
-                onClick = { openPhotoPicker() },
-                modifier = Modifier
-                    .width(230.dp)
-                    .height(36.dp),
+                onClick = { controller.navigate(AppScreens.editarPerfilUsuario.name) },
+                modifier = Modifier.width(230.dp).height(36.dp),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(width = 1.dp, color = MainGreen)
             ) {
-                Text(
-                    text = "Editar perfil",
-                    fontSize = 14.sp,
-                    color = MainGreen
-                )
+                Text(text = "Editar perfil", fontSize = 14.sp, color = MainGreen)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    controller.navigate(AppScreens.login.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                modifier = Modifier.width(230.dp).height(36.dp),
+                shape = RoundedCornerShape(50.dp),
+                border = BorderStroke(width = 1.dp, color = MainGreen)
+            ) {
+                Text(text = "Cerrar sesión", fontSize = 14.sp, color = MainGreen)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ------------------------------------------------
-            // CONTENIDO (IMPACTO)
-            // ------------------------------------------------
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 27.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 27.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Impacto",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MainText
-                    )
-
-                    Text(
-                        text = "Ver más →",
-                        fontSize = 14.sp,
-                        color = MainGreen
-                    )
+                    Text(text = "Impacto", fontSize = 22.sp, fontWeight = FontWeight.Medium, color = MainText)
+                    Text(text = "Ver más →", fontSize = 14.sp, color = MainGreen)
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 ProfileUsuarioSummaryCard()
-
                 Spacer(modifier = Modifier.height(25.dp))
             }
         }
     }
 }
 
-// ----------------------------------------------------
-// HEADER PERFIL (CON BORDE CIRCULAR MÁS GORDITO)
-// ----------------------------------------------------
 
 @Composable
 private fun ProfileUsuarioHeader(
     selectedImageBitmap: ImageBitmap?,
-    onPhotoClick: () -> Unit
+    subiendoFoto: Boolean,
+    onTap: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(215.dp)
-    ) {
+    val coroutineScope = rememberCoroutineScope()
+    var mostrarFotoGrande by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxWidth().height(215.dp)) {
         Image(
             painter = painterResource(id = R.drawable.fundacion_profile_header),
             contentDescription = "Fondo perfil Usuario",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(175.dp),
+            modifier = Modifier.fillMaxWidth().height(175.dp),
             contentScale = ContentScale.Crop
         )
-
-        // ------------------------------------------------
-        // FOTO CIRCULAR CON BORDE GRUESO ("GORDITO")
-        // ------------------------------------------------
 
         Box(
             modifier = Modifier
                 .size(150.dp)
                 .align(Alignment.BottomCenter)
                 .clip(CircleShape)
-                .border(
-                    width = 10.dp,
-                    color = BackgroundColor,
-                    shape = CircleShape
-                )
-                .clickable { onPhotoClick() },
+                .border(width = 10.dp, color = BackgroundColor, shape = CircleShape)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            var fueSostenido = false
+                            val job = coroutineScope.launch {
+                                delay(350)
+                                fueSostenido = true
+                                mostrarFotoGrande = true
+                            }
+                            tryAwaitRelease()
+                            job.cancel()
+                            mostrarFotoGrande = false
+                            if (!fueSostenido) onTap()
+                        }
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
-            if (selectedImageBitmap != null) {
-                Image(
-                    bitmap = selectedImageBitmap,
-                    contentDescription = "Foto seleccionada",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = R.drawable.usuario_perfil), // O cámbialo por tu recurso de usuario
-                    contentDescription = "Foto de Usuario",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            FotoPerfilUsuario(selectedImageBitmap)
+
+            if (subiendoFoto) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.35f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(28.dp))
+                }
+            }
+        }
+    }
+
+    if (mostrarFotoGrande) {
+        Dialog(
+            onDismissRequest = { mostrarFotoGrande = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+                if (selectedImageBitmap != null) {
+                    Image(
+                        bitmap = selectedImageBitmap,
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.usuario_perfil),
+                        contentDescription = "Foto de perfil ampliada",
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
     }
 }
 
-// ----------------------------------------------------
-// CARD RESUMEN DE IMPACTO
-// ----------------------------------------------------
+@Composable
+private fun FotoPerfilUsuario(selectedImageBitmap: ImageBitmap?) {
+    if (selectedImageBitmap != null) {
+        Image(
+            bitmap = selectedImageBitmap,
+            contentDescription = "Foto seleccionada",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Image(
+            painter = painterResource(id = R.drawable.usuario_perfil),
+            contentDescription = "Foto de Usuario",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
 
 @Composable
 private fun ProfileUsuarioSummaryCard() {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp),
+        modifier = Modifier.fillMaxWidth().height(160.dp),
         shape = RoundedCornerShape(13.dp),
         border = BorderStroke(width = 1.dp, color = BorderGreen),
         colors = CardDefaults.cardColors(containerColor = LightGreen),
         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Image(
                     painter = painterResource(id = R.drawable.fundacion_summary),
                     contentDescription = "Gráfico de impacto",
                     modifier = Modifier.size(90.dp),
                     contentScale = ContentScale.Fit
                 )
-
                 Spacer(modifier = Modifier.width(20.dp))
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "8 Kg",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = DarkGreen
-                    )
-                    Text(
-                        text = "Plástico",
-                        fontSize = 14.sp,
-                        color = SecondaryText
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "8 Kg", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
+                    Text(text = "Plástico", fontSize = 14.sp, color = SecondaryText)
                 }
-
                 Spacer(modifier = Modifier.weight(1f))
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "13,5%",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = DarkGreen
-                    )
-                    Text(
-                        text = "Reciclaje",
-                        fontSize = 14.sp,
-                        color = SecondaryText
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "13,5%", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
+                    Text(text = "Reciclaje", fontSize = 14.sp, color = SecondaryText)
                 }
             }
-
             Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "20 recolecciones realizadas",
-                fontSize = 15.sp,
-                color = SecondaryText
-            )
+            Text(text = "20 recolecciones realizadas", fontSize = 15.sp, color = SecondaryText)
         }
     }
 }
 
-// ----------------------------------------------------
-// BARRA INFERIOR DEL USUARIO
-// ----------------------------------------------------
 
 @Composable
 private fun ReBottleUsuarioProfileBottomBar(
@@ -372,89 +393,57 @@ private fun ReBottleUsuarioProfileBottomBar(
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BackgroundColor)
-            .padding(top = 3.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(top = 3.dp)) {
         NavigationBar(
             modifier = Modifier.fillMaxWidth(),
             containerColor = Color.White,
             tonalElevation = 0.dp
         ) {
             NavigationBarItem(
-                selected = currentRoute == AppScreens.perfilUsuario.name,
-                onClick = { controller.navigate(AppScreens.perfilUsuario.name) },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Home,
-                        contentDescription = "Inicio",
-                        modifier = Modifier.size(26.dp)
-                    )
+                selected = currentRoute == AppScreens.homeCiudadano.name,
+                onClick = {
+                    if (currentRoute != AppScreens.homeCiudadano.name) {
+                        controller.navigate(AppScreens.homeCiudadano.name)
+                    }
                 },
+                icon = { Icon(imageVector = Icons.Outlined.Home, contentDescription = "Inicio", modifier = Modifier.size(26.dp)) },
                 label = { Text(text = "Inicio", fontSize = 12.sp) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
+                    selectedIconColor = MainGreen, selectedTextColor = MainGreen,
+                    unselectedIconColor = SecondaryText, unselectedTextColor = SecondaryText,
                     indicatorColor = Color.Transparent
                 )
             )
-
             NavigationBarItem(
-                selected = false,
-                onClick = { /* controller.navigate(...) */ },
-                icon = {
-                    Image(
-                        painter = painterResource(id = R.drawable.icon_collection),
-                        contentDescription = "Recolecciones",
-                        modifier = Modifier.size(25.dp)
-                    )
+                selected = currentRoute == AppScreens.solicitudesUsuario.name,
+                onClick = {
+                    if (currentRoute != AppScreens.solicitudesUsuario.name) {
+                        controller.navigate(AppScreens.solicitudesUsuario.name)
+                    }
                 },
+                icon = { Image(painter = painterResource(id = R.drawable.icon_collection), contentDescription = "Recolecciones", modifier = Modifier.size(25.dp)) },
                 label = { Text(text = "Recolecciones", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+                colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
             )
-
             NavigationBarItem(
                 selected = false,
-                onClick = { /* controller.navigate(...) */ },
-                icon = {
-                    Image(
-                        painter = painterResource(id = R.drawable.icon_rewards),
-                        contentDescription = "Recompensas",
-                        modifier = Modifier.size(25.dp)
-                    )
-                },
+                onClick = { /* TODO: recompensas */ },
+                icon = { Image(painter = painterResource(id = R.drawable.icon_rewards), contentDescription = "Recompensas", modifier = Modifier.size(25.dp)) },
                 label = { Text(text = "Recompensas", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
+                colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
             )
-
             NavigationBarItem(
-                selected = true,
-                onClick = { /* controller.navigate(...) */ },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "Perfil",
-                        modifier = Modifier.size(26.dp)
-                    )
+                selected = currentRoute == AppScreens.perfilUsuario.name,
+                onClick = {
+                    if (currentRoute != AppScreens.perfilUsuario.name) {
+                        controller.navigate(AppScreens.perfilUsuario.name)
+                    }
                 },
+                icon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Perfil", modifier = Modifier.size(26.dp)) },
                 label = { Text(text = "Perfil", fontSize = 12.sp) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
+                    selectedIconColor = MainGreen, selectedTextColor = MainGreen,
+                    unselectedIconColor = SecondaryText, unselectedTextColor = SecondaryText,
                     indicatorColor = Color.Transparent
                 )
             )
@@ -462,15 +451,11 @@ private fun ReBottleUsuarioProfileBottomBar(
     }
 }
 
-@Preview(
-    showBackground = true,
-    showSystemUi = true
-)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun ProfileUsuarioScreenPreview() {
     val controller = rememberNavController()
     RebottleTheme {
-        ProfileUsuarioScreen(controller = controller)
+        ProfileUserScreen(controller = controller)
     }
 }
-

@@ -52,15 +52,18 @@ import com.rebottle.app.components.MainGreen
 import com.rebottle.app.model.SolicitudViewModel
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+
+import com.rebottle.app.ui.theme.RebottleColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val BackgroundColor = RebottleColors.Background
+private val MainText = RebottleColors.MainText
+private val SecondaryText = RebottleColors.SecondaryText
+private val BrownIcon = RebottleColors.Brown
 
-private val BackgroundColor = Color(0xFFFBF8F2)
-private val MainText = Color(0xFF34382F)
-private val SecondaryText = Color(0xFF7F887A)
-private val BrownIcon = Color(0xFFA55E37)
+
 
 
 @Composable
