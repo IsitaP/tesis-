@@ -799,9 +799,9 @@ private fun ReBottleBottomBar(
 
             // SOLICITUDES
             NavigationBarItem(
-                selected = currentRoute == AppScreens.solicitudesUsuario.name,
+                selected = currentRoute == AppScreens.solicitudesFundacion.name,
                 onClick = {
-                    controller.navigate(AppScreens.solicitudesUsuario.name)
+                    controller.navigate(AppScreens.solicitudesFundacion.name)
                 },
                 icon = { BottomNavIcon(iconRes = R.drawable.icon_collection, contentDescription = "Solicitudes") },
                 label = { Text(text = "Solicitudes", fontSize = 12.sp) },

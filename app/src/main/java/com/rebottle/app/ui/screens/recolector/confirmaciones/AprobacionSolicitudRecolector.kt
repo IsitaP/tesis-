@@ -49,7 +49,7 @@ fun AprobacionSolicitudFundacion(
         }
     },
     onGoToRequestsClick: () -> Unit = {
-        navController?.navigate(AppScreens.solicitudes.name)
+        navController?.navigate(AppScreens.solicitudesFundacion.name)
     },
 ) {
     AprobacionSolicitudFundacionScreen(

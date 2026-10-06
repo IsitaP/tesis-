@@ -940,9 +940,9 @@ private fun ReBottleProfileBottomBar(
 
             NavigationBarItem(
 
-                selected = currentRoute == AppScreens.solicitudesUsuario.name,
+                selected = currentRoute == AppScreens.solicitudesFundacion.name,
                 onClick = {
-                    controller.navigate(AppScreens.solicitudes.name)
+                    controller.navigate(AppScreens.solicitudesFundacion.name)
                 },
 
                 icon = {

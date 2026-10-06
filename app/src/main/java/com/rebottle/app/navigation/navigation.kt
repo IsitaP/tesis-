@@ -10,7 +10,6 @@ import com.rebottle.app.ui.screens.auth.RegisterScreen
 import com.rebottle.app.ui.screens.fundacion.HomeFundacionScreen
 import com.rebottle.app.ui.screens.fundacion.ProfileFundacionScreen
 import com.rebottle.app.ui.screens.fundacion.EditarPerfilFundacionScreen
-import com.rebottle.app.ui.screens.fundacion.gestion.CollectionRequestsScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingOneScreen
 import com.rebottle.app.ui.screens.onBoarding.OnboardingPrefs
 import com.rebottle.app.ui.screens.onBoarding.OnboardingThreeScreen
@@ -31,6 +30,7 @@ import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignac
 import com.rebottle.app.ui.screens.recolector.perfil.PantallaPerfilRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -54,7 +54,7 @@ enum class AppScreens {
     //FUNDACION
     homeFundacion,
     editarPerfilFundacion,
-    solicitudes,
+    solicitudesFundacion,
     perfil,
     rutas,
 
@@ -111,7 +111,7 @@ fun Navigation() {
 
         //**FUNDACION**//
         composable(route = AppScreens.homeFundacion.name) { HomeFundacionScreen(navController) }
-        composable(route = AppScreens.solicitudes.name) { CollectionRequestsScreen(navController) }
+        composable(route = AppScreens.solicitudesFundacion.name) { RutasCreadasScreen(navController) }
         composable(route = AppScreens.perfil.name) { ProfileFundacionScreen(navController) }
         composable(route = AppScreens.rutas.name) { ProfileFundacionScreen(navController) }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
@@ -127,6 +127,8 @@ fun Navigation() {
             val id = backStackEntry.arguments?.getString("asignacionId") ?: ""
             PantallaDetalleAsignacionRecolector(navController, id)
         }
+
+
 
         //**CIUDADANO**//
         composable(route = AppScreens.homeCiudadano.name) { HomeUserScreen(navController) }
