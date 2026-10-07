@@ -1,5 +1,6 @@
 package com.rebottle.app.model
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -71,6 +72,10 @@ data class PuntosState(
 
 class PuntosViewModel : ViewModel() {
 
+    companion object {
+        private const val TAG = "PUNTOS"
+    }
+
     private val firestore =
         FirebaseFirestore.getInstance()
 
@@ -105,7 +110,10 @@ class PuntosViewModel : ViewModel() {
         onResult: (puntosSumados: Long) -> Unit = {}
     ) {
 
+        Log.d(TAG, "completarModulo($moduloId) llamado")
+
         val usuarioActual = auth.currentUser ?: run {
+            Log.e(TAG, "No hay usuario autenticado: no se guardan puntos")
             _state.value = _state.value.copy(error = "No hay un usuario autenticado")
             return
         }
@@ -151,9 +159,11 @@ class PuntosViewModel : ViewModel() {
                 puntos
             }
             .addOnSuccessListener { sumados ->
+                Log.d(TAG, "Módulo $moduloId guardado. Puntos sumados: $sumados (0 = ya estaba completado)")
                 onResult(sumados)
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Error guardando puntos de $moduloId", e)
                 _state.value = _state.value.copy(
                     error = e.message ?: "Error al guardar los puntos"
                 )
@@ -180,6 +190,7 @@ class PuntosViewModel : ViewModel() {
                 .addSnapshotListener { snapshot, error ->
 
                     if (error != null) {
+                        Log.e(TAG, "Error leyendo puntos", error)
                         _state.value = _state.value.copy(
                             isLoading = false,
                             error = error.message

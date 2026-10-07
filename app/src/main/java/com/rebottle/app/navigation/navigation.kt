@@ -25,6 +25,7 @@ import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
 import com.rebottle.app.ui.screens.usuario.gamificacion.RecompensasFlowScreen
+import com.rebottle.app.ui.screens.usuario.gamificacion.RankingScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
@@ -32,6 +33,9 @@ import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignac
 import com.rebottle.app.ui.screens.recolector.perfil.PantallaPerfilRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.PuntosModulos
+import com.rebottle.app.model.PuntosViewModel
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -70,6 +74,7 @@ enum class AppScreens {
     aprendizaje,
     misAportes,
     recompensas,
+    ranking,
 
     confirmacionSolicitud,
     rechazoSolicitud,
@@ -95,6 +100,9 @@ fun Navigation() {
 
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // ViewModel de puntos compartido (módulos + Recompensas)
+    val puntosViewModel: PuntosViewModel = viewModel()
 
     val startDestination = if (OnboardingPrefs.isOnboardingCompleted(context)) {
         AppScreens.login.name
@@ -139,6 +147,7 @@ fun Navigation() {
         composable(route = AppScreens.crearSolicitud.name) { CreateRequestScreen(navController) }
         composable(route = AppScreens.solicitudesUsuario.name) { SolicitudesUsuarioScreen(navController) }
         composable(route = AppScreens.misAportes.name) { MisAportesScreen(controller = navController) }
+        composable(route = AppScreens.ranking.name) { RankingScreen(controller = navController) }
        // composable(route = AppScreens.confirmacionSolicitud.name) { ConfirmacionSolicitudUsuarioScreen(navController) }
         composable(route = AppScreens.rechazoSolicitud.name) { RechazoSolicitudUsuario(navController) }
 
@@ -184,37 +193,43 @@ fun Navigation() {
         composable(route = AppScreens.moduleOne.name) {
             ModuleOneFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M1) }
             )
         }
         composable(route = AppScreens.moduleTwo.name) {
             ModuleTwoFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M2) }
             )
         }
         composable(route = AppScreens.moduleThree.name) {
             ModuleThreeFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M3) }
             )
         }
         composable(route = AppScreens.moduleFour.name) {
             ModuleFourFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M4) }
             )
         }
         composable(route = AppScreens.moduleFive.name) {
             ModuleFiveFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M5) }
             )
         }
         composable(route = AppScreens.moduleSix.name) {
             ModuleSixFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M6) }
             )
         }
         composable(
@@ -222,13 +237,15 @@ fun Navigation() {
         ) {
 
             RecompensasFlowScreen(
-                controller = navController
+                controller = navController,
+                puntosViewModel = puntosViewModel
             )
         }
         composable(route = AppScreens.moduleSeven.name) {
             ModuleSevenFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M7) }
             )
         }
     }
