@@ -47,6 +47,22 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.theme.RebottleTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.PuntosViewModel
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextDecoration
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 // ============================================================
@@ -251,7 +267,32 @@ private val medallasQuis = listOf(
 
 @Composable
 fun RecompensasFlowScreen(
-    controller: NavController
+    controller: NavController,
+    puntosViewModel: PuntosViewModel = viewModel()
+) {
+
+    // Puntos reales desde Firebase (progresoAprendizaje/{uid})
+    val puntosState by puntosViewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        puntosViewModel.escucharPuntos()
+    }
+
+    RecompensasFlowContent(
+        controller = controller,
+        puntos = puntosState.puntosTotales.toInt(),
+        nivel = 6
+    )
+}
+
+
+// Contenido separado del ViewModel para que los Previews
+// funcionen sin Firebase
+@Composable
+private fun RecompensasFlowContent(
+    controller: NavController,
+    puntos: Int,
+    nivel: Int
 ) {
 
     var step by remember {
@@ -271,8 +312,8 @@ fun RecompensasFlowScreen(
         RecompensaStep.RECOMPENSAS -> {
 
             RecompensasScreen(
-                puntos = 520,
-                nivel = 6,
+                puntos = puntos,
+                nivel = nivel,
 
                 onBack = {
                     controller.popBackStack()
@@ -289,7 +330,7 @@ fun RecompensasFlowScreen(
         RecompensaStep.PERSONALIZAR -> {
 
             PersonalizarQuisScreen(
-                puntos = 520,
+                puntos = puntos,
 
                 onBack = {
                     step =
@@ -478,7 +519,6 @@ private fun RecompensasScreen(
                     text = "Medallas",
 
                     fontSize = 17.sp,
-
                     color =
                         RewardText
                 )
@@ -599,18 +639,16 @@ private fun BarraPuntos(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
+            .height(88.dp)
             .background(
-                color =
-                    RewardBottomGreen,
-
-                shape =
-                    RoundedCornerShape(
-                        17.dp
-                    )
+                color = RewardBottomGreen,
+                shape = RoundedCornerShape(26.dp)
             )
             .padding(
-                horizontal = 12.dp
+                start = 18.dp,
+                end = 16.dp,
+                top = 10.dp,
+                bottom = 10.dp
             ),
 
         verticalAlignment =
@@ -622,85 +660,63 @@ private fun BarraPuntos(
         // ====================================================
 
         Column(
-            horizontalAlignment =
-                Alignment.CenterHorizontally
+            modifier = Modifier.width(56.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text(
-                text = "◎",
+            IconoGlobo(
                 color = Color.White,
-                fontSize = 20.sp
+                modifier = Modifier.size(24.dp)
             )
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = "NIVEL",
-                color =
-                    Color.White.copy(
-                        alpha = 0.85f
-                    ),
-                fontSize = 7.sp
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                lineHeight = 12.sp
             )
 
             Text(
-                text =
-                    nivel.toString(),
-
-                color =
-                    Color.White,
-
-                fontSize = 13.sp,
-
-                fontWeight =
-                    FontWeight.Bold
+                text = nivel.toString(),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 20.sp
             )
         }
 
 
-        Spacer(
-            modifier =
-                Modifier.width(12.dp)
-        )
+        Spacer(modifier = Modifier.width(14.dp))
 
 
-        // DIVISOR
+        // DIVISOR (de arriba a abajo)
 
         Box(
             modifier = Modifier
                 .width(1.dp)
-                .height(48.dp)
-                .background(
-                    Color.White.copy(
-                        alpha = 0.35f
-                    )
-                )
+                .fillMaxHeight()
+                .background(Color.White.copy(alpha = 0.3f))
         )
 
 
-        Spacer(
-            modifier =
-                Modifier.width(12.dp)
-        )
+        Spacer(modifier = Modifier.width(16.dp))
 
 
         // ====================================================
         // ESTRELLA
         // ====================================================
 
-        Text(
-            text = "☆",
-
-            color =
-                Color.White,
-
-            fontSize =
-                35.sp
+        IconoEstrella(
+            color = Color.White,
+            modifier = Modifier.size(42.dp)
         )
 
 
-        Spacer(
-            modifier =
-                Modifier.width(7.dp)
-        )
+        Spacer(modifier = Modifier.width(12.dp))
 
 
         // ====================================================
@@ -710,62 +726,131 @@ private fun BarraPuntos(
         Column {
 
             Text(
-                text =
-                    puntos.toString(),
-
-                color =
-                    Color.White,
-
-                fontSize =
-                    26.sp,
-
-                fontWeight =
-                    FontWeight.Bold
+                text = puntos.toString(),
+                color = Color.White,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 34.sp
             )
 
             Text(
                 text = "Puntos",
-
-                color =
-                    Color.White.copy(
-                        alpha = 0.9f
-                    ),
-
-                fontSize =
-                    10.sp
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 15.sp,
+                lineHeight = 16.sp,
+                modifier = Modifier.offset(y = (-2).dp)
             )
         }
 
 
-        Spacer(
-            modifier =
-                Modifier.weight(1f)
-        )
+        Spacer(modifier = Modifier.weight(1f))
 
 
         // ====================================================
-        // REDIMIR
+        // REDIMIR (abajo a la derecha, subrayado)
         // ====================================================
 
-        Text(
-            text =
-                "Redimir →",
+        Row(
+            modifier = Modifier
+                .align(Alignment.Bottom)
+                .clickable { onRedimirClick() }
+                .padding(vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-            color =
-                Color.White,
+            Text(
+                text = "Redimir",
+                color = Color.White,
+                fontSize = 13.sp,
+                textDecoration = TextDecoration.Underline
+            )
 
-            fontSize =
-                10.sp,
+            Spacer(modifier = Modifier.width(6.dp))
 
-            modifier =
-                Modifier
-                    .clickable {
-                        onRedimirClick()
-                    }
-                    .padding(
-                        vertical = 12.dp
-                    )
+            Text(
+                text = "→",
+                color = Color.White,
+                fontSize = 13.sp
+            )
+        }
+    }
+}
+
+
+// ============================================================
+// ÍCONOS DIBUJADOS (no necesitan material-icons-extended)
+// ============================================================
+
+@Composable
+private fun IconoEstrella(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+
+        val stroke = size.minDimension * 0.07f
+        val cx = size.width / 2f
+        val cy = size.height / 2f + size.height * 0.04f
+        val rExt = size.minDimension / 2f - stroke
+        val rInt = rExt * 0.45f
+
+        val path = Path()
+
+        for (i in 0 until 10) {
+            val r = if (i % 2 == 0) rExt else rInt
+            val ang = Math.toRadians(-90.0 + i * 36.0)
+            val x = cx + (r * cos(ang)).toFloat()
+            val y = cy + (r * sin(ang)).toFloat()
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        path.close()
+
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(
+                width = stroke,
+                join = StrokeJoin.Round,
+                cap = StrokeCap.Round
+            )
         )
+    }
+}
+
+
+@Composable
+private fun IconoGlobo(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+
+        val stroke = size.minDimension * 0.08f
+        val r = size.minDimension / 2f - stroke
+        val c = Offset(size.width / 2f, size.height / 2f)
+        val estilo = Stroke(width = stroke)
+
+        // Círculo exterior
+        drawCircle(color = color, radius = r, center = c, style = estilo)
+
+        // Meridiano (óvalo vertical)
+        drawOval(
+            color = color,
+            topLeft = Offset(c.x - r * 0.45f, c.y - r),
+            size = Size(r * 0.9f, r * 2f),
+            style = estilo
+        )
+
+        // Línea vertical central
+        drawLine(color, Offset(c.x, c.y - r), Offset(c.x, c.y + r), stroke)
+
+        // Ecuador y paralelos
+        drawLine(color, Offset(c.x - r, c.y), Offset(c.x + r, c.y), stroke)
+
+        val dy = r * 0.5f
+        val dx = r * 0.86f
+        drawLine(color, Offset(c.x - dx, c.y - dy), Offset(c.x + dx, c.y - dy), stroke)
+        drawLine(color, Offset(c.x - dx, c.y + dy), Offset(c.x + dx, c.y + dy), stroke)
     }
 }
 
@@ -1522,9 +1607,11 @@ private fun RecompensasFlowPreview() {
 
     RebottleTheme {
 
-        RecompensasFlowScreen(
+        RecompensasFlowContent(
             controller =
-                rememberNavController()
+                rememberNavController(),
+            puntos = 520,
+            nivel = 6
         )
     }
 }
