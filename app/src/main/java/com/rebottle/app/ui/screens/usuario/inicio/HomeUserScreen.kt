@@ -827,9 +827,15 @@ fun ReBottleBottomBar(
 
             onClick = {
 
-                /*
-                 * Aqui va la pantalla de recompensas
-                 */
+                if (
+                    currentRoute !=
+                    AppScreens.recompensas.name
+                ) {
+
+                    controller.navigate(
+                        AppScreens.recompensas.name
+                    )
+                }
             }
         )
 
