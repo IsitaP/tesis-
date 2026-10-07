@@ -119,9 +119,10 @@ private fun colorMedalla(puesto: Int): Color = when (puesto) {
 @Composable
 fun RankingScreen(
     controller: NavController,
-    posicionUsuario: Int = 4 // Luego lo traes del ViewModel
+    posicionUsuario: Int = 4,// Luego lo traes del ViewModel
+    esSemanalInicial: Boolean = true
 ) {
-    var esSemanal by rememberSaveable { mutableStateOf(true) }
+    var esSemanal by rememberSaveable { mutableStateOf(esSemanalInicial) }
     val lista = if (esSemanal) rankingSemanal else rankingHistorico
 
     // OJO: el Column raíz NO lleva padding horizontal,
@@ -627,6 +628,53 @@ private fun Avatar(
             .background(AvatarBackground)
             .border(2.dp, borderColor, CircleShape)
     )
+}
+
+// ============================================================
+// PREVIEW SEMANAL
+// ============================================================
+
+@Preview(
+    name = "Ranking - Semanal",
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=851dp,dpi=440"
+)
+@Composable
+private fun RankingSemanalPreview() {
+
+    RebottleTheme {
+
+        RankingScreen(
+            controller = rememberNavController(),
+            posicionUsuario = 4,
+            esSemanalInicial = true
+        )
+    }
+}
+
+
+// ============================================================
+// PREVIEW HISTÓRICO
+// ============================================================
+
+@Preview(
+    name = "Ranking - Histórico",
+    showBackground = true,
+    showSystemUi = true,
+    device = "spec:width=393dp,height=851dp,dpi=440"
+)
+@Composable
+private fun RankingHistoricoPreview() {
+
+    RebottleTheme {
+
+        RankingScreen(
+            controller = rememberNavController(),
+            posicionUsuario = 4,
+            esSemanalInicial = false
+        )
+    }
 }
 
 

@@ -24,6 +24,7 @@ import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.gamificacion.RecompensasFlowScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
@@ -68,6 +69,8 @@ enum class AppScreens {
     detalleSolicitudUsuario,
     aprendizaje,
     misAportes,
+    recompensas,
+
     confirmacionSolicitud,
     rechazoSolicitud,
 
@@ -84,6 +87,7 @@ enum class AppScreens {
     perfilRecolector,
     solicitudesRecolector,
     detalleAsignacionRecolector,
+
 }
 
 @Composable
@@ -211,6 +215,14 @@ fun Navigation() {
             ModuleSixFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
                 onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+            )
+        }
+        composable(
+            route = AppScreens.recompensas.name
+        ) {
+
+            RecompensasFlowScreen(
+                controller = navController
             )
         }
         composable(route = AppScreens.moduleSeven.name) {
