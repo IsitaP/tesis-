@@ -31,6 +31,7 @@ import com.rebottle.app.ui.screens.recolector.perfil.PantallaPerfilRecolector
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
+import com.rebottle.app.ui.screens.fundacion.solicitudes.RutaDetalleScreen
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -55,6 +56,7 @@ enum class AppScreens {
     homeFundacion,
     editarPerfilFundacion,
     solicitudesFundacion,
+    detalleRuta,
     perfil,
     rutas,
 
@@ -115,6 +117,21 @@ fun Navigation() {
         composable(route = AppScreens.perfil.name) { ProfileFundacionScreen(navController) }
         composable(route = AppScreens.rutas.name) { ProfileFundacionScreen(navController) }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
+
+        composable(
+            route = "${AppScreens.detalleRuta.name}/{rutaId}",
+            arguments = listOf(navArgument("rutaId") {type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("rutaId") ?: ""
+
+            RutaDetalleScreen(
+                rutaId = id,
+                navController = navController
+            )
+        }
+
 
         //**RECOLECTOR**//
         composable(route = AppScreens.homeRecolector.name) { PantallaInicioRecolector(navController) }

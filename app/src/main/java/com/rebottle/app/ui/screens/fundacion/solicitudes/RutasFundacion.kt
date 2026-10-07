@@ -79,7 +79,6 @@ fun RutasCreadasScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onCreateClick: () -> Unit = {},
-    onDetailsClick: (Ruta) -> Unit = {},
     mapaViewModel: MapaViewModel = viewModel()
 ) {
 
@@ -113,7 +112,6 @@ fun RutasCreadasScreen(
         modifier = modifier,
         onBackClick = onBackClick,
         onCreateClick = onCreateClick,
-        onDetailsClick = onDetailsClick,
         rutas = rutasState.rutasPublicadas,
         isLoading = rutasState.isLoading,
         error = rutasState.error
@@ -463,14 +461,9 @@ private fun CollectionRoutesContent(
 
 
                     HistoryCard(
-                        ruta =
-                            ruta
-                    ) {
-
-                        onDetailsClick(
-                            ruta
-                        )
-                    }
+                        ruta = ruta,
+                        controller = controller
+                    )
                 }
             }
 
@@ -949,7 +942,7 @@ private fun StatCard(
 @Composable
 private fun HistoryCard(
     ruta: Ruta,
-    onDetailsClick: () -> Unit
+    controller: NavController
 ) {
 
     val distanciaKm =
@@ -1142,7 +1135,9 @@ private fun HistoryCard(
                     modifier =
                         Modifier.clickable {
 
-                            onDetailsClick()
+                            controller.navigate(
+                                "${AppScreens.detalleRuta.name}/${ruta.id}"
+                            )
                         }
                 )
             }
