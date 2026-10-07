@@ -330,46 +330,173 @@ fun register(
     controller: NavController,
     context: Context
 ) {
-    if (!validateRegisterForm(model, name, email, password, role)) return
+
+    if (
+        !validateRegisterForm(
+            model,
+            name,
+            email,
+            password,
+            role
+        )
+    ) {
+        return
+    }
+
 
     model.updateRegisterLoading(true)
 
-    firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            val uid = firebaseAuth.currentUser?.uid
 
-            if (uid != null) {
-                val userData = hashMapOf(
-                    "name" to name,
-                    "email" to email,
-                    "role" to role!!.firestoreValue,
-                    "telefono" to "",
-                    "direccion" to ""
-                )
+    firebaseAuth
+        .createUserWithEmailAndPassword(
+            email,
+            password
+        )
+        .addOnCompleteListener { task ->
 
-                Firebase.firestore.collection("users").document(uid)
-                    .set(userData)
-                    .addOnSuccessListener {
-                        model.updateRegisterLoading(false)
-                        val destination = when (role) {
-                            UserRole.CIUDADANO -> AppScreens.homeCiudadano.name
-                            UserRole.FUNDACION -> AppScreens.homeFundacion.name
-                            UserRole.RECOLECTOR -> AppScreens.homeRecolector.name
-                        }
-                        controller.navigate(destination) {
-                            popUpTo(AppScreens.onboardingOne.name) { inclusive = true }
-                        }
+
+            if (task.isSuccessful) {
+
+                val uid =
+                    firebaseAuth
+                        .currentUser
+                        ?.uid
+
+
+                if (uid != null) {
+
+
+                    // =========================================
+                    // DATOS GENERALES DEL USUARIO
+                    // =========================================
+
+                    val userData =
+                        hashMapOf<String, Any>(
+
+                            "name" to
+                                    name,
+
+                            "email" to
+                                    email,
+
+                            "role" to
+                                    role!!.firestoreValue,
+
+                            "telefono" to
+                                    "",
+
+                            "direccion" to
+                                    ""
+                        )
+
+
+                    // =========================================
+                    // ESTADO DEL RECOLECTOR
+                    // =========================================
+
+                    if (
+                        role ==
+                        UserRole.RECOLECTOR
+                    ) {
+
+                        userData["estado"] =
+                            "DISPONIBLE"
                     }
-                    .addOnFailureListener {
-                        model.updateRegisterLoading(false)
-                        Toast.makeText(context, "Error guardando el perfil: ${it.message}", Toast.LENGTH_LONG).show()
-                    }
+
+
+                    // =========================================
+                    // GUARDAR EN FIRESTORE
+                    // =========================================
+
+                    Firebase
+                        .firestore
+                        .collection(
+                            "users"
+                        )
+                        .document(
+                            uid
+                        )
+                        .set(
+                            userData
+                        )
+                        .addOnSuccessListener {
+
+
+                            model
+                                .updateRegisterLoading(
+                                    false
+                                )
+
+
+                            val destination =
+                                when (role) {
+
+                                    UserRole.CIUDADANO ->
+                                        AppScreens
+                                            .homeCiudadano
+                                            .name
+
+                                    UserRole.FUNDACION ->
+                                        AppScreens
+                                            .homeFundacion
+                                            .name
+
+                                    UserRole.RECOLECTOR ->
+                                        AppScreens
+                                            .homeRecolector
+                                            .name
+                                }
+
+
+                            controller.navigate(
+                                destination
+                            ) {
+
+                                popUpTo(
+                                    AppScreens
+                                        .onboardingOne
+                                        .name
+                                ) {
+                                    inclusive =
+                                        true
+                                }
+                            }
+                        }
+                        .addOnFailureListener {
+
+                            model
+                                .updateRegisterLoading(
+                                    false
+                                )
+
+
+                            Toast
+                                .makeText(
+                                    context,
+                                    "Error guardando el perfil: ${it.message}",
+                                    Toast.LENGTH_LONG
+                                )
+                                .show()
+                        }
+                }
+
+            } else {
+
+                model
+                    .updateRegisterLoading(
+                        false
+                    )
+
+
+                Toast
+                    .makeText(
+                        context,
+                        "Error en el registro: ${task.exception}",
+                        Toast.LENGTH_LONG
+                    )
+                    .show()
             }
-        } else {
-            model.updateRegisterLoading(false)
-            Toast.makeText(context, "Error en el registro: ${task.exception}", Toast.LENGTH_LONG).show()
         }
-    }
 }
 
 @Preview(showBackground = true)

@@ -6,6 +6,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+// ============================================================
+// MODELO DE USUARIO
+// ============================================================
+
+data class Usuario(
+    val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val role: String = "",
+    val telefono: String = "",
+    val direccion: String = "",
+    val estado: String = "",
+    val fotoUrl: String = ""
+)
+
+
+
 
 // ============================================================
 // ESTADO DEL REGISTRO
