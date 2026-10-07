@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -83,7 +84,8 @@ private enum class WasteBin {
 @Composable
 fun ModuleTwoFlowScreen(
     onBackToRoadmap: () -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    onModuleCompleted: () -> Unit = {}
 ) {
 
     var currentStep by rememberSaveable {
@@ -186,6 +188,12 @@ fun ModuleTwoFlowScreen(
 
 
         ModuleTwoStep.COMPLETE -> {
+
+
+            // Suma los puntos en Firebase apenas se llega a la pantalla final
+
+            LaunchedEffect(Unit) { onModuleCompleted() }
+
 
             ModuleTwoCompleteScreen(
                 onFinish = onFinish
@@ -1099,4 +1107,4 @@ private fun ModuleTwoCompletePreview() {
     ModuleTwoCompleteScreen(
         onFinish = {}
     )
-}
+}

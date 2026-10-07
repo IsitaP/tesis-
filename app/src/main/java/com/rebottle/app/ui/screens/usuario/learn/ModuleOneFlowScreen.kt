@@ -23,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +66,8 @@ private enum class LessonTwoTab {
 @Composable
 fun ModuleOneFlowScreen(
     onBackToRoadmap: () -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    onModuleCompleted: () -> Unit = {}
 ) {
     var currentStep by rememberSaveable {
         mutableStateOf(ModuleOneStep.INTRO)
@@ -135,6 +137,10 @@ fun ModuleOneFlowScreen(
         }
 
         ModuleOneStep.COMPLETE -> {
+
+            // Suma los puntos en Firebase apenas se llega a la pantalla final
+            LaunchedEffect(Unit) { onModuleCompleted() }
+
             ModuleOneCompleteScreen(
                 onFinish = onFinish
             )
