@@ -619,7 +619,12 @@ private fun MoreActionsSection(controller: NavController) {
         ActionCard(
             title = "Ranking",
             imageRes = R.drawable.home_ranking,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            onClick = {
+                controller.navigate(
+                    AppScreens.ranking.name
+                )
+            }
         )
     }
 }
@@ -827,9 +832,15 @@ fun ReBottleBottomBar(
 
             onClick = {
 
-                /*
-                 * Aqui va la pantalla de recompensas
-                 */
+                if (
+                    currentRoute !=
+                    AppScreens.recompensas.name
+                ) {
+
+                    controller.navigate(
+                        AppScreens.recompensas.name
+                    )
+                }
             }
         )
 

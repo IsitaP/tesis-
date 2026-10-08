@@ -23,6 +23,8 @@ import com.rebottle.app.ui.screens.usuario.SolicitudesUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.gestion.SolicitudDetalleScreenU
 import com.rebottle.app.ui.screens.usuario.gestion.EditRequestScreen
 import com.rebottle.app.ui.screens.learn.LearnRoadmapScreen
+import com.rebottle.app.ui.screens.usuario.gamificacion.RecompensasFlowScreen
+import com.rebottle.app.ui.screens.usuario.gamificacion.RankingScreen
 
 import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
@@ -32,6 +34,10 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
 import com.rebottle.app.ui.screens.fundacion.solicitudes.RutaDetalleScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.PuntosModulos
+import com.rebottle.app.model.PuntosViewModel
+import com.rebottle.app.ui.screens.fundacion.gestion.AsignarRecolectorScreen
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -42,7 +48,6 @@ import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
 import com.rebottle.app.ui.screens.usuario.confirmaciones.ConfirmacionSolicitudUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.confirmaciones.RechazoSolicitudUsuario
-import com.rebottle.app.ui.screens.fundacion.gestion.AsignarRecolectorScreen
 
 enum class AppScreens {
 
@@ -72,6 +77,9 @@ enum class AppScreens {
     detalleSolicitudUsuario,
     aprendizaje,
     misAportes,
+    recompensas,
+    ranking,
+
     confirmacionSolicitud,
     rechazoSolicitud,
 
@@ -95,6 +103,9 @@ fun Navigation() {
 
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // ViewModel de puntos compartido (módulos + Recompensas)
+    val puntosViewModel: PuntosViewModel = viewModel()
 
     val startDestination = if (OnboardingPrefs.isOnboardingCompleted(context)) {
         AppScreens.login.name
@@ -158,8 +169,6 @@ fun Navigation() {
             PantallaDetalleAsignacionRecolector(navController, id)
         }
 
-
-
         //**CIUDADANO**//
         composable(route = AppScreens.homeCiudadano.name) { HomeUserScreen(navController) }
         composable(route = AppScreens.perfilUsuario.name) { ProfileUserScreen(navController) }
@@ -212,43 +221,59 @@ fun Navigation() {
         composable(route = AppScreens.moduleOne.name) {
             ModuleOneFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M1) }
             )
         }
         composable(route = AppScreens.moduleTwo.name) {
             ModuleTwoFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M2) }
             )
         }
         composable(route = AppScreens.moduleThree.name) {
             ModuleThreeFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M3) }
             )
         }
         composable(route = AppScreens.moduleFour.name) {
             ModuleFourFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M4) }
             )
         }
         composable(route = AppScreens.moduleFive.name) {
             ModuleFiveFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M5) }
             )
         }
         composable(route = AppScreens.moduleSix.name) {
             ModuleSixFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M6) }
+            )
+        }
+        composable(
+            route = AppScreens.recompensas.name
+        ) {
+
+            RecompensasFlowScreen(
+                controller = navController,
+                puntosViewModel = puntosViewModel
             )
         }
         composable(route = AppScreens.moduleSeven.name) {
             ModuleSevenFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
-                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) }
+                onFinish = { navController.popBackStack(AppScreens.aprendizaje.name, inclusive = false) },
+                onModuleCompleted = { puntosViewModel.completarModulo(PuntosModulos.M7) }
             )
         }
     }

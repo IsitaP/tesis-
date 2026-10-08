@@ -21,6 +21,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -71,7 +72,8 @@ private enum class ModuleFiveStep {
 @Composable
 fun ModuleFiveFlowScreen(
     onBackToRoadmap: () -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    onModuleCompleted: () -> Unit = {}
 ) {
 
     var currentStep by rememberSaveable {
@@ -175,6 +177,12 @@ fun ModuleFiveFlowScreen(
 
 
         ModuleFiveStep.COMPLETE -> {
+
+
+            // Suma los puntos en Firebase apenas se llega a la pantalla final
+
+            LaunchedEffect(Unit) { onModuleCompleted() }
+
 
             ModuleFiveCompleteScreen(
                 onFinish = onFinish
@@ -1242,4 +1250,4 @@ private fun M5CompletePreview() {
     ModuleFiveCompleteScreen(
         onFinish = {}
     )
-}
+}

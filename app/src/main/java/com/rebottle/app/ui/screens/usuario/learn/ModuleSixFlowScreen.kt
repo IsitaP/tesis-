@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -67,7 +68,8 @@ private enum class ModuleSixStep {
 @Composable
 fun ModuleSixFlowScreen(
     onBackToRoadmap: () -> Unit,
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    onModuleCompleted: () -> Unit = {}
 ) {
 
     var currentStep by rememberSaveable {
@@ -174,6 +176,12 @@ fun ModuleSixFlowScreen(
 
 
         ModuleSixStep.COMPLETE -> {
+
+
+            // Suma los puntos en Firebase apenas se llega a la pantalla final
+
+            LaunchedEffect(Unit) { onModuleCompleted() }
+
 
             ModuleSixCompleteScreen(
                 onFinish = onFinish
