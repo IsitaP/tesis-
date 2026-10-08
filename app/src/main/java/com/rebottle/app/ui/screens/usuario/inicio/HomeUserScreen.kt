@@ -35,6 +35,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,9 +61,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.rebottle.app.R
 import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.model.PerfilCache
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+
 
 
 private val BackgroundColor = RebottleColors.Background
@@ -283,33 +287,39 @@ fun HomeUserScreen(
 @Composable
 private fun Header() {
 
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(uid) {
+        if (uid != null) PerfilCache.cargar(uid)
+    }
+
+    val primerNombre = PerfilCache.nombre
+        ?.substringBefore(" ")
+        ?.ifEmpty { null }
+        ?: "Usuario"
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-
         verticalAlignment = Alignment.CenterVertically,
-
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
         Text(
-            text = "Hola, Usuario !",
+            text = "Hola, $primerNombre !",
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Brown
+            color = Brown,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
-
 
         Box(
             modifier = Modifier
                 .size(42.dp)
-                .background(
-                    color = Color(0xFFF1F5ED),
-                    shape = CircleShape
-                ),
-
+                .background(color = Color(0xFFF1F5ED), shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
-
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Notificaciones",
