@@ -67,6 +67,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import com.rebottle.app.R
+import com.rebottle.app.model.PerfilCache
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.theme.RebottleTheme
@@ -96,32 +97,12 @@ fun PantallaPerfilRecolector(
     val coroutineScope = rememberCoroutineScope()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    var nombre by remember { mutableStateOf("") }
-    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-    var cargando by remember { mutableStateOf(true) }
+    val nombre = PerfilCache.nombre ?: ""
+    val selectedImageBitmap = PerfilCache.foto
     var subiendoFoto by remember { mutableStateOf(false) }
 
     LaunchedEffect(uid) {
-        if (uid != null) {
-            Firebase.firestore.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    nombre = doc.getString("name") ?: ""
-                    cargando = false
-
-                    val fotoUrl = doc.getString("fotoUrl")
-                    if (!fotoUrl.isNullOrEmpty()) {
-                        runCatching {
-                            Firebase.storage.getReferenceFromUrl(fotoUrl)
-                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
-                            ?.addOnSuccessListener { bytes ->
-                                selectedImageBitmap = BitmapFactory
-                                    .decodeByteArray(bytes, 0, bytes.size)
-                                    .asImageBitmap()
-                            }
-                    }
-                }
-                .addOnFailureListener { cargando = false }
-        }
+        if (uid != null) PerfilCache.cargar(uid)
     }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -133,7 +114,7 @@ fun PantallaPerfilRecolector(
             }.getOrNull()
 
             if (bitmap != null) {
-                selectedImageBitmap = bitmap.asImageBitmap()
+                PerfilCache.actualizarFoto(bitmap.asImageBitmap())
                 subiendoFoto = true
 
                 val stream = java.io.ByteArrayOutputStream()
@@ -185,7 +166,7 @@ fun PantallaPerfilRecolector(
 
             Spacer(modifier = Modifier.height(5.dp))
 
-            if (cargando) {
+            if (PerfilCache.nombre == null) {
                 CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(20.dp))
             } else {
                 Text(
@@ -217,6 +198,7 @@ fun PantallaPerfilRecolector(
 
             OutlinedButton(
                 onClick = {
+                    PerfilCache.limpiar()
                     FirebaseAuth.getInstance().signOut()
                     controller.navigate(AppScreens.login.name) {
                         popUpTo(0) { inclusive = true }

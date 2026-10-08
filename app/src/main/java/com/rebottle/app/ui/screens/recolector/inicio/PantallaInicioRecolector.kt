@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,9 +32,12 @@ import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolector
 import com.rebottle.app.ui.screens.recolector.componentes.TarjetaAccionRecolector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+import com.rebottle.app.model.PerfilCache
+import com.google.firebase.auth.FirebaseAuth
 
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
@@ -68,7 +72,7 @@ fun PantallaInicioRecolector(
                 .padding(start = 17.dp, end = 18.dp, top = 24.dp, bottom = 24.dp)
         ) {
 
-            HeaderRecolector()
+            Header()
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -124,45 +128,46 @@ fun PantallaInicioRecolector(
 // ----------------------------------------------------
 
 @Composable
-private fun HeaderRecolector() {
+private fun Header() {
+
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(uid) {
+        if (uid != null) PerfilCache.cargar(uid)
+    }
+
+    val primerNombre = PerfilCache.nombre
+        ?.substringBefore(" ")
+        ?.ifEmpty { null }
+        ?: "Usuario"
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
-        Column {
-            Text(
-                text = "Hola, Recolector !",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = Brown
-            )
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(
-                text = "Fundación Ecoalianza",
-                fontSize = 18.sp,
-                color = SecondaryText
-            )
-        }
+        Text(
+            text = "Hola, $primerNombre !",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Brown,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
 
         Box(
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier
+                .size(42.dp)
+                .background(color = Color(0xFFF1F5ED), shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Notificaciones",
                 tint = MainGreen,
-                modifier = Modifier.size(25.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 7.dp, end = 6.dp)
-                    .size(6.dp)
-                    .background(color = Color(0xFFE16A58), shape = CircleShape)
+                modifier = Modifier.size(23.dp)
             )
         }
     }

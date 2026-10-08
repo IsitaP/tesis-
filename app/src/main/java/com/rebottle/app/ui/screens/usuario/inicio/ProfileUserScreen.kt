@@ -69,6 +69,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import com.rebottle.app.R
+import com.rebottle.app.model.PerfilCache
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
@@ -93,33 +94,22 @@ fun ProfileUserScreen(
     val coroutineScope = rememberCoroutineScope()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    var nombre by remember { mutableStateOf("") }
+    val nombre = PerfilCache.nombre ?: ""
     var direccion by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
-    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    val selectedImageBitmap = PerfilCache.foto
     var cargando by remember { mutableStateOf(true) }
     var subiendoFoto by remember { mutableStateOf(false) }
 
     LaunchedEffect(uid) {
         if (uid != null) {
+            PerfilCache.cargar(uid)
+
             Firebase.firestore.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
-                    nombre = doc.getString("name") ?: ""
                     direccion = doc.getString("direccion") ?: ""
                     telefono = doc.getString("telefono") ?: ""
                     cargando = false
-
-                    val fotoUrl = doc.getString("fotoUrl")
-                    if (!fotoUrl.isNullOrEmpty()) {
-                        runCatching {
-                            Firebase.storage.getReferenceFromUrl(fotoUrl)
-                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
-                            ?.addOnSuccessListener { bytes ->
-                                selectedImageBitmap = BitmapFactory
-                                    .decodeByteArray(bytes, 0, bytes.size)
-                                    .asImageBitmap()
-                            }
-                    }
                 }
                 .addOnFailureListener { cargando = false }
         }
@@ -135,7 +125,7 @@ fun ProfileUserScreen(
 
             if (bitmap != null) {
                 val redimensionado = Bitmap.createScaledBitmap(bitmap, 500, 500, true)
-                selectedImageBitmap = redimensionado.asImageBitmap()
+                PerfilCache.actualizarFoto(redimensionado.asImageBitmap())
                 subiendoFoto = true
 
                 val stream = java.io.ByteArrayOutputStream()
@@ -219,6 +209,7 @@ fun ProfileUserScreen(
 
             OutlinedButton(
                 onClick = {
+                    PerfilCache.limpiar()
                     FirebaseAuth.getInstance().signOut()
                     controller.navigate(AppScreens.login.name) {
                         popUpTo(0) { inclusive = true }
