@@ -375,7 +375,7 @@ private fun SolicitudCard(
     val estadoUpper = solicitud.estado.uppercase()
 
     val cardColor = when (estadoUpper) {
-        "PENDIENTE" -> Color(0xFFFEF3D7)
+        "PUBLICADA" -> Color(0xFFFEF3D7)
         "ACEPTADA" -> Color(0xFFF2F7ED)
         "COMPLETADA" -> Color(0xFFE3EDDB)
         "CANCELADA" -> Color(0xFFFFD8D4)
@@ -383,7 +383,7 @@ private fun SolicitudCard(
     }
 
     val borderColor = when (estadoUpper) {
-        "PENDIENTE" -> Color(0xFFF5E1B8)
+        "PUBLICADA" -> Color(0xFFF5E1B8)
         "ACEPTADA" -> Color(0xFFD5E3CD)
         "COMPLETADA" -> Color(0xFFD5E3CD)
         "CANCELADA" -> Color(0xFFF3A29B)
@@ -391,7 +391,7 @@ private fun SolicitudCard(
     }
 
     val badgeColor = when (estadoUpper) {
-        "PENDIENTE" -> Color(0xFFD99B4B)
+        "PUBLICADA" -> Color(0xFFD99B4B)
         "ACEPTADA" -> Color(0xFF536D45)
         "COMPLETADA" -> Color(0xFF536D45)
         "CANCELADA" -> Color(0xFFC94338)
