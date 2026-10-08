@@ -1,5 +1,7 @@
 package com.rebottle.app.ui.screens.fundacion.solicitudes
 
+import android.widget.Toast
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,9 +18,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -28,30 +30,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import androidx.lifecycle.viewmodel.compose.viewModel
+
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 
 import com.rebottle.app.R
+import com.rebottle.app.model.DesasignacionRutaState
 import com.rebottle.app.model.EstadoRuta
 import com.rebottle.app.model.MapaViewModel
 import com.rebottle.app.model.Ruta
 import com.rebottle.app.navigation.AppScreens
-import com.rebottle.app.ui.theme.RebottleTheme
 
 
 // ============================================================
@@ -104,13 +109,27 @@ fun RutaDetalleScreen(
     mapaViewModel: MapaViewModel = viewModel()
 ) {
 
+    val context =
+        LocalContext.current
+
+
     // ========================================================
-    // ESTADO DEL VIEWMODEL
+    // ESTADO DE RUTAS
     // ========================================================
 
     val rutasState by
     mapaViewModel
         .rutasState
+        .collectAsState()
+
+
+    // ========================================================
+    // ESTADO DE DESASIGNACIÓN
+    // ========================================================
+
+    val desasignacionState by
+    mapaViewModel
+        .desasignacionState
         .collectAsState()
 
 
@@ -126,13 +145,57 @@ fun RutaDetalleScreen(
 
 
     // ========================================================
-    // BUSCAR LA RUTA
+    // RESULTADO DE DESASIGNACIÓN
+    // ========================================================
+
+    LaunchedEffect(
+        desasignacionState.desasignacionExitosa,
+        desasignacionState.error
+    ) {
+
+        if (
+            desasignacionState
+                .desasignacionExitosa
+        ) {
+
+            Toast.makeText(
+                context,
+                "Recolector desasignado correctamente",
+                Toast.LENGTH_SHORT
+            ).show()
+
+
+            mapaViewModel
+                .limpiarEstadoDesasignacion()
+        }
+
+        else if (
+            desasignacionState.error != null
+        ) {
+
+            Toast.makeText(
+                context,
+                desasignacionState.error
+                    ?: "No se pudo desasignar el recolector",
+                Toast.LENGTH_LONG
+            ).show()
+
+
+            mapaViewModel
+                .limpiarEstadoDesasignacion()
+        }
+    }
+
+
+    // ========================================================
+    // BUSCAR RUTA
     // ========================================================
 
     val ruta =
         rutasState
             .rutasPublicadas
             .find {
+
                 it.id == rutaId
             }
 
@@ -179,9 +242,11 @@ fun RutaDetalleScreen(
             ) {
 
                 CircularProgressIndicator(
-                    color = PrimaryGreen
+                    color =
+                        PrimaryGreen
                 )
             }
+
 
             return@Scaffold
         }
@@ -219,6 +284,7 @@ fun RutaDetalleScreen(
                 )
             }
 
+
             return@Scaffold
         }
 
@@ -251,6 +317,7 @@ fun RutaDetalleScreen(
                 )
             }
 
+
             return@Scaffold
         }
 
@@ -260,9 +327,20 @@ fun RutaDetalleScreen(
         // ====================================================
 
         RecoleccionDetalleContent(
-            ruta = ruta,
-            navController = navController,
-            innerPadding = innerPadding
+            controller =
+                navController,
+
+            ruta =
+                ruta,
+
+            mapaViewModel =
+                mapaViewModel,
+
+            desasignacionState =
+                desasignacionState,
+
+            innerPadding =
+                innerPadding
         )
     }
 }
@@ -274,9 +352,11 @@ fun RutaDetalleScreen(
 
 @Composable
 private fun RecoleccionDetalleContent(
+    controller: NavController,
     ruta: Ruta,
-    navController: NavController,
-    innerPadding: PaddingValues = PaddingValues()
+    mapaViewModel: MapaViewModel,
+    desasignacionState: DesasignacionRutaState,
+    innerPadding: PaddingValues
 ) {
 
     Column(
@@ -284,21 +364,19 @@ private fun RecoleccionDetalleContent(
             Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(
-                    rememberScrollState()
-                ),
-
-        verticalArrangement =
-            Arrangement.SpaceBetween
     ) {
 
+
+        // ====================================================
+        // CONTENIDO PRINCIPAL
+        // ====================================================
 
         Column(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = 24.dp
+                        horizontal = 20.dp
                     )
         ) {
 
@@ -306,25 +384,28 @@ private fun RecoleccionDetalleContent(
             Spacer(
                 modifier =
                     Modifier.height(
-                        16.dp
+                        8.dp
                     )
             )
 
 
             // =================================================
-            // CARD DE DETALLE
+            // CARD DETALLE
             // =================================================
 
             RecoleccionDetailCard(
-                ruta = ruta,
-                controller = navController
+                ruta =
+                    ruta,
+
+                controller =
+                    controller
             )
 
 
             Spacer(
                 modifier =
                     Modifier.height(
-                        28.dp
+                        14.dp
                     )
             )
 
@@ -336,44 +417,68 @@ private fun RecoleccionDetalleContent(
             Button(
                 onClick = {
 
+                    controller.navigate(
+                        "${AppScreens.asignarRecolector.name}/${ruta.id}"
+                    )
                 },
+
+                enabled =
+                    ruta.estado ==
+                            EstadoRuta.PUBLICADA.name,
 
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .height(
-                            52.dp
+                            48.dp
                         ),
 
                 shape =
                     RoundedCornerShape(
-                        16.dp
+                        14.dp
                     ),
 
                 colors =
                     ButtonDefaults
                         .buttonColors(
+
                             containerColor =
-                                PrimaryGreen
+                                PrimaryGreen,
+
+                            disabledContainerColor =
+                                Color(0xFFD3D3D3),
+
+                            disabledContentColor =
+                                Color(0xFF777777)
                         ),
 
                 elevation =
                     ButtonDefaults
                         .buttonElevation(
+
                             defaultElevation =
                                 2.dp
                         )
             ) {
 
+
                 Text(
                     text =
-                        "Asignar recolector",
 
-                    color =
-                        Color.White,
+                        if (
+                            ruta.estado ==
+                            EstadoRuta.PUBLICADA.name
+                        ) {
+
+                            "Asignar recolector"
+
+                        } else {
+
+                            "Recolector asignado"
+                        },
 
                     fontSize =
-                        16.sp,
+                        15.sp,
 
                     fontWeight =
                         FontWeight.Medium
@@ -381,93 +486,161 @@ private fun RecoleccionDetalleContent(
             }
 
 
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        16.dp
-                    )
-            )
-
-
             // =================================================
-            // CANCELAR RUTA
+            // DESASIGNAR RECOLECTOR
             // =================================================
 
-            OutlinedButton(
-                onClick = {
+            if (
+                ruta.estado ==
+                EstadoRuta.ASIGNADA.name
+            ) {
 
-                },
 
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(
-                            52.dp
+                Spacer(
+                    modifier =
+                        Modifier.height(
+                            10.dp
+                        )
+                )
+
+
+                OutlinedButton(
+                    onClick = {
+
+                        mapaViewModel
+                            .desasignarRecolectorDeRuta(
+
+                                rutaId =
+                                    ruta.id
+                            )
+                    },
+
+                    enabled =
+                        !desasignacionState
+                            .isLoading,
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(
+                                48.dp
+                            ),
+
+                    shape =
+                        RoundedCornerShape(
+                            14.dp
                         ),
 
-                shape =
-                    RoundedCornerShape(
-                        16.dp
-                    ),
+                    border =
+                        BorderStroke(
+                            width =
+                                1.dp,
 
-                border =
-                    BorderStroke(
-                        1.dp,
-                        PrimaryGreen
-                    ),
-
-                colors =
-                    ButtonDefaults
-                        .outlinedButtonColors(
-                            containerColor =
-                                Color.White,
-
-                            contentColor =
+                            color =
                                 PrimaryGreen
                         ),
 
-                elevation =
-                    ButtonDefaults
-                        .buttonElevation(
-                            defaultElevation =
+                    colors =
+                        ButtonDefaults
+                            .outlinedButtonColors(
+
+                                containerColor =
+                                    Color.White,
+
+                                contentColor =
+                                    PrimaryGreen
+                            ),
+
+                    elevation =
+                        ButtonDefaults
+                            .buttonElevation(
+
+                                defaultElevation =
+                                    2.dp
+                            )
+                ) {
+
+
+                    if (
+                        desasignacionState
+                            .isLoading
+                    ) {
+
+                        CircularProgressIndicator(
+                            modifier =
+                                Modifier.size(
+                                    18.dp
+                                ),
+
+                            color =
+                                PrimaryGreen,
+
+                            strokeWidth =
                                 2.dp
                         )
-            ) {
 
-                Text(
-                    text =
-                        "Cancelar ruta",
 
-                    color =
-                        PrimaryGreen,
+                        Spacer(
+                            modifier =
+                                Modifier.width(
+                                    8.dp
+                                )
+                        )
 
-                    fontSize =
-                        16.sp,
 
-                    fontWeight =
-                        FontWeight.Medium
-                )
+                        Text(
+                            text =
+                                "Desasignando...",
+
+                            color =
+                                PrimaryGreen,
+
+                            fontSize =
+                                15.sp
+                        )
+
+                    } else {
+
+                        Text(
+                            text =
+                                "Desasignar recolector",
+
+                            color =
+                                PrimaryGreen,
+
+                            fontSize =
+                                15.sp,
+
+                            fontWeight =
+                                FontWeight.Medium
+                        )
+                    }
+                }
             }
-
-
-            Spacer(
-                modifier =
-                    Modifier.height(
-                        24.dp
-                    )
-            )
         }
+
+
+        Spacer(
+            modifier =
+                Modifier.height(
+                    6.dp
+                )
+        )
 
 
         // ====================================================
         // PAISAJE
+        //
+        // weight(1f) hace que use solamente el espacio
+        // que quede disponible en la pantalla.
         // ====================================================
 
         Image(
             painter =
                 painterResource(
                     id =
-                        R.drawable.solicitudes_paisaje
+                        R.drawable
+                            .solicitudes_paisaje
                 ),
 
             contentDescription =
@@ -476,9 +649,7 @@ private fun RecoleccionDetalleContent(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(
-                        220.dp
-                    ),
+                    .weight(1f),
 
             contentScale =
                 ContentScale.FillWidth
@@ -522,7 +693,7 @@ private fun RecoleccionHeader(
                 ),
 
             contentDescription =
-                null,
+                "Volver",
 
             modifier =
                 Modifier
@@ -576,7 +747,7 @@ private fun RecoleccionDetailCard(
 ) {
 
     // ========================================================
-    // DATOS FORMATEADOS
+    // DISTANCIA
     // ========================================================
 
     val distanciaKm =
@@ -584,7 +755,12 @@ private fun RecoleccionDetailCard(
                 1000.0
 
 
+    // ========================================================
+    // DURACIÓN
+    // ========================================================
+
     val duracionMinutos =
+
         if (
             ruta.duracionTotalSegundos <= 0
         ) {
@@ -600,9 +776,15 @@ private fun RecoleccionDetailCard(
         }
 
 
+    // ========================================================
+    // ORDEN DE SOLICITUDES
+    // ========================================================
+
     val solicitudesOrdenadas =
+
         if (
-            ruta.ordenSolicitudes.isNotEmpty()
+            ruta.ordenSolicitudes
+                .isNotEmpty()
         ) {
 
             ruta.ordenSolicitudes
@@ -619,7 +801,8 @@ private fun RecoleccionDetailCard(
 
     Card(
         modifier =
-            modifier.fillMaxWidth(),
+            modifier
+                .fillMaxWidth(),
 
         shape =
             RoundedCornerShape(
@@ -627,20 +810,26 @@ private fun RecoleccionDetailCard(
             ),
 
         colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    LightOrange
-            ),
+            CardDefaults
+                .cardColors(
+
+                    containerColor =
+                        LightOrange
+                ),
 
         border =
             BorderStroke(
-                1.dp,
-                BorderOrange
+                width =
+                    1.dp,
+
+                color =
+                    BorderOrange
             ),
 
         elevation =
             CardDefaults
                 .cardElevation(
+
                     defaultElevation =
                         0.dp
                 )
@@ -650,13 +839,13 @@ private fun RecoleccionDetailCard(
         Column(
             modifier =
                 Modifier.padding(
-                    20.dp
+                    18.dp
                 )
         ) {
 
 
             // =================================================
-            // ID Y ESTADO
+            // ID + ESTADO
             // =================================================
 
             Row(
@@ -676,7 +865,7 @@ private fun RecoleccionDetailCard(
                         "#${ruta.id}",
 
                     fontSize =
-                        20.sp,
+                        19.sp,
 
                     fontWeight =
                         FontWeight.Bold,
@@ -698,13 +887,13 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        16.dp
+                        12.dp
                     )
             )
 
 
             // =================================================
-            // PUNTOS DE RECOLECCIÓN
+            // PUNTOS
             // =================================================
 
             Row(
@@ -717,7 +906,8 @@ private fun RecoleccionDetailCard(
                     painter =
                         painterResource(
                             id =
-                                R.drawable.ic_location_pin
+                                R.drawable
+                                    .ic_location_pin
                         ),
 
                     contentDescription =
@@ -725,7 +915,7 @@ private fun RecoleccionDetailCard(
 
                     modifier =
                         Modifier.size(
-                            20.dp
+                            19.dp
                         ),
 
                     tint =
@@ -743,11 +933,10 @@ private fun RecoleccionDetailCard(
 
                 Text(
                     text =
-                        "${solicitudesOrdenadas.size} " +
-                                "puntos de recolección",
+                        "${solicitudesOrdenadas.size} puntos de recolección",
 
                     fontSize =
-                        14.sp,
+                        13.sp,
 
                     color =
                         MainText
@@ -758,13 +947,13 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        12.dp
+                        9.dp
                     )
             )
 
 
             // =================================================
-            // FECHA Y DURACIÓN
+            // FECHA + DURACIÓN
             // =================================================
 
             Row(
@@ -773,7 +962,7 @@ private fun RecoleccionDetailCard(
 
                 horizontalArrangement =
                     Arrangement.spacedBy(
-                        24.dp
+                        20.dp
                     ),
 
                 verticalAlignment =
@@ -781,9 +970,9 @@ private fun RecoleccionDetailCard(
             ) {
 
 
-                // ---------------------------------------------
+                // =============================================
                 // FECHA
-                // ---------------------------------------------
+                // =============================================
 
                 Row(
                     verticalAlignment =
@@ -795,7 +984,8 @@ private fun RecoleccionDetailCard(
                         painter =
                             painterResource(
                                 id =
-                                    R.drawable.ic_calendar
+                                    R.drawable
+                                        .ic_calendar
                             ),
 
                         contentDescription =
@@ -803,7 +993,7 @@ private fun RecoleccionDetailCard(
 
                         modifier =
                             Modifier.size(
-                                20.dp
+                                19.dp
                             ),
 
                         tint =
@@ -826,7 +1016,7 @@ private fun RecoleccionDetailCard(
                             ),
 
                         fontSize =
-                            14.sp,
+                            13.sp,
 
                         color =
                             MainText
@@ -834,9 +1024,9 @@ private fun RecoleccionDetailCard(
                 }
 
 
-                // ---------------------------------------------
+                // =============================================
                 // DURACIÓN
-                // ---------------------------------------------
+                // =============================================
 
                 Row(
                     verticalAlignment =
@@ -848,7 +1038,8 @@ private fun RecoleccionDetailCard(
                         painter =
                             painterResource(
                                 id =
-                                    R.drawable.ic_clock
+                                    R.drawable
+                                        .ic_clock
                             ),
 
                         contentDescription =
@@ -856,7 +1047,7 @@ private fun RecoleccionDetailCard(
 
                         modifier =
                             Modifier.size(
-                                20.dp
+                                19.dp
                             ),
 
                         tint =
@@ -877,7 +1068,7 @@ private fun RecoleccionDetailCard(
                             "$duracionMinutos min",
 
                         fontSize =
-                            14.sp,
+                            13.sp,
 
                         color =
                             MainText
@@ -889,7 +1080,7 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        16.dp
+                        12.dp
                     )
             )
 
@@ -903,7 +1094,7 @@ private fun RecoleccionDetailCard(
                     "Solicitudes de la ruta",
 
                 fontSize =
-                    15.sp,
+                    14.sp,
 
                 fontWeight =
                     FontWeight.SemiBold,
@@ -916,19 +1107,15 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        8.dp
+                        6.dp
                     )
             )
 
 
-            // =================================================
-            // ORDEN DE SOLICITUDES
-            // =================================================
-
             Column(
                 verticalArrangement =
                     Arrangement.spacedBy(
-                        8.dp
+                        5.dp
                     )
             ) {
 
@@ -949,13 +1136,14 @@ private fun RecoleccionDetailCard(
                                 modifier =
                                     Modifier
                                         .size(
-                                            24.dp
+                                            22.dp
                                         )
                                         .background(
-                                            BrownIcon,
-                                            RoundedCornerShape(
-                                                50
-                                            )
+                                            color =
+                                                BrownIcon,
+
+                                            shape =
+                                                CircleShape
                                         ),
 
                                 contentAlignment =
@@ -971,7 +1159,7 @@ private fun RecoleccionDetailCard(
                                         Color.White,
 
                                     fontSize =
-                                        12.sp,
+                                        11.sp,
 
                                     fontWeight =
                                         FontWeight.Bold
@@ -992,7 +1180,7 @@ private fun RecoleccionDetailCard(
                                     solicitudId,
 
                                 fontSize =
-                                    14.sp,
+                                    13.sp,
 
                                 color =
                                     SecondaryText
@@ -1005,13 +1193,13 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        16.dp
+                        12.dp
                     )
             )
 
 
             // =================================================
-            // DISTANCIA Y ESTADO
+            // DISTANCIA + ESTADO
             // =================================================
 
             Row(
@@ -1026,9 +1214,9 @@ private fun RecoleccionDetailCard(
             ) {
 
 
-                // ---------------------------------------------
+                // =============================================
                 // DISTANCIA
-                // ---------------------------------------------
+                // =============================================
 
                 Row(
                     verticalAlignment =
@@ -1040,7 +1228,8 @@ private fun RecoleccionDetailCard(
                         painter =
                             painterResource(
                                 id =
-                                    R.drawable.icon_routes
+                                    R.drawable
+                                        .icon_routes
                             ),
 
                         contentDescription =
@@ -1048,7 +1237,7 @@ private fun RecoleccionDetailCard(
 
                         modifier =
                             Modifier.size(
-                                36.dp
+                                32.dp
                             ),
 
                         tint =
@@ -1059,7 +1248,7 @@ private fun RecoleccionDetailCard(
                     Spacer(
                         modifier =
                             Modifier.width(
-                                10.dp
+                                8.dp
                             )
                     )
 
@@ -1072,7 +1261,7 @@ private fun RecoleccionDetailCard(
                                 "Distancia estimada",
 
                             fontSize =
-                                13.sp,
+                                12.sp,
 
                             color =
                                 SecondaryText
@@ -1087,7 +1276,7 @@ private fun RecoleccionDetailCard(
                                 ),
 
                             fontSize =
-                                14.sp,
+                                13.sp,
 
                             fontWeight =
                                 FontWeight.SemiBold,
@@ -1099,9 +1288,9 @@ private fun RecoleccionDetailCard(
                 }
 
 
-                // ---------------------------------------------
+                // =============================================
                 // ESTADO
-                // ---------------------------------------------
+                // =============================================
 
                 Column {
 
@@ -1111,7 +1300,7 @@ private fun RecoleccionDetailCard(
                             "Estado",
 
                         fontSize =
-                            13.sp,
+                            12.sp,
 
                         color =
                             SecondaryText
@@ -1125,7 +1314,7 @@ private fun RecoleccionDetailCard(
                             ),
 
                         fontSize =
-                            14.sp,
+                            13.sp,
 
                         fontWeight =
                             FontWeight.SemiBold,
@@ -1140,13 +1329,13 @@ private fun RecoleccionDetailCard(
             Spacer(
                 modifier =
                     Modifier.height(
-                        20.dp
+                        14.dp
                     )
             )
 
 
             // =================================================
-            // BOTONES PEQUEÑOS
+            // BOTONES DEL CARD
             // =================================================
 
             Row(
@@ -1155,19 +1344,21 @@ private fun RecoleccionDetailCard(
 
                 horizontalArrangement =
                     Arrangement.spacedBy(
-                        12.dp
+                        10.dp
                     )
             ) {
 
 
-                // ---------------------------------------------
+                // =============================================
                 // VER SOLICITUDES
-                // ---------------------------------------------
+                // =============================================
 
                 OutlinedButton(
                     onClick = {
 
-                        controller.navigate(AppScreens.solicitudesFundacion.name)
+                        controller.navigate(
+                            AppScreens.solicitudesFundacion.name
+                        )
                     },
 
                     modifier =
@@ -1189,6 +1380,7 @@ private fun RecoleccionDetailCard(
                     colors =
                         ButtonDefaults
                             .outlinedButtonColors(
+
                                 containerColor =
                                     Color.White,
 
@@ -1198,18 +1390,18 @@ private fun RecoleccionDetailCard(
 
                     contentPadding =
                         PaddingValues(
-                            horizontal = 8.dp,
-                            vertical = 10.dp
+                            horizontal =
+                                6.dp,
+
+                            vertical =
+                                8.dp
                         )
                 ) {
 
 
                     Row(
                         verticalAlignment =
-                            Alignment.CenterVertically,
-
-                        horizontalArrangement =
-                            Arrangement.Start
+                            Alignment.CenterVertically
                     ) {
 
 
@@ -1217,7 +1409,8 @@ private fun RecoleccionDetailCard(
                             painter =
                                 painterResource(
                                     id =
-                                        R.drawable.ic_box
+                                        R.drawable
+                                            .ic_box
                                 ),
 
                             contentDescription =
@@ -1225,7 +1418,7 @@ private fun RecoleccionDetailCard(
 
                             modifier =
                                 Modifier.size(
-                                    24.dp
+                                    21.dp
                                 ),
 
                             tint =
@@ -1236,7 +1429,7 @@ private fun RecoleccionDetailCard(
                         Spacer(
                             modifier =
                                 Modifier.width(
-                                    6.dp
+                                    5.dp
                                 )
                         )
 
@@ -1246,13 +1439,13 @@ private fun RecoleccionDetailCard(
                                 "Ver solicitudes",
 
                             fontSize =
-                                12.sp,
+                                11.sp,
 
                             color =
                                 ButtonText,
 
                             lineHeight =
-                                14.sp,
+                                13.sp,
 
                             textAlign =
                                 TextAlign.Start
@@ -1261,9 +1454,9 @@ private fun RecoleccionDetailCard(
                 }
 
 
-                // ---------------------------------------------
+                // =============================================
                 // VER RECORRIDO
-                // ---------------------------------------------
+                // =============================================
 
                 OutlinedButton(
                     onClick = {
@@ -1289,6 +1482,7 @@ private fun RecoleccionDetailCard(
                     colors =
                         ButtonDefaults
                             .outlinedButtonColors(
+
                                 containerColor =
                                     Color.White,
 
@@ -1298,18 +1492,18 @@ private fun RecoleccionDetailCard(
 
                     contentPadding =
                         PaddingValues(
-                            horizontal = 8.dp,
-                            vertical = 10.dp
+                            horizontal =
+                                6.dp,
+
+                            vertical =
+                                8.dp
                         )
                 ) {
 
 
                     Row(
                         verticalAlignment =
-                            Alignment.CenterVertically,
-
-                        horizontalArrangement =
-                            Arrangement.Start
+                            Alignment.CenterVertically
                     ) {
 
 
@@ -1317,7 +1511,8 @@ private fun RecoleccionDetailCard(
                             painter =
                                 painterResource(
                                     id =
-                                        R.drawable.ic_location_pin
+                                        R.drawable
+                                            .ic_location_pin
                                 ),
 
                             contentDescription =
@@ -1325,7 +1520,7 @@ private fun RecoleccionDetailCard(
 
                             modifier =
                                 Modifier.size(
-                                    24.dp
+                                    21.dp
                                 ),
 
                             tint =
@@ -1336,7 +1531,7 @@ private fun RecoleccionDetailCard(
                         Spacer(
                             modifier =
                                 Modifier.width(
-                                    6.dp
+                                    5.dp
                                 )
                         )
 
@@ -1346,13 +1541,13 @@ private fun RecoleccionDetailCard(
                                 "Ver recorrido",
 
                             fontSize =
-                                12.sp,
+                                11.sp,
 
                             color =
                                 ButtonText,
 
                             lineHeight =
-                                14.sp,
+                                13.sp,
 
                             textAlign =
                                 TextAlign.Start
@@ -1366,7 +1561,7 @@ private fun RecoleccionDetailCard(
 
 
 // ============================================================
-// BADGE DE ESTADO
+// BADGE
 // ============================================================
 
 @Composable
@@ -1379,16 +1574,23 @@ private fun StatusBadge(
         modifier =
             modifier
                 .background(
-                    MainOrange,
-                    RoundedCornerShape(
-                        8.dp
-                    )
+                    color =
+                        MainOrange,
+
+                    shape =
+                        RoundedCornerShape(
+                            8.dp
+                        )
                 )
                 .padding(
-                    horizontal = 14.dp,
-                    vertical = 6.dp
+                    horizontal =
+                        12.dp,
+
+                    vertical =
+                        5.dp
                 )
     ) {
+
 
         Text(
             text =
@@ -1398,7 +1600,7 @@ private fun StatusBadge(
                 Color.White,
 
             fontSize =
-                13.sp,
+                12.sp,
 
             fontWeight =
                 FontWeight.Medium
@@ -1459,87 +1661,5 @@ private fun formatearEstadoRuta(
 
         else ->
             estado
-    }
-}
-
-
-// ============================================================
-// PREVIEW
-// ============================================================
-
-@Preview(
-    showBackground = true,
-    showSystemUi = false
-)
-@Composable
-private fun RutaDetalleScreenPreview() {
-
-    RebottleTheme {
-
-        val navController =
-            rememberNavController()
-
-
-        Scaffold(
-            containerColor =
-                BackgroundColor,
-
-            topBar = {
-
-                RecoleccionHeader(
-                    rutaId =
-                        "RT-0002",
-
-                    onBackClick = {}
-                )
-            }
-
-        ) { innerPadding ->
-
-
-            RecoleccionDetalleContent(
-                ruta =
-                    Ruta(
-                        id =
-                            "RT-0002",
-
-                        solicitudesIds =
-                            listOf(
-                                "RB-0029",
-                                "RB-0028",
-                                "RB-0027",
-                                "RB-0030",
-                                "RB-0026"
-                            ),
-
-                        fechaRecoleccion =
-                            "2026-10-10",
-
-                        estado =
-                            EstadoRuta.PUBLICADA.name,
-
-                        ordenSolicitudes =
-                            listOf(
-                                "RB-0027",
-                                "RB-0029",
-                                "RB-0028",
-                                "RB-0030",
-                                "RB-0026"
-                            ),
-
-                        distanciaTotalMetros =
-                            5863,
-
-                        duracionTotalSegundos =
-                            780
-                    ),
-
-                navController =
-                    navController,
-
-                innerPadding =
-                    innerPadding
-            )
-        }
     }
 }

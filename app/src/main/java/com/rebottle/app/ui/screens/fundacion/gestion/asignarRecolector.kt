@@ -1,6 +1,8 @@
 package com.rebottle.app.ui.screens.fundacion.gestion
 
 import android.graphics.BitmapFactory
+import android.widget.Toast
+
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -23,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -47,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,10 +63,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavController
 
@@ -71,10 +77,14 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 
 import com.rebottle.app.R
+import com.rebottle.app.model.AsignacionRutaState
 import com.rebottle.app.model.Usuario
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.auth.UserRole
 import com.rebottle.app.ui.theme.RebottleColors
+
+import com.rebottle.app.model.MapaViewModel
+
 
 
 // ============================================================
@@ -114,8 +124,10 @@ fun AsignarRecolectorScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {
         controller.popBackStack()
-    }
+    },
+    mapaViewModel: MapaViewModel = viewModel()
 ) {
+
 
     // ========================================================
     // ESTADO
@@ -140,6 +152,82 @@ fun AsignarRecolectorScreen(
         mutableStateOf<String?>(null)
     }
 
+
+    val context = LocalContext.current
+
+
+    val asignacionState by mapaViewModel.asignacionState.collectAsState()
+
+
+
+    LaunchedEffect(
+        asignacionState.asignacionExitosa,
+        asignacionState.error
+    ) {
+
+
+        // ========================================================
+        // ASIGNACIÓN EXITOSA
+        // ========================================================
+
+        if (
+            asignacionState
+                .asignacionExitosa
+        ) {
+
+
+            Toast
+                .makeText(
+                    context,
+                    "Recolector asignado correctamente",
+                    Toast.LENGTH_SHORT
+                )
+                .show()
+
+
+            mapaViewModel
+                .limpiarEstadoAsignacion()
+
+
+            // Volvemos a la lista de rutas
+            controller.navigate(
+                AppScreens.rutas.name
+            ) {
+
+                popUpTo(
+                    AppScreens.rutas.name
+                ) {
+                    inclusive = false
+                }
+
+                launchSingleTop =
+                    true
+            }
+        }
+
+
+        // ========================================================
+        // ERROR
+        // ========================================================
+
+        else if (
+            asignacionState.error != null
+        ) {
+
+
+            Toast
+                .makeText(
+                    context,
+                    asignacionState.error,
+                    Toast.LENGTH_LONG
+                )
+                .show()
+
+
+            mapaViewModel
+                .limpiarEstadoAsignacion()
+        }
+    }
 
     // ========================================================
     // ESCUCHAR RECOLECTORES EN FIRESTORE
@@ -581,7 +669,11 @@ fun AsignarRecolectorScreen(
                                     recolector,
 
                                 rutaId =
-                                    rutaId
+                                    rutaId,
+
+                                mapaViewModel = mapaViewModel,
+
+                                asignacionState = asignacionState
                             )
                         }
                     }
@@ -715,7 +807,11 @@ private fun CollectorCard(
 
     collector: Usuario,
 
-    rutaId: String
+    rutaId: String,
+
+    mapaViewModel: MapaViewModel,
+
+    asignacionState: AsignacionRutaState
 
 ) {
 
@@ -961,61 +1057,59 @@ private fun CollectorCard(
 
 
                 Button(
-
                     onClick = {
 
-                        /*
-                         * =================================================
-                         * SIGUIENTE PASO
-                         * =================================================
-                         *
-                         * Aquí vamos a llamar:
-                         *
-                         * mapaViewModel.asignarRecolectorARuta(
-                         *     rutaId = rutaId,
-                         *     recolectorId = collector.id
-                         * )
-                         *
-                         * collector.id ya es el UID REAL del usuario.
-                         *
-                         * Por ahora todavía no modificamos Firebase.
-                         */
-
+                        mapaViewModel.asignarRecolectorARuta(
+                            rutaId = rutaId,
+                            recolectorId = collector.id
+                        )
                     },
 
-                    shape =
-                        RoundedCornerShape(
-                            10.dp
-                        ),
+                    enabled = !asignacionState.isLoading,
 
-                    colors =
-                        ButtonDefaults.buttonColors(
+                    shape = RoundedCornerShape(10.dp),
 
-                            containerColor =
-                                MainGreen
-                        )
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MainGreen
+                    )
                 ) {
 
+                    val asignandoEsteRecolector =
+                        asignacionState.isLoading &&
+                                asignacionState.recolectorId == collector.id
 
-                    Text(
+                    if (asignandoEsteRecolector) {
 
-                        text =
-                            "Asignar",
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
 
-                        fontSize =
-                            15.sp,
+                        Spacer(
+                            modifier = Modifier.width(8.dp)
+                        )
 
-                        fontWeight =
-                            FontWeight.Medium,
+                        Text(
+                            text = "Asignando...",
+                            color = Color.White
+                        )
 
-                        color =
-                            Color.White
-                    )
+                    } else {
+
+                        Text(
+                            text = "Asignar",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
+                        )
+                    }
+                }
                 }
             }
         }
     }
-}
+
 
 
 // ============================================================

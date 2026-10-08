@@ -42,6 +42,7 @@ import com.rebottle.app.ui.screens.usuario.learn.ModuleSixFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleSevenFlowScreen
 import com.rebottle.app.ui.screens.usuario.confirmaciones.ConfirmacionSolicitudUsuarioScreen
 import com.rebottle.app.ui.screens.usuario.confirmaciones.RechazoSolicitudUsuario
+import com.rebottle.app.ui.screens.fundacion.gestion.AsignarRecolectorScreen
 
 enum class AppScreens {
 
@@ -57,6 +58,7 @@ enum class AppScreens {
     editarPerfilFundacion,
     solicitudesFundacion,
     detalleRuta,
+    asignarRecolector,
     perfil,
     rutas,
 
@@ -130,6 +132,17 @@ fun Navigation() {
                 rutaId = id,
                 navController = navController
             )
+        }
+
+        composable(
+            route = "${AppScreens.asignarRecolector.name}/{rutaId}",
+            arguments = listOf(navArgument("rutaId") {type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments?.getString("rutaId") ?: ""
+
+            AsignarRecolectorScreen(controller = navController, rutaId = id,)
         }
 
 
