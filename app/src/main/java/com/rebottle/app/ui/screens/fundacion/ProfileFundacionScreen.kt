@@ -97,6 +97,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
+import com.rebottle.app.model.PerfilCache
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -124,9 +125,8 @@ fun ProfileFundacionScreen(
     val coroutineScope = rememberCoroutineScope()
     val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-    var nombre by remember { mutableStateOf("") }
-    var selectedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
-    var cargando by remember { mutableStateOf(true) }
+    val nombre = PerfilCache.nombre ?: ""
+    val selectedImageBitmap = PerfilCache.foto
     var subiendoFoto by remember { mutableStateOf(false) }
 
     // ------------------------------------------------
@@ -134,26 +134,7 @@ fun ProfileFundacionScreen(
     // ------------------------------------------------
 
     LaunchedEffect(uid) {
-        if (uid != null) {
-            Firebase.firestore.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    nombre = doc.getString("name") ?: ""
-                    cargando = false
-
-                    val fotoUrl = doc.getString("fotoUrl")
-                    if (!fotoUrl.isNullOrEmpty()) {
-                        runCatching {
-                            Firebase.storage.getReferenceFromUrl(fotoUrl)
-                        }.getOrNull()?.getBytes(2 * 1024 * 1024)
-                            ?.addOnSuccessListener { bytes ->
-                                selectedImageBitmap = BitmapFactory
-                                    .decodeByteArray(bytes, 0, bytes.size)
-                                    .asImageBitmap()
-                            }
-                    }
-                }
-                .addOnFailureListener { cargando = false }
-        }
+        if (uid != null) PerfilCache.cargar(uid)
     }
 
     // ------------------------------------------------
@@ -169,7 +150,7 @@ fun ProfileFundacionScreen(
             }.getOrNull()
 
             if (bitmap != null) {
-                selectedImageBitmap = bitmap.asImageBitmap()
+                PerfilCache.actualizarFoto(bitmap.asImageBitmap())
                 subiendoFoto = true
 
                 val stream = java.io.ByteArrayOutputStream()
@@ -259,7 +240,7 @@ fun ProfileFundacionScreen(
             // NOMBRE FUNDACIÓN
             // ------------------------------------------------
 
-            if (cargando) {
+            if (PerfilCache.nombre == null) {
                 CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(20.dp))
             } else {
                 Text(
@@ -321,6 +302,7 @@ fun ProfileFundacionScreen(
 
             OutlinedButton(
                 onClick = {
+                    PerfilCache.limpiar()
                     FirebaseAuth.getInstance().signOut()
                     controller.navigate(AppScreens.login.name) {
                         popUpTo(0) { inclusive = true }

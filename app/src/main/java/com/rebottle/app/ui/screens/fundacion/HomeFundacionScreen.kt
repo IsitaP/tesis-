@@ -34,6 +34,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,12 +42,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.firebase.auth.FirebaseAuth
 import com.rebottle.app.R
+import com.rebottle.app.model.PerfilCache
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleColors
 
@@ -181,54 +185,43 @@ fun HomeFundacionScreen(
 @Composable
 private fun HeaderFundacion() {
 
+    val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+    LaunchedEffect(uid) {
+        if (uid != null) PerfilCache.cargar(uid)
+    }
+
+    val nombre = PerfilCache.nombre?.ifEmpty { null } ?: "Fundación"
+
     Row(
         modifier = Modifier.fillMaxWidth(),
-
-        horizontalArrangement =
-            Arrangement.SpaceBetween,
-
-        verticalAlignment =
-            Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
 
             Text(
-                text = "Hola, EcoAlianza !",
+                text = "Hola, $nombre !",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Brown
+                color = Brown,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
 
+            Spacer(modifier = Modifier.height(3.dp))
 
-            Spacer(
-                modifier = Modifier.height(3.dp)
-            )
-
-
-            Row(
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
 
                 Icon(
-                    imageVector =
-                        Icons.Outlined.LocationOn,
-
-                    contentDescription =
-                        "Ubicación",
-
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = "Ubicación",
                     tint = SecondaryText,
-
-                    modifier =
-                        Modifier.size(15.dp)
+                    modifier = Modifier.size(15.dp)
                 )
 
-
-                Spacer(
-                    modifier = Modifier.width(6.dp)
-                )
-
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = "Cll 34b #18-24",
@@ -238,47 +231,30 @@ private fun HeaderFundacion() {
             }
         }
 
-
         // ------------------------------------------------
         // NOTIFICACIONES
         // ------------------------------------------------
 
         Box(
-            modifier =
-                Modifier.size(42.dp),
-
-            contentAlignment =
-                Alignment.Center
+            modifier = Modifier.size(42.dp),
+            contentAlignment = Alignment.Center
         ) {
 
             Icon(
-                imageVector =
-                    Icons.Default.Notifications,
-
-                contentDescription =
-                    "Notificaciones",
-
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notificaciones",
                 tint = MainGreen,
-
-                modifier =
-                    Modifier.size(25.dp)
+                modifier = Modifier.size(25.dp)
             )
-
 
             // Punto rojo
             Box(
                 modifier = Modifier
-                    .align(
-                        Alignment.TopEnd
-                    )
-                    .padding(
-                        top = 7.dp,
-                        end = 6.dp
-                    )
+                    .align(Alignment.TopEnd)
+                    .padding(top = 7.dp, end = 6.dp)
                     .size(6.dp)
                     .background(
-                        color =
-                            Color(0xFFE16A58),
+                        color = Color(0xFFE16A58),
                         shape = CircleShape
                     )
             )

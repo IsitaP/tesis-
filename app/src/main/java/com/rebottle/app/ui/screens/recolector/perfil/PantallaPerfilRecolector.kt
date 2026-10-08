@@ -178,7 +178,7 @@ fun PantallaPerfilRecolector(
             }
 
             Text(
-                text = "Fundación X",
+                text = "Fundación Ecolianza",
                 fontSize = 14.sp,
                 color = SecondaryText
             )
