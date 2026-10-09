@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,9 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +49,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
 import com.rebottle.app.ui.theme.RebottleTheme
+import java.text.Normalizer
+import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 // ============================================================
@@ -61,18 +69,110 @@ private val GlassGreen = Color(0xFF2F711F)
 private val PaperGreen = Color(0xFF3E5F2B)
 private val MetalGreen = Color(0xFF70836A)
 private val OtherGreen = Color(0xFFD5E87C)
+private val EmptyRing = Color(0xFFE3E7DC)
 
 
 // ============================================================
-// MODELO UI
+// MODELO
 // ============================================================
 
-private data class ContributionItem(
-    val title: String,
-    val kilograms: String,
-    val imageRes: Int,
+/** Un material entregado en una recolección ya completada. */
+data class Aporte(
+    val material: String,
+    val kg: Double,
+    val fechaMillis: Long          // cuándo se completó la recolección
+)
+
+enum class PeriodoAportes(val etiqueta: String, val dias: Long?) {
+    SEMANA("1 semana", 7),
+    MES("1 mes", 30),
+    TODO("Todo", null)
+}
+
+private data class MaterialInfo(
+    val nombre: String,
+    val imageRes: Int?,
     val color: Color
 )
+
+private data class ResumenMaterial(
+    val titulo: String,
+    val kg: Double,
+    val porcentaje: Float,
+    val imageRes: Int?,
+    val color: Color
+)
+
+private val infoMateriales = listOf(
+    MaterialInfo("Plástico", R.drawable.aportes_plastico, PlasticGreen),
+    MaterialInfo("Vidrio", R.drawable.aportes_vidrio, GlassGreen),
+    MaterialInfo("Papel", R.drawable.aportes_papel, PaperGreen),
+    MaterialInfo("Metal", R.drawable.aportes_metal, MetalGreen),
+    MaterialInfo("Otros", null, OtherGreen)
+)
+
+
+// ============================================================
+// LÓGICA (sin UI)
+// ============================================================
+
+/** Lleva cualquier texto de material a una de las categorías de la pantalla. */
+private fun categoria(raw: String): String {
+    val t = Normalizer.normalize(raw.lowercase(), Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+
+    return when {
+        "plast" in t || "pet" in t -> "Plástico"
+        "vidri" in t -> "Vidrio"
+        "papel" in t || "carton" in t -> "Papel"
+        "metal" in t || "lata" in t || "alumin" in t -> "Metal"
+        else -> "Otros"
+    }
+}
+
+private fun resumir(
+    aportes: List<Aporte>,
+    periodo: PeriodoAportes
+): List<ResumenMaterial> {
+
+    val ahora = System.currentTimeMillis()
+    val desde = periodo.dias
+        ?.let { ahora - it * 24L * 60L * 60L * 1000L }
+        ?: Long.MIN_VALUE
+
+    val kgPorCategoria = aportes
+        .filter { it.fechaMillis >= desde }
+        .groupBy { categoria(it.material) }
+        .mapValues { (_, lista) -> lista.sumOf { it.kg } }
+
+    val total = kgPorCategoria.values.sum()
+
+    return infoMateriales
+        .map { info ->
+            val kg = kgPorCategoria[info.nombre] ?: 0.0
+            ResumenMaterial(
+                titulo = info.nombre,
+                kg = kg,
+                porcentaje = if (total > 0) (kg / total * 100).toFloat() else 0f,
+                imageRes = info.imageRes,
+                color = info.color
+            )
+        }
+        .filter { it.titulo != "Otros" || it.kg > 0 }
+}
+
+private fun formatDecimal(valor: Double): String {
+    val r = Math.round(valor * 10) / 10.0
+    return if (r % 1.0 == 0.0) {
+        r.toInt().toString()
+    } else {
+        String.format(Locale.forLanguageTag("es-CO"), "%.1f", r)
+    }
+}
+
+private fun formatKg(kg: Double) = "${formatDecimal(kg)} Kg"
+
+private fun formatPorcentaje(p: Float) = "${formatDecimal(p.toDouble())}%"
 
 
 // ============================================================
@@ -83,79 +183,50 @@ private data class ContributionItem(
 fun MisAportesScreen(
     controller: NavController
 ) {
+    // TODO (siguiente paso): reemplazar por los aportes reales
+    // que salen de las solicitudes completadas en Firestore.
+    MisAportesContent(
+        controller = controller,
+        aportes = emptyList()
+    )
+}
 
-    var selectedRange by remember {
-        mutableStateOf("1 mes")
+@Composable
+private fun MisAportesContent(
+    controller: NavController,
+    aportes: List<Aporte>
+) {
+
+    var selectedRange by remember { mutableStateOf(PeriodoAportes.MES) }
+
+    val resumen = remember(aportes, selectedRange) {
+        resumir(aportes, selectedRange)
     }
 
-    val aportes = listOf(
-
-        ContributionItem(
-            title = "Plástico",
-            kilograms = "3 Kg",
-            imageRes = R.drawable.aportes_plastico,
-            color = PlasticGreen
-        ),
-
-        ContributionItem(
-            title = "Vidrio",
-            kilograms = "3,2 Kg",
-            imageRes = R.drawable.aportes_vidrio,
-            color = GlassGreen
-        ),
-
-        ContributionItem(
-            title = "Papel",
-            kilograms = "6 Kg",
-            imageRes = R.drawable.aportes_papel,
-            color = PaperGreen
-        ),
-
-        ContributionItem(
-            title = "Metal",
-            kilograms = "3,6 Kg",
-            imageRes = R.drawable.aportes_metal,
-            color = MetalGreen
-        )
-    )
+    val totalKg = resumen.sumOf { it.kg }
 
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Background)
-            .verticalScroll(
-                rememberScrollState()
-            )
-            .padding(
-                start = 22.dp,
-                end = 22.dp,
-                bottom = 30.dp
-            )
+            .verticalScroll(rememberScrollState())
+            .padding(start = 22.dp, end = 22.dp, bottom = 30.dp)
     ) {
 
-        Spacer(
-            modifier = Modifier.height(18.dp)
-        )
+        Spacer(modifier = Modifier.height(48.dp))
 
 
         // ====================================================
         // HEADER
         // ====================================================
 
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
 
             IconButton(
-                onClick = {
-                    controller.popBackStack()
-                },
-                modifier = Modifier.align(
-                    Alignment.CenterStart
-                )
+                onClick = { controller.popBackStack() },
+                modifier = Modifier.align(Alignment.CenterStart)
             ) {
-
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Volver",
@@ -164,22 +235,17 @@ fun MisAportesScreen(
                 )
             }
 
-
             Text(
                 text = "Mis aportes",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = DarkGreen,
-                modifier = Modifier.align(
-                    Alignment.Center
-                )
+                modifier = Modifier.align(Alignment.Center)
             )
         }
 
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+        Spacer(modifier = Modifier.height(12.dp))
 
 
         // ====================================================
@@ -190,46 +256,46 @@ fun MisAportesScreen(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-
             PeriodSelector(
                 selected = selectedRange,
-                onSelected = {
-                    selectedRange = it
-                }
+                onSelected = { selectedRange = it }
             )
         }
 
 
-        Spacer(
-            modifier = Modifier.height(25.dp)
-        )
+        Spacer(modifier = Modifier.height(25.dp))
 
 
         // ====================================================
         // GRÁFICA
         // ====================================================
 
-        ContributionChart()
-
-
-        Spacer(
-            modifier = Modifier.height(30.dp)
+        ContributionChart(
+            resumen = resumen,
+            totalKg = totalKg
         )
+
+        if (totalKg == 0.0) {
+            Text(
+                text = "Aún no tienes aportes en este período",
+                fontSize = 13.sp,
+                color = SecondaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+
+        Spacer(modifier = Modifier.height(30.dp))
 
 
         // ====================================================
         // LISTA DE MATERIALES
         // ====================================================
 
-        aportes.forEach { aporte ->
-
-            ContributionCard(
-                item = aporte
-            )
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
+        resumen.forEach { item ->
+            ContributionCard(item = item)
+            Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }
@@ -241,74 +307,45 @@ fun MisAportesScreen(
 
 @Composable
 private fun PeriodSelector(
-    selected: String,
-    onSelected: (String) -> Unit
+    selected: PeriodoAportes,
+    onSelected: (PeriodoAportes) -> Unit
 ) {
-
-    val options = listOf(
-        "1 semana",
-        "1 mes",
-        "Todo"
-    )
-
 
     Card(
         modifier = Modifier
             .width(210.dp)
             .height(38.dp),
-
         shape = RoundedCornerShape(50.dp),
-
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
 
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(4.dp),
-
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            options.forEach { option ->
+            PeriodoAportes.values().forEach { option ->
 
-                val isSelected =
-                    selected == option
-
+                val isSelected = selected == option
 
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(30.dp)
                         .background(
-                            color = if (isSelected) {
-                                Color(0xFFDDEED3)
-                            } else {
-                                Color.Transparent
-                            },
+                            color = if (isSelected) Color(0xFFDDEED3) else Color.Transparent,
                             shape = RoundedCornerShape(50.dp)
                         )
-                        .clickable {
-                            onSelected(option)
-                        },
-
+                        .clickable { onSelected(option) },
                     contentAlignment = Alignment.Center
                 ) {
-
                     Text(
-                        text = option,
+                        text = option.etiqueta,
                         fontSize = 9.sp,
-                        color = if (isSelected) {
-                            MainGreen
-                        } else {
-                            SecondaryText
-                        }
+                        color = if (isSelected) MainGreen else SecondaryText
                     )
                 }
             }
@@ -322,91 +359,74 @@ private fun PeriodSelector(
 // ============================================================
 
 @Composable
-private fun ContributionChart() {
+private fun ContributionChart(
+    resumen: List<ResumenMaterial>,
+    totalKg: Double
+) {
+
+    val conDatos = resumen.filter { it.kg > 0 }
+    val gap = if (conDatos.size > 1) 3f else 0f
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(285.dp),
+            .height(300.dp),
         contentAlignment = Alignment.Center
     ) {
 
-        Canvas(
-            modifier = Modifier.size(225.dp)
-        ) {
+        // ---------------- ANILLO ----------------
 
-            val strokeWidth =
-                38.dp.toPx()
+        Canvas(modifier = Modifier.size(225.dp)) {
 
-            val values =
-                listOf(
-                    15.5f,
-                    40f,
-                    15f,
-                    9.5f,
-                    11f
-                )
+            val strokeWidth = 38.dp.toPx()
+            val inset = strokeWidth / 2f
 
-            val colors =
-                listOf(
-                    GlassGreen,
-                    PaperGreen,
-                    MetalGreen,
-                    OtherGreen,
-                    PlasticGreen
-                )
+            // El anillo se dibuja hacia adentro para que no se salga del cuadro
+            val topLeft = Offset(inset, inset)
+            val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
 
-
-            val total =
-                values.sum()
-
-
-            var startAngle =
-                -90f
-
-
-            values.forEachIndexed { index, value ->
-
-                val fullSweep =
-                    (value / total) * 360f
-
-
-                val gap =
-                    3f
-
+            if (conDatos.isEmpty()) {
 
                 drawArc(
-                    color = colors[index],
-
-                    startAngle = startAngle,
-
-                    sweepAngle =
-                        fullSweep - gap,
-
+                    color = EmptyRing,
+                    startAngle = 0f,
+                    sweepAngle = 360f,
                     useCenter = false,
-
-                    style = Stroke(
-                        width = strokeWidth,
-                        cap = StrokeCap.Butt
-                    )
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidth)
                 )
 
+            } else {
 
-                startAngle += fullSweep
+                var startAngle = -90f
+
+                conDatos.forEach { item ->
+
+                    val fullSweep = (item.porcentaje / 100f) * 360f
+
+                    drawArc(
+                        color = item.color,
+                        startAngle = startAngle,
+                        sweepAngle = (fullSweep - gap).coerceAtLeast(0f),
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+                    )
+
+                    startAngle += fullSweep
+                }
             }
         }
 
 
-        // ====================================================
-        // CENTRO
-        // ====================================================
+        // ---------------- CENTRO ----------------
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
             Text(
-                text = "15 Kg",
+                text = formatKg(totalKg),
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Medium,
                 color = DarkGreen
@@ -420,77 +440,35 @@ private fun ContributionChart() {
         }
 
 
-        // ====================================================
-        // ETIQUETAS
-        // ====================================================
+        // ---------------- ETIQUETAS (según el ángulo de cada porción) ----------------
 
-        Text(
-            text = "15,5%\nVidrio",
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
-            color = GlassGreen,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(
-                    start = 22.dp,
-                    top = 22.dp
+        var inicio = -90f
+
+        conDatos.forEach { item ->
+
+            val sweep = (item.porcentaje / 100f) * 360f
+
+            // Las porciones muy pequeñas no llevan etiqueta (se leen en la lista de abajo)
+            if (item.porcentaje >= 4f) {
+
+                val medio = Math.toRadians((inicio + sweep / 2f).toDouble())
+                val radio = 140f
+
+                val x = (radio * cos(medio)).toFloat()
+                val y = (radio * sin(medio)).toFloat()
+
+                Text(
+                    text = "${formatPorcentaje(item.porcentaje)}\n${item.titulo}",
+                    fontSize = 10.sp,
+                    lineHeight = 12.sp,
+                    textAlign = TextAlign.Center,
+                    color = if (item.color.luminance() > 0.4f) SecondaryText else item.color,
+                    modifier = Modifier.offset(x = x.dp, y = y.dp)
                 )
-        )
+            }
 
-
-        Text(
-            text = "40%\nPapel",
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
-            color = PaperGreen,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(
-                    end = 18.dp,
-                    top = 45.dp
-                )
-        )
-
-
-        Text(
-            text = "15%\nMetal",
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
-            color = MetalGreen,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(
-                    end = 20.dp,
-                    bottom = 25.dp
-                )
-        )
-
-
-        Text(
-            text = "11%\nPlástico",
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
-            color = PlasticGreen,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(
-                    start = 15.dp,
-                    bottom = 50.dp
-                )
-        )
-
-
-        Text(
-            text = "9,5%\nOtros",
-            fontSize = 10.sp,
-            lineHeight = 12.sp,
-            color = OtherGreen,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-        )
+            inicio += sweep
+        }
     }
 }
 
@@ -501,38 +479,24 @@ private fun ContributionChart() {
 
 @Composable
 private fun ContributionCard(
-    item: ContributionItem
+    item: ResumenMaterial
 ) {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp),
-
         shape = RoundedCornerShape(4.dp),
-
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
 
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    horizontal = 14.dp
-                ),
-
+                .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // =================================================
-            // ICONO TEMPORAL
-            // =================================================
 
             Box(
                 modifier = Modifier
@@ -541,61 +505,42 @@ private fun ContributionCard(
                         color = Color(0xFFF5F6F3),
                         shape = RoundedCornerShape(6.dp)
                     ),
-
                 contentAlignment = Alignment.Center
             ) {
-
-                Image(
-                    painter = painterResource(
-                        id = item.imageRes
-                    ),
-                    contentDescription = item.title,
-                    modifier = Modifier.size(42.dp),
-                    contentScale = ContentScale.Fit
-                )
+                if (item.imageRes != null) {
+                    Image(
+                        painter = painterResource(id = item.imageRes),
+                        contentDescription = item.titulo,
+                        modifier = Modifier.size(42.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Text(text = "•••", fontSize = 14.sp, color = SecondaryText)
+                }
             }
 
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Spacer(
-                modifier = Modifier.width(16.dp)
-            )
-
-
-            // =================================================
-            // NOMBRE Y PESO
-            // =================================================
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
 
                 Text(
-                    text = item.title,
+                    text = item.titulo,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = DarkGreen
                 )
 
-
                 Text(
-                    text = item.kilograms,
+                    text = formatKg(item.kg),
                     fontSize = 12.sp,
                     color = SecondaryText
                 )
             }
 
-
-            // =================================================
-            // PUNTO
-            // =================================================
-
             Box(
                 modifier = Modifier
                     .size(16.dp)
-                    .background(
-                        color = item.color,
-                        shape = RoundedCornerShape(50.dp)
-                    )
+                    .background(color = item.color, shape = RoundedCornerShape(50.dp))
             )
         }
     }
@@ -603,7 +548,7 @@ private fun ContributionCard(
 
 
 // ============================================================
-// PREVIEW
+// PREVIEW (con datos de ejemplo para ver la gráfica funcionando)
 // ============================================================
 
 @Preview(
@@ -614,10 +559,20 @@ private fun ContributionCard(
 @Composable
 private fun MisAportesScreenPreview() {
 
-    RebottleTheme {
+    val ahora = System.currentTimeMillis()
+    val dia = 24L * 60L * 60L * 1000L
 
-        MisAportesScreen(
-            controller = rememberNavController()
+    RebottleTheme {
+        MisAportesContent(
+            controller = rememberNavController(),
+            aportes = listOf(
+                Aporte("Plástico", 3.0, ahora - 2 * dia),
+                Aporte("Vidrio", 3.2, ahora - 5 * dia),
+                Aporte("Papel", 6.0, ahora - 10 * dia),
+                Aporte("Metal", 3.6, ahora - 20 * dia),
+                Aporte("Cartón", 1.5, ahora - 1 * dia),
+                Aporte("Textil", 1.4, ahora - 3 * dia)
+            )
         )
     }
 }
