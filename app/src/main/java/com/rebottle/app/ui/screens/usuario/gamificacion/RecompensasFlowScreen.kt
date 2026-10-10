@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ import com.rebottle.app.ui.theme.RebottleTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.PuntosModulos
 import com.rebottle.app.model.PuntosViewModel
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -123,7 +125,7 @@ private data class ItemQuis(
 
 private data class MedallaQuis(
     @DrawableRes val imagen: Int,
-    val desbloqueada: Boolean
+    val moduloId: String
 )
 
 
@@ -217,47 +219,15 @@ private val ropaQuis = listOf(
 // MEDALLAS
 // ============================================================
 
+// Cada medalla se desbloquea al completar su módulo (M1..M7)
 private val medallasQuis = listOf(
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_1,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_2,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_3,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_4,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_5,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_6,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_7,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_8,
-        desbloqueada = false
-    )
+    MedallaQuis(imagen = R.drawable.medalla_1, moduloId = PuntosModulos.M1),
+    MedallaQuis(imagen = R.drawable.medalla_2, moduloId = PuntosModulos.M2),
+    MedallaQuis(imagen = R.drawable.medalla_3, moduloId = PuntosModulos.M3),
+    MedallaQuis(imagen = R.drawable.medalla_4, moduloId = PuntosModulos.M4),
+    MedallaQuis(imagen = R.drawable.medalla_5, moduloId = PuntosModulos.M5),
+    MedallaQuis(imagen = R.drawable.medalla_6, moduloId = PuntosModulos.M6),
+    MedallaQuis(imagen = R.drawable.medalla_7, moduloId = PuntosModulos.M7)
 )
 
 
@@ -281,7 +251,11 @@ fun RecompensasFlowScreen(
     RecompensasFlowContent(
         controller = controller,
         puntos = puntosState.puntosTotales.toInt(),
-        nivel = 6
+        nivel = 6,
+        modulosCompletados =
+            puntosState.modulosCompletados
+                .map { it.moduloId }
+                .toSet()
     )
 }
 
@@ -292,7 +266,8 @@ fun RecompensasFlowScreen(
 private fun RecompensasFlowContent(
     controller: NavController,
     puntos: Int,
-    nivel: Int
+    nivel: Int,
+    modulosCompletados: Set<String> = emptySet()
 ) {
 
     var step by remember {
@@ -314,6 +289,7 @@ private fun RecompensasFlowContent(
             RecompensasScreen(
                 puntos = puntos,
                 nivel = nivel,
+                modulosCompletados = modulosCompletados,
 
                 onBack = {
                     controller.popBackStack()
@@ -376,6 +352,7 @@ private fun RecompensasFlowContent(
 private fun RecompensasScreen(
     puntos: Int,
     nivel: Int,
+    modulosCompletados: Set<String> = emptySet(),
     onBack: () -> Unit,
     onRedimirClick: () -> Unit
 ) {
@@ -530,7 +507,10 @@ private fun RecompensasScreen(
                 )
 
 
-                MedallasGrid()
+                MedallasGrid(
+                    modulosCompletados =
+                        modulosCompletados
+                )
 
 
                 Spacer(
@@ -551,12 +531,11 @@ private fun RecompensasScreen(
 }
 
 
-// ============================================================
-// MEDALLAS
-// ============================================================
 
 @Composable
-private fun MedallasGrid() {
+private fun MedallasGrid(
+    modulosCompletados: Set<String>
+) {
 
     medallasQuis
         .chunked(3)
@@ -567,7 +546,7 @@ private fun MedallasGrid() {
                     Modifier.fillMaxWidth(),
 
                 horizontalArrangement =
-                    Arrangement.SpaceEvenly
+                    Arrangement.spacedBy(8.dp)
             ) {
 
                 fila.forEach { medalla ->
@@ -583,14 +562,17 @@ private fun MedallasGrid() {
                             "Medalla",
 
                         modifier = Modifier
-                            .size(110.dp)
+                            .weight(1f)
+                            .aspectRatio(1f)
                             .alpha(
+                                // Bloqueada (50%) hasta completar su módulo
                                 if (
-                                    medalla.desbloqueada
+                                    medalla.moduloId in
+                                    modulosCompletados
                                 ) {
                                     1f
                                 } else {
-                                    0.35f
+                                    0.5f
                                 }
                             ),
 
@@ -608,9 +590,7 @@ private fun MedallasGrid() {
 
                         Spacer(
                             modifier =
-                                Modifier.size(
-                                    72.dp
-                                )
+                                Modifier.weight(1f)
                         )
                     }
                 }
@@ -1536,6 +1516,7 @@ private fun RecompensasPreview() {
         RecompensasScreen(
             puntos = 520,
             nivel = 6,
+            modulosCompletados = setOf("M1", "M2", "M3"),
             onBack = {},
             onRedimirClick = {}
         )
