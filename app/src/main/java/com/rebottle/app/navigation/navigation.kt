@@ -277,6 +277,9 @@ fun Navigation() {
                 puntosViewModel = puntosViewModel
             )
         }
+        composable(route = AppScreens.ranking.name) {
+            RankingScreen(controller = navController)
+        }
         composable(route = AppScreens.moduleSeven.name) {
             ModuleSevenFlowScreen(
                 onBackToRoadmap = { navController.popBackStack() },
