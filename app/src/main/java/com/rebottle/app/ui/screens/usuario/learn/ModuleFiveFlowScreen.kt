@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -220,6 +221,13 @@ private fun ModuleFiveIntroScreen(
                 .clickable {
                     onBack()
                 }
+        )
+        Image(
+            painter = painterResource(id = R.drawable.m5_basura),
+            contentDescription = "Ilustración de completado",
+            modifier = Modifier
+                .size(530.dp)
+                .offset(y = 160.dp)
         )
 
 
@@ -1250,4 +1258,4 @@ private fun M5CompletePreview() {
     ModuleFiveCompleteScreen(
         onFinish = {}
     )
-}
+}

@@ -210,6 +210,14 @@ private fun ModuleFourIntroScreen(
                     onBack()
                 }
         )
+        Image(
+            painter = painterResource(id = R.drawable.m4_reto),
+            contentDescription = "Ilustración de completado",
+            modifier = Modifier
+                .size(530.dp)
+                .offset(y = 160.dp)
+        )
+
 
         Column(
             modifier = Modifier
