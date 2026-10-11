@@ -26,6 +26,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,9 +47,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
+import com.rebottle.app.model.Solicitud
+import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.model.cuentaComoAporte
 import com.rebottle.app.ui.theme.RebottleTheme
 import java.text.Normalizer
 import java.util.Locale
@@ -170,9 +176,28 @@ private fun formatDecimal(valor: Double): String {
     }
 }
 
-private fun formatKg(kg: Double) = "${formatDecimal(kg)} Kg"
+internal fun formatKg(kg: Double) = "${formatDecimal(kg)} Kg"
 
-private fun formatPorcentaje(p: Float) = "${formatDecimal(p.toDouble())}%"
+internal fun formatPorcentaje(p: Float) = "${formatDecimal(p.toDouble())}%"
+
+
+/** Material que más ha reciclado el usuario (para la tarjeta del Perfil). */
+data class MaterialPrincipal(
+    val nombre: String,
+    val kg: Double,
+    val porcentaje: Float
+)
+
+/**
+ * Usa el mismo cálculo que esta pantalla (período "Todo"), así el
+ * Perfil y Mis aportes siempre muestran los mismos números.
+ * null si todavía no hay aportes.
+ */
+fun materialPrincipal(solicitudes: List<Solicitud>): MaterialPrincipal? =
+    resumir(aportesDesde(solicitudes), PeriodoAportes.TODO)
+        .filter { it.kg > 0 }
+        .maxByOrNull { it.kg }
+        ?.let { MaterialPrincipal(it.titulo, it.kg, it.porcentaje) }
 
 
 // ============================================================
@@ -181,15 +206,43 @@ private fun formatPorcentaje(p: Float) = "${formatDecimal(p.toDouble())}%"
 
 @Composable
 fun MisAportesScreen(
-    controller: NavController
+    controller: NavController,
+    model: SolicitudViewModel = viewModel()
 ) {
-    // TODO (siguiente paso): reemplazar por los aportes reales
-    // que salen de las solicitudes completadas en Firestore.
+    // Aportes reales: salen de las solicitudes del usuario
+    val state by model.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        model.escucharSolicitudesUsuario()
+    }
+
+    val aportes = remember(state.solicitudes) {
+        aportesDesde(state.solicitudes)
+    }
+
     MisAportesContent(
         controller = controller,
-        aportes = emptyList()
+        aportes = aportes
     )
 }
+
+
+/**
+ * Convierte cada solicitud (no cancelada) en aportes por material.
+ * La solicitud guarda un solo peso para todos sus materiales, así
+ * que los kg se reparten por igual entre ellos.
+ */
+private fun aportesDesde(solicitudes: List<Solicitud>): List<Aporte> =
+    solicitudes
+        .filter { it.cuentaComoAporte() && it.materiales.isNotEmpty() }
+        .flatMap { solicitud ->
+            val kgPorMaterial = solicitud.pesoKg.toDouble() / solicitud.materiales.size
+            val fecha = solicitud.creadaEn?.toDate()?.time ?: System.currentTimeMillis()
+
+            solicitud.materiales.map { material ->
+                Aporte(material = material, kg = kgPorMaterial, fechaMillis = fecha)
+            }
+        }
 
 @Composable
 private fun MisAportesContent(

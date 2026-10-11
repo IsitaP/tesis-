@@ -85,6 +85,12 @@ data class Solicitud(
 )
 
 
+// Las solicitudes canceladas no suman kg, recolecciones
+// ni aportes; todas las demás sí.
+fun Solicitud.cuentaComoAporte(): Boolean =
+    !estado.equals(EstadoSolicitud.CANCELADA.name, ignoreCase = true)
+
+
 // ============================================================
 // ESTADO GENERAL
 // ============================================================

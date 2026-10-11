@@ -62,6 +62,7 @@ import com.rebottle.app.R
 import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudState
 import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.model.cuentaComoAporte
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.usuario.inicio.ReBottleBottomBar
 import com.rebottle.app.ui.theme.RebottleTheme
@@ -105,12 +106,12 @@ fun SolicitudesUsuarioScreenContent(
 ) {
     var busqueda by remember { mutableStateOf("") }
 
-    val solicitudesCompletadas = state.solicitudes.filter { solicitud ->
-        solicitud.estado.equals("COMPLETADA", ignoreCase = true)
-    }
+    // Total neto de kg (sin separar por material) y número de
+    // recolecciones, contando todas menos las canceladas
+    val solicitudesValidas = state.solicitudes.filter { it.cuentaComoAporte() }
 
-    val totalKilos = solicitudesCompletadas.sumOf { it.pesoKg }
-    val totalRecolecciones = solicitudesCompletadas.size
+    val totalKilos = solicitudesValidas.sumOf { it.pesoKg }
+    val totalRecolecciones = solicitudesValidas.size
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
