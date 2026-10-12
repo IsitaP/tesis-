@@ -62,6 +62,8 @@ data class Solicitud(
 
     val creadaEn: Timestamp? = null,
 
+    val completadaEn: Timestamp? = null,
+
     // ========================================================
     // UBICACIÓN GOOGLE PLACES
     // ========================================================
@@ -946,6 +948,10 @@ class SolicitudViewModel : ViewModel() {
                                     creadaEn =
                                         document.getTimestamp(
                                             "creadaEn"
+                                        ),
+                                    completadaEn =
+                                        document.getTimestamp(
+                                            "completadaEn"
                                         )
                                 )
                             }
@@ -1036,6 +1042,36 @@ class SolicitudViewModel : ViewModel() {
 
                     exception.message
                         ?: "Error al cancelar la solicitud"
+                )
+            }
+    }
+    // ========================================================
+    // MARCAR SOLICITUD COMO RECOLECTADA
+    // ========================================================
+
+    fun marcarRecolectada(
+
+        solicitudId: String,
+
+        onSuccess: () -> Unit = {},
+
+        onError: (String) -> Unit = {}
+    ) {
+
+        firestore
+            .collection("solicitudes")
+            .document(solicitudId)
+            .update(
+                mapOf(
+                    "estado" to EstadoSolicitud.RECOLECTADA.name,
+                    "completadaEn" to FieldValue.serverTimestamp()
+                )
+            )
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { exception ->
+                onError(
+                    exception.message
+                        ?: "Error al completar la solicitud"
                 )
             }
     }

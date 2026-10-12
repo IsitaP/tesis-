@@ -53,6 +53,12 @@ import java.text.Normalizer
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.EstadoSolicitud
+import com.rebottle.app.model.Solicitud
+import com.rebottle.app.model.SolicitudViewModel
 
 
 // ============================================================
@@ -181,20 +187,53 @@ private fun formatPorcentaje(p: Float) = "${formatDecimal(p.toDouble())}%"
 
 @Composable
 fun MisAportesScreen(
-    controller: NavController
+    controller: NavController,
+    model: SolicitudViewModel = viewModel()
 ) {
-    // TODO (siguiente paso): reemplazar por los aportes reales
-    // que salen de las solicitudes completadas en Firestore.
+    val state by model.state.collectAsState()
+
+    val aportes = remember(state.solicitudes) {
+        state.solicitudes
+            .filter { it.estado == EstadoSolicitud.RECOLECTADA.name }
+            .flatMap { it.aAportes() }
+    }
+
     MisAportesContent(
         controller = controller,
-        aportes = emptyList()
+        aportes = aportes,
+        cargando = state.isHistoryLoading,
+        error = state.historyError
     )
+}
+
+/**
+ * Una solicitud tiene un peso total y varios materiales.
+ * Se reparte en partes iguales entre sus materiales.
+ * La fecha es la de completada; si falta, usa la de creación.
+ */
+private fun Solicitud.aAportes(): List<Aporte> {
+    if (materiales.isEmpty() || pesoKg <= 0) return emptyList()
+
+    val fecha = (completadaEn ?: creadaEn)?.toDate()?.time
+        ?: return emptyList()
+
+    val kgPorMaterial = pesoKg.toDouble() / materiales.size
+
+    return materiales.map { material ->
+        Aporte(
+            material = material,
+            kg = kgPorMaterial,
+            fechaMillis = fecha
+        )
+    }
 }
 
 @Composable
 private fun MisAportesContent(
     controller: NavController,
-    aportes: List<Aporte>
+    aportes: List<Aporte>,
+    cargando: Boolean = false,
+    error: String = ""
 ) {
 
     var selectedRange by remember { mutableStateOf(PeriodoAportes.MES) }
@@ -275,8 +314,26 @@ private fun MisAportesContent(
             totalKg = totalKg
         )
 
-        if (totalKg == 0.0) {
-            Text(
+        when {
+            cargando -> Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MainGreen,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            error.isNotEmpty() -> Text(
+                text = error,
+                fontSize = 13.sp,
+                color = SecondaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            totalKg == 0.0 -> Text(
                 text = "Aún no tienes aportes en este período",
                 fontSize = 13.sp,
                 color = SecondaryText,
