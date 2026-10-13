@@ -582,7 +582,7 @@ private fun LearnCard(
 
                 Image(
                     painter = painterResource(
-                        id = R.drawable.home_learn
+                        id = R.drawable.home_learn1
                     ),
 
                     contentDescription = "Rocco reciclando",
