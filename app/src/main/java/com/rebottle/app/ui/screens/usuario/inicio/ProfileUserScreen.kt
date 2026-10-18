@@ -40,6 +40,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -70,6 +72,12 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import com.rebottle.app.R
 import com.rebottle.app.model.PerfilCache
+import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.model.cuentaComoAporte
+import com.rebottle.app.ui.screens.usuario.gamificacion.MaterialPrincipal
+import com.rebottle.app.ui.screens.usuario.gamificacion.formatKg
+import com.rebottle.app.ui.screens.usuario.gamificacion.formatPorcentaje
+import com.rebottle.app.ui.screens.usuario.gamificacion.materialPrincipal
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
@@ -88,7 +96,8 @@ private val SecondaryText = Color(0xFF7F887A)
 
 @Composable
 fun ProfileUserScreen(
-    controller: NavController
+    controller: NavController,
+    solicitudViewModel: SolicitudViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -101,9 +110,17 @@ fun ProfileUserScreen(
     var cargando by remember { mutableStateOf(true) }
     var subiendoFoto by remember { mutableStateOf(false) }
 
+    // Recolecciones reales: mismas que en Solicitudes (sin canceladas)
+    val solicitudState by solicitudViewModel.state.collectAsState()
+    val totalRecolecciones = solicitudState.solicitudes.count { it.cuentaComoAporte() }
+    val principal = remember(solicitudState.solicitudes) {
+        materialPrincipal(solicitudState.solicitudes)
+    }
+
     LaunchedEffect(uid) {
         if (uid != null) {
             PerfilCache.cargar(uid)
+            solicitudViewModel.escucharSolicitudesUsuario()
 
             Firebase.firestore.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
@@ -234,7 +251,10 @@ fun ProfileUserScreen(
                     Text(text = "Ver más →", fontSize = 14.sp, color = MainGreen)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                ProfileUsuarioSummaryCard()
+                ProfileUsuarioSummaryCard(
+                    totalRecolecciones = totalRecolecciones,
+                    principal = principal
+                )
                 Spacer(modifier = Modifier.height(25.dp))
             }
         }
@@ -343,7 +363,10 @@ private fun FotoPerfilUsuario(selectedImageBitmap: ImageBitmap?) {
 
 
 @Composable
-private fun ProfileUsuarioSummaryCard() {
+private fun ProfileUsuarioSummaryCard(
+    totalRecolecciones: Int,
+    principal: MaterialPrincipal?
+) {
     Card(
         modifier = Modifier.fillMaxWidth().height(160.dp),
         shape = RoundedCornerShape(13.dp),
@@ -361,17 +384,24 @@ private fun ProfileUsuarioSummaryCard() {
                 )
                 Spacer(modifier = Modifier.width(20.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "8 Kg", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
-                    Text(text = "Plástico", fontSize = 14.sp, color = SecondaryText)
+                    // Material que más recicla y sus kg
+                    Text(text = formatKg(principal?.kg ?: 0.0), fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
+                    Text(text = principal?.nombre ?: "Sin aportes", fontSize = 14.sp, color = SecondaryText)
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "13,5%", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
+                    // Qué porcentaje de todo su reciclaje es ese material
+                    Text(text = formatPorcentaje(principal?.porcentaje ?: 0f), fontSize = 20.sp, fontWeight = FontWeight.Medium, color = DarkGreen)
                     Text(text = "Reciclaje", fontSize = 14.sp, color = SecondaryText)
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "20 recolecciones realizadas", fontSize = 15.sp, color = SecondaryText)
+            Text(
+                text = if (totalRecolecciones == 1) "1 recolección realizada"
+                else "$totalRecolecciones recolecciones realizadas",
+                fontSize = 15.sp,
+                color = SecondaryText
+            )
         }
     }
 }

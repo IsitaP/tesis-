@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -38,6 +39,7 @@ private val ShadowGreen = Color(0xFF78835D)
 
 @Composable
 fun LearnRoadmapScreen(
+    modulosCompletados: Set<String> = emptySet(),
     onBack: () -> Unit,
     onM1Click: () -> Unit,
     onM2Click: () -> Unit,
@@ -47,6 +49,10 @@ fun LearnRoadmapScreen(
     onM6Click: () -> Unit,
     onM7Click: () -> Unit,
 ) {
+
+    // Un módulo se bloquea hasta completar el anterior (M1 siempre abierto)
+    fun bloqueado(numero: Int): Boolean =
+        numero > 1 && "M${numero - 1}" !in modulosCompletados
 
     Column(
         modifier = Modifier
@@ -118,6 +124,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M1",
+                bloqueado = bloqueado(1),
                 x = 20.dp,
                 y = 115.dp,
                 onClick={
@@ -127,6 +134,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M2",
+                bloqueado = bloqueado(2),
                 x = 265.dp,
                 y = 230.dp,
                 onClick={
@@ -136,6 +144,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M3",
+                bloqueado = bloqueado(3),
                 x = 5.dp,
                 y = 350.dp,
                 onClick={
@@ -145,6 +154,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M4",
+                bloqueado = bloqueado(4),
                 x = 260.dp,
                 y = 455.dp,
                 onClick={
@@ -154,6 +164,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M5",
+                bloqueado = bloqueado(5),
                 x = 20.dp,
                 y = 560.dp,
                 onClick={
@@ -163,6 +174,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M6",
+                bloqueado = bloqueado(6),
                 x = 265.dp,
                 y = 665.dp,
                 onClick={
@@ -172,6 +184,7 @@ fun LearnRoadmapScreen(
 
             ModuleButton(
                 text = "M7",
+                bloqueado = bloqueado(7),
                 x = 5.dp,
                 y = 780.dp,
                 onClick={
@@ -189,6 +202,7 @@ private fun ModuleButton(
     text: String,
     x: androidx.compose.ui.unit.Dp,
     y: androidx.compose.ui.unit.Dp,
+    bloqueado: Boolean = false,
     onClick: () -> Unit = {}
 ) {
 
@@ -197,6 +211,9 @@ private fun ModuleButton(
             .offset(
                 x = x,
                 y = y
+            )
+            .alpha(
+                if (bloqueado) 0.5f else 1f
             )
     ) {
 
@@ -219,7 +236,9 @@ private fun ModuleButton(
         Card(
             modifier = Modifier
                 .size(85.dp)
-                .clickable {
+                .clickable(
+                    enabled = !bloqueado
+                ) {
                     onClick()
                 },
             shape = CircleShape,

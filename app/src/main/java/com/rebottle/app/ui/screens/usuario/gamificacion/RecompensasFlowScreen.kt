@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ import com.rebottle.app.ui.theme.RebottleTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.PuntosModulos
 import com.rebottle.app.model.PuntosViewModel
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -60,6 +62,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.text.style.TextDecoration
 import kotlin.math.cos
 import kotlin.math.sin
@@ -94,170 +97,28 @@ private enum class RecompensaStep {
     FINAL
 }
 
-
-// ============================================================
-// CATEGORÍAS
-// ============================================================
-
-private enum class CategoriaQuis {
-    ROPA,
-    ACCESORIOS
-}
-
-
-// ============================================================
-// MODELO ITEM
-// ============================================================
-
-private data class ItemQuis(
-    val id: String,
-    val nombre: String,
-    val precio: Int,
-    @DrawableRes val imagen: Int
-)
-
-
 // ============================================================
 // MODELO MEDALLA
 // ============================================================
 
 private data class MedallaQuis(
     @DrawableRes val imagen: Int,
-    val desbloqueada: Boolean
+    val moduloId: String
 )
-
-
-// ============================================================
-// ACCESORIOS
-// ============================================================
-
-private val accesoriosQuis = listOf(
-
-    ItemQuis(
-        id = "guantes",
-        nombre = "Guantes",
-        precio = 0,
-        imagen = R.drawable.acc_guantes
-    ),
-
-    ItemQuis(
-        id = "gafas_fruta",
-        nombre = "Gafas",
-        precio = 25,
-        imagen = R.drawable.acc_gafas_fruta
-    ),
-
-    ItemQuis(
-        id = "gafas_estrellas",
-        nombre = "Gafas de estrellas",
-        precio = 40,
-        imagen = R.drawable.acc_gafas_estrellas
-    ),
-
-    ItemQuis(
-        id = "bufanda",
-        nombre = "Bufanda",
-        precio = 50,
-        imagen = R.drawable.acc_bufanda
-    ),
-
-    ItemQuis(
-        id = "sombrero",
-        nombre = "Sombrero",
-        precio = 100,
-        imagen = R.drawable.acc_sombrero
-    ),
-
-    ItemQuis(
-        id = "casco",
-        nombre = "Casco",
-        precio = 100,
-        imagen = R.drawable.acc_casco
-    ),
-
-    ItemQuis(
-        id = "pato",
-        nombre = "Pato",
-        precio = 120,
-        imagen = R.drawable.acc_pato
-    )
-)
-
-
-// ============================================================
-// ROPA
-// ============================================================
-
-private val ropaQuis = listOf(
-
-    ItemQuis(
-        id = "tenis",
-        nombre = "Tenis",
-        precio = 110,
-        imagen = R.drawable.ropa_tenis
-    ),
-
-    ItemQuis(
-        id = "camisa",
-        nombre = "Camisa",
-        precio = 120,
-        imagen = R.drawable.ropa_camisa
-    ),
-
-    ItemQuis(
-        id = "chaleco",
-        nombre = "Chaleco",
-        precio = 120,
-        imagen = R.drawable.ropa_chaleco
-    )
-)
-
 
 // ============================================================
 // MEDALLAS
 // ============================================================
 
+// Cada medalla se desbloquea al completar su módulo (M1..M7)
 private val medallasQuis = listOf(
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_1,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_2,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_3,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_4,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_5,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_6,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_7,
-        desbloqueada = true
-    ),
-
-    MedallaQuis(
-        imagen = R.drawable.medalla_8,
-        desbloqueada = false
-    )
+    MedallaQuis(imagen = R.drawable.medalla_1, moduloId = PuntosModulos.M1),
+    MedallaQuis(imagen = R.drawable.medalla_2, moduloId = PuntosModulos.M2),
+    MedallaQuis(imagen = R.drawable.medalla_3, moduloId = PuntosModulos.M3),
+    MedallaQuis(imagen = R.drawable.medalla_4, moduloId = PuntosModulos.M4),
+    MedallaQuis(imagen = R.drawable.medalla_5, moduloId = PuntosModulos.M5),
+    MedallaQuis(imagen = R.drawable.medalla_6, moduloId = PuntosModulos.M6),
+    MedallaQuis(imagen = R.drawable.medalla_7, moduloId = PuntosModulos.M7)
 )
 
 
@@ -281,7 +142,11 @@ fun RecompensasFlowScreen(
     RecompensasFlowContent(
         controller = controller,
         puntos = puntosState.puntosTotales.toInt(),
-        nivel = 6
+        nivel = 6,
+        modulosCompletados =
+            puntosState.modulosCompletados
+                .map { it.moduloId }
+                .toSet()
     )
 }
 
@@ -292,7 +157,8 @@ fun RecompensasFlowScreen(
 private fun RecompensasFlowContent(
     controller: NavController,
     puntos: Int,
-    nivel: Int
+    nivel: Int,
+    modulosCompletados: Set<String> = emptySet()
 ) {
 
     var step by remember {
@@ -300,26 +166,47 @@ private fun RecompensasFlowContent(
             RecompensaStep.RECOMPENSAS
         )
     }
+    var saldoPuntos by remember(puntos) {
+        mutableStateOf(puntos)
+    }
 
+    val comprados = remember {
+        mutableStateMapOf<String, Boolean>()
+    }
 
-    var itemSeleccionado by remember {
-        mutableStateOf<ItemQuis?>(null)
+// El artículo gratis ya se considera comprado
+    LaunchedEffect(Unit) {
+        comprados["guantes"] = true
+    }
+
+    // ========================================================
+    // ARTÍCULOS EQUIPADOS
+    // ========================================================
+
+    val equipados = remember {
+        mutableStateMapOf<SlotQuis, ItemQuis>()
     }
 
 
     when (step) {
 
+        // ====================================================
+        // RECOMPENSAS
+        // ====================================================
+
         RecompensaStep.RECOMPENSAS -> {
 
             RecompensasScreen(
-                puntos = puntos,
+                puntos = saldoPuntos,
                 nivel = nivel,
+                modulosCompletados = modulosCompletados,
 
                 onBack = {
                     controller.popBackStack()
                 },
 
                 onRedimirClick = {
+
                     step =
                         RecompensaStep.PERSONALIZAR
                 }
@@ -327,10 +214,19 @@ private fun RecompensasFlowContent(
         }
 
 
+        // ====================================================
+        // PERSONALIZAR
+        // ====================================================
+
         RecompensaStep.PERSONALIZAR -> {
 
             PersonalizarQuisScreen(
-                puntos = puntos,
+
+                puntos = saldoPuntos,
+
+                equipados = equipados,
+
+                comprados = comprados.keys,
 
                 onBack = {
                     step =
@@ -339,8 +235,59 @@ private fun RecompensasFlowContent(
 
                 onItemClick = { item ->
 
-                    itemSeleccionado = item
+                    val actual =
+                        equipados[item.slot]
 
+                    val yaComprado =
+                        comprados[item.id] == true
+
+                    // =================================================
+                    // SI YA ESTÁ COMPRADO
+                    // =================================================
+
+                    if (yaComprado) {
+
+                        // Si toca el mismo que ya tiene puesto,
+                        // se lo quita.
+                        if (actual?.id == item.id) {
+
+                            equipados.remove(
+                                item.slot
+                            )
+
+                        } else {
+
+                            // Si ya lo compró, se puede poner
+                            // sin volver a gastar puntos.
+                            equipados[item.slot] =
+                                item
+                        }
+
+                    } else {
+
+                        // =================================================
+                        // SI TODAVÍA NO LO HA COMPRADO
+                        // =================================================
+
+                        if (saldoPuntos >= item.precio) {
+
+                            // Descontamos los puntos
+                            saldoPuntos -= item.precio
+
+                            // Lo marcamos como comprado
+                            comprados[item.id] = true
+
+                            // Se lo ponemos a Quis
+                            equipados[item.slot] =
+                                item
+                        }
+
+                        // Si no alcanza el saldo,
+                        // no hace absolutamente nada.
+                    }
+                },
+
+                onFinalizar = {
                     step =
                         RecompensaStep.FINAL
                 }
@@ -348,15 +295,17 @@ private fun RecompensasFlowContent(
         }
 
 
+        // ====================================================
+        // FINAL
+        // ====================================================
+
         RecompensaStep.FINAL -> {
 
             RecompensaFinalScreen(
-                itemSeleccionado =
-                    itemSeleccionado,
+
+                equipados = equipados,
 
                 onFinalizar = {
-
-                    itemSeleccionado = null
 
                     step =
                         RecompensaStep.RECOMPENSAS
@@ -376,6 +325,7 @@ private fun RecompensasFlowContent(
 private fun RecompensasScreen(
     puntos: Int,
     nivel: Int,
+    modulosCompletados: Set<String> = emptySet(),
     onBack: () -> Unit,
     onRedimirClick: () -> Unit
 ) {
@@ -530,7 +480,10 @@ private fun RecompensasScreen(
                 )
 
 
-                MedallasGrid()
+                MedallasGrid(
+                    modulosCompletados =
+                        modulosCompletados
+                )
 
 
                 Spacer(
@@ -551,12 +504,11 @@ private fun RecompensasScreen(
 }
 
 
-// ============================================================
-// MEDALLAS
-// ============================================================
 
 @Composable
-private fun MedallasGrid() {
+private fun MedallasGrid(
+    modulosCompletados: Set<String>
+) {
 
     medallasQuis
         .chunked(3)
@@ -567,7 +519,7 @@ private fun MedallasGrid() {
                     Modifier.fillMaxWidth(),
 
                 horizontalArrangement =
-                    Arrangement.SpaceEvenly
+                    Arrangement.spacedBy(8.dp)
             ) {
 
                 fila.forEach { medalla ->
@@ -583,14 +535,17 @@ private fun MedallasGrid() {
                             "Medalla",
 
                         modifier = Modifier
-                            .size(110.dp)
+                            .weight(1f)
+                            .aspectRatio(1f)
                             .alpha(
+                                // Bloqueada (50%) hasta completar su módulo
                                 if (
-                                    medalla.desbloqueada
+                                    medalla.moduloId in
+                                    modulosCompletados
                                 ) {
                                     1f
                                 } else {
-                                    0.35f
+                                    0.5f
                                 }
                             ),
 
@@ -608,9 +563,7 @@ private fun MedallasGrid() {
 
                         Spacer(
                             modifier =
-                                Modifier.size(
-                                    72.dp
-                                )
+                                Modifier.weight(1f)
                         )
                     }
                 }
@@ -862,12 +815,22 @@ private fun IconoGlobo(
 
 @Composable
 private fun PersonalizarQuisScreen(
+
     puntos: Int,
+
+    equipados: Map<SlotQuis, ItemQuis>,
+
+    comprados: Set<String>,
+
     onBack: () -> Unit,
-    onItemClick: (ItemQuis) -> Unit
+
+    onItemClick: (ItemQuis) -> Unit,
+
+    onFinalizar: () -> Unit
 ) {
 
     var categoria by remember {
+
         mutableStateOf(
             CategoriaQuis.ACCESORIOS
         )
@@ -882,6 +845,7 @@ private fun PersonalizarQuisScreen(
         ) {
 
             accesoriosQuis
+
 
         } else {
 
@@ -959,6 +923,7 @@ private fun PersonalizarQuisScreen(
                         16.sp
                 )
 
+
                 Text(
                     text =
                         "Quis",
@@ -975,7 +940,9 @@ private fun PersonalizarQuisScreen(
             }
 
 
-            // PUNTOS ARRIBA
+            // =================================================
+            // PUNTOS
+            // =================================================
 
             Box(
                 modifier = Modifier
@@ -1038,30 +1005,19 @@ private fun PersonalizarQuisScreen(
 
         Spacer(
             modifier =
-                Modifier.height(5.dp)
+                Modifier.height(8.dp)
         )
 
 
         // ====================================================
-        // QUIS
+        // QUIS + ARTÍCULOS
         // ====================================================
 
-        Image(
-            painter =
-                painterResource(
-                    id =
-                        R.drawable.recompensas_quis
-                ),
-
-            contentDescription =
-                "Quis",
-
+        QuisPersonalizable(
+            equipados = equipados,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(170.dp),
-
-            contentScale =
-                ContentScale.Fit
+                .height(180.dp)
         )
 
 
@@ -1130,15 +1086,16 @@ private fun PersonalizarQuisScreen(
 
 
         // ====================================================
-        // GRID DE ITEMS
+        // ITEMS
         // ====================================================
 
         LazyVerticalGrid(
+
             columns =
                 GridCells.Fixed(2),
 
             modifier =
-                Modifier.fillMaxSize(),
+                Modifier.weight(1f),
 
             verticalArrangement =
                 Arrangement.spacedBy(
@@ -1160,24 +1117,146 @@ private fun PersonalizarQuisScreen(
                 }
             ) { item ->
 
+
+                val seleccionado =
+
+                    equipados[item.slot]
+                        ?.id ==
+                            item.id
+
+
                 ItemQuisCard(
-                    item =
-                        item,
+                    item = item,
 
                     puntosDisponibles =
                         puntos,
 
+                    seleccionado =
+                        seleccionado,
+
+                    comprado =
+                        item.id in comprados,
+
                     onClick = {
-                        onItemClick(
-                            item
-                        )
+                        onItemClick(item)
                     }
+                )
+            }
+        }
+
+
+        Spacer(
+            modifier =
+                Modifier.height(8.dp)
+        )
+
+
+        // ====================================================
+        // FINALIZAR
+        // ====================================================
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .background(
+                    color =
+                        RewardGreen,
+
+                    shape =
+                        RoundedCornerShape(
+                            10.dp
+                        )
+                )
+                .clickable {
+
+                    onFinalizar()
+                },
+
+            contentAlignment =
+                Alignment.Center
+        ) {
+
+            Text(
+                text =
+                    "Finalizar",
+
+                color =
+                    Color.White,
+
+                fontSize =
+                    13.sp
+            )
+        }
+
+
+        Spacer(
+            modifier =
+                Modifier.height(12.dp)
+        )
+    }
+}
+
+// ============================================================
+// QUIS PERSONALIZABLE
+// ============================================================
+
+@Composable
+private fun QuisPersonalizable(
+    equipados: Map<SlotQuis, ItemQuis>,
+    modifier: Modifier = Modifier
+) {
+
+    val ordenCapas = listOf(
+        SlotQuis.PIES,
+        SlotQuis.TORSO_BASE,
+        SlotQuis.TORSO_EXTERIOR,
+        SlotQuis.CUELLO,
+        SlotQuis.MANOS,
+        SlotQuis.OJOS,
+        SlotQuis.CABEZA,
+        SlotQuis.EXTRA
+    )
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+
+        // ================================================
+        // QUIS BASE
+        // ================================================
+
+        Image(
+            painter = painterResource(
+                id = R.drawable.quis_personalizar
+            ),
+            contentDescription = "Quis",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
+
+
+        // ================================================
+        // ACCESORIOS / ROPA ENCIMA DE QUIS
+        // ================================================
+
+        ordenCapas.forEach { slot ->
+
+            equipados[slot]?.let { item ->
+
+                Image(
+                    painter = painterResource(
+                        id = item.overlay
+                    ),
+                    contentDescription = item.nombre,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
                 )
             }
         }
     }
 }
-
 
 // ============================================================
 // BOTÓN CATEGORÍA
@@ -1247,12 +1326,17 @@ private fun CategoriaButton(
 private fun ItemQuisCard(
     item: ItemQuis,
     puntosDisponibles: Int,
+    seleccionado: Boolean,
+    comprado: Boolean,
     onClick: () -> Unit
 ) {
 
-    val puedeComprar =
-        puntosDisponibles >=
-                item.precio
+    // Puede usarlo si:
+    // 1. Ya lo compró
+    // 2. O todavía tiene puntos suficientes para comprarlo
+    val disponible =
+        comprado ||
+                puntosDisponibles >= item.precio
 
 
     Card(
@@ -1260,8 +1344,7 @@ private fun ItemQuisCard(
             .fillMaxWidth()
             .height(145.dp)
             .clickable(
-                enabled =
-                    puedeComprar
+                enabled = disponible
             ) {
                 onClick()
             },
@@ -1279,8 +1362,20 @@ private fun ItemQuisCard(
 
         border =
             BorderStroke(
-                width = 1.dp,
-                color = RewardBorder
+
+                width =
+                    if (seleccionado) {
+                        2.dp
+                    } else {
+                        1.dp
+                    },
+
+                color =
+                    if (seleccionado) {
+                        RewardGreen
+                    } else {
+                        RewardBorder
+                    }
             )
     ) {
 
@@ -1299,17 +1394,22 @@ private fun ItemQuisCard(
             Image(
                 painter =
                     painterResource(
-                        id =
-                            item.imagen
+                        id = item.imagen
                     ),
 
                 contentDescription =
                     item.nombre,
 
                 modifier =
-                    Modifier.size(
-                        95.dp
-                    ),
+                    Modifier
+                        .size(95.dp)
+                        .alpha(
+                            if (disponible) {
+                                1f
+                            } else {
+                                0.4f
+                            }
+                        ),
 
                 contentScale =
                     ContentScale.Fit
@@ -1322,41 +1422,44 @@ private fun ItemQuisCard(
             )
 
 
-            // PRECIO
+            // ================================================
+            // PRECIO / COMPRADO
+            // ================================================
 
             Box(
-                modifier =
-                    Modifier
-                        .background(
-                            color =
-                                if (
-                                    puedeComprar
-                                ) {
+                modifier = Modifier
+                    .background(
+                        color =
+                            when {
 
+                                comprado ->
+                                    RewardGreen
+
+                                disponible ->
                                     RewardBottomGreen
 
-                                } else {
-
+                                else ->
                                     Color.LightGray
-                                },
+                            },
 
-                            shape =
-                                RoundedCornerShape(
-                                    4.dp
-                                )
-                        )
-                        .padding(
-                            horizontal =
-                                10.dp,
-
-                            vertical =
+                        shape =
+                            RoundedCornerShape(
                                 4.dp
-                        )
+                            )
+                    )
+                    .padding(
+                        horizontal = 10.dp,
+                        vertical = 4.dp
+                    )
             ) {
 
                 Text(
                     text =
-                        "☆ ${item.precio}",
+                        if (comprado) {
+                            "✓"
+                        } else {
+                            "☆ ${item.precio}"
+                        },
 
                     color =
                         Color.White,
@@ -1369,7 +1472,6 @@ private fun ItemQuisCard(
     }
 }
 
-
 // ============================================================
 // PANTALLA 3
 // LISTO
@@ -1377,7 +1479,10 @@ private fun ItemQuisCard(
 
 @Composable
 private fun RecompensaFinalScreen(
-    itemSeleccionado: ItemQuis?,
+
+    equipados:
+    Map<SlotQuis, ItemQuis>,
+
     onFinalizar: () -> Unit
 ) {
 
@@ -1437,30 +1542,22 @@ private fun RecompensaFinalScreen(
 
         Spacer(
             modifier =
-                Modifier.height(65.dp)
+                Modifier.height(45.dp)
         )
 
 
         // ====================================================
-        // QUIS FINAL
+        // QUIS CON TODO LO SELECCIONADO
         // ====================================================
 
-        Image(
-            painter =
-                painterResource(
-                    id =
-                        R.drawable.recompensas_quis_final
-                ),
+        QuisPersonalizable(
+            equipados =
+                equipados,
 
-            contentDescription =
-                "Quis actualizado",
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp),
-
-            contentScale =
-                ContentScale.Fit
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
         )
 
 
@@ -1469,10 +1566,6 @@ private fun RecompensaFinalScreen(
                 Modifier.weight(1f)
         )
 
-
-        // ====================================================
-        // FINALIZAR
-        // ====================================================
 
         Box(
             modifier =
@@ -1536,6 +1629,7 @@ private fun RecompensasPreview() {
         RecompensasScreen(
             puntos = 520,
             nivel = 6,
+            modulosCompletados = setOf("M1", "M2", "M3"),
             onBack = {},
             onRedimirClick = {}
         )
@@ -1546,7 +1640,6 @@ private fun RecompensasPreview() {
 // ============================================================
 // PREVIEW - ACCESORIOS
 // ============================================================
-
 @Preview(
     name = "2 - Accesorios",
     showBackground = true,
@@ -1556,12 +1649,35 @@ private fun RecompensasPreview() {
 @Composable
 private fun AccesoriosPreview() {
 
+    val equipados = remember {
+        mutableStateMapOf<SlotQuis, ItemQuis>()
+    }
+
     RebottleTheme {
 
         PersonalizarQuisScreen(
             puntos = 520,
+
+            equipados = equipados,
+
+            comprados = emptySet(),
+
             onBack = {},
-            onItemClick = {}
+
+            onItemClick = { item ->
+
+                val actual = equipados[item.slot]
+
+                if (actual?.id == item.id) {
+                    // Si toca el mismo artículo otra vez, se lo quita
+                    equipados.remove(item.slot)
+                } else {
+                    // Si toca otro artículo, se lo pone
+                    equipados[item.slot] = item
+                }
+            },
+
+            onFinalizar = {}
         )
     }
 }
@@ -1572,19 +1688,53 @@ private fun AccesoriosPreview() {
 // ============================================================
 
 @Preview(
-    name = "3 - Final",
+    name = "2 - Personalizar",
     showBackground = true,
     showSystemUi = true,
     device = "spec:width=393dp,height=851dp,dpi=440"
 )
 @Composable
-private fun RecompensaFinalPreview() {
+private fun PersonalizarPreview() {
+
+    val equipados = remember {
+        mutableStateMapOf<SlotQuis, ItemQuis>()
+    }
+
 
     RebottleTheme {
 
-        RecompensaFinalScreen(
-            itemSeleccionado =
-                accesoriosQuis.first(),
+        PersonalizarQuisScreen(
+
+            puntos = 520,
+
+            equipados =
+                equipados,
+
+            comprados = emptySet(),
+
+            onBack = {},
+
+            onItemClick = { item ->
+
+                val actual =
+                    equipados[item.slot]
+
+
+                if (
+                    actual?.id ==
+                    item.id
+                ) {
+
+                    equipados.remove(
+                        item.slot
+                    )
+
+                } else {
+
+                    equipados[item.slot] =
+                        item
+                }
+            },
 
             onFinalizar = {}
         )
@@ -1597,21 +1747,45 @@ private fun RecompensaFinalPreview() {
 // ============================================================
 
 @Preview(
-    name = "4 - Flow completo",
+    name = "3 - Quis vestido",
     showBackground = true,
     showSystemUi = true,
     device = "spec:width=393dp,height=851dp,dpi=440"
 )
 @Composable
-private fun RecompensasFlowPreview() {
+private fun RecompensaFinalPreview() {
+
+    val equipados = remember {
+        mutableStateMapOf<SlotQuis, ItemQuis>()
+    }
+
+
+    // Tenis
+    equipados[
+        SlotQuis.PIES
+    ] = ropaQuis[0]
+
+
+    // Camisa
+    equipados[
+        SlotQuis.TORSO_BASE
+    ] = ropaQuis[1]
+
+
+    // Gafas
+    equipados[
+        SlotQuis.OJOS
+    ] = accesoriosQuis[1]
+
 
     RebottleTheme {
 
-        RecompensasFlowContent(
-            controller =
-                rememberNavController(),
-            puntos = 520,
-            nivel = 6
+        RecompensaFinalScreen(
+
+            equipados =
+                equipados,
+
+            onFinalizar = {}
         )
     }
 }

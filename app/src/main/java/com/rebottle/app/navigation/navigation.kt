@@ -1,6 +1,9 @@
 package com.rebottle.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -206,7 +209,12 @@ fun Navigation() {
         }
 
         composable(route = AppScreens.aprendizaje.name) {
+            // Módulos completados desde Firebase para bloquear la ruta
+            val puntosState by puntosViewModel.state.collectAsState()
+            LaunchedEffect(Unit) { puntosViewModel.escucharPuntos() }
+
             LearnRoadmapScreen(
+                modulosCompletados = puntosState.modulosCompletados.map { it.moduloId }.toSet(),
                 onBack = { navController.popBackStack() },
                 onM1Click = { navController.navigate(AppScreens.moduleOne.name) },
                 onM2Click = { navController.navigate(AppScreens.moduleTwo.name) },
@@ -268,6 +276,9 @@ fun Navigation() {
                 controller = navController,
                 puntosViewModel = puntosViewModel
             )
+        }
+        composable(route = AppScreens.ranking.name) {
+            RankingScreen(controller = navController)
         }
         composable(route = AppScreens.moduleSeven.name) {
             ModuleSevenFlowScreen(

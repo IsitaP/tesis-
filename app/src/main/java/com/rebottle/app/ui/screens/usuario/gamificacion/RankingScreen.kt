@@ -1,6 +1,6 @@
 package com.rebottle.app.ui.screens.usuario.gamificacion
 
-import androidx.annotation.DrawableRes
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +34,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +47,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -57,14 +61,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.google.firebase.storage.FirebaseStorage
 import com.rebottle.app.R
+import com.rebottle.app.model.RankingViewModel
+import com.rebottle.app.model.UsuarioRanking
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
 import androidx.compose.foundation.shape.GenericShape
 import java.util.Locale
-
 
 
 private val ScreenBackground = Color(0xFFB5C99A) // Verde claro de fondo
@@ -79,30 +85,15 @@ private val Silver = Color(0xFFC0C0C0)
 private val Bronze = Color(0xFFCD7F32)
 
 // ============================================================
-// MODELO Y DATOS DE PRUEBA
+// DATOS DE PRUEBA (solo para los Previews)
 // ============================================================
 
-data class UsuarioRanking(
-    val puesto: Int,
-    val nombre: String,
-    val puntos: Int,
-    @DrawableRes val avatarRes: Int
-)
-
-private val rankingSemanal = listOf(
-    UsuarioRanking(1, "Davis Curtis", 2569, R.drawable.avatar_davis),
-    UsuarioRanking(2, "Alena Donin", 1469, R.drawable.avatar_alena),
-    UsuarioRanking(3, "Craig Gouse", 1053, R.drawable.avatar_craig),
-    UsuarioRanking(4, "Madelyn Dias", 590, R.drawable.avatar_madelyn),
-    UsuarioRanking(5, "Zain Vaccaro", 448, R.drawable.avatar_zain)
-)
-
-private val rankingHistorico = listOf(
-    UsuarioRanking(1, "Davis Curtis", 8950, R.drawable.avatar_davis),
-    UsuarioRanking(2, "Alena Donin", 7420, R.drawable.avatar_alena),
-    UsuarioRanking(3, "Craig Gouse", 6100, R.drawable.avatar_craig),
-    UsuarioRanking(4, "Madelyn Dias", 4300, R.drawable.avatar_madelyn),
-    UsuarioRanking(5, "Zain Vaccaro", 3900, R.drawable.avatar_zain)
+private val previewRanking = listOf(
+    UsuarioRanking(1, "u1", "Davis Curtis", 650),
+    UsuarioRanking(2, "u2", "Alena Donin", 450),
+    UsuarioRanking(3, "u3", "Craig Gouse", 300),
+    UsuarioRanking(4, "u4", "Madelyn Dias", 150),
+    UsuarioRanking(4, "u5", "Zain Vaccaro", 150)
 )
 
 private fun colorMedalla(puesto: Int): Color = when (puesto) {
@@ -119,11 +110,37 @@ private fun colorMedalla(puesto: Int): Color = when (puesto) {
 @Composable
 fun RankingScreen(
     controller: NavController,
-    posicionUsuario: Int = 4,// Luego lo traes del ViewModel
+    rankingViewModel: RankingViewModel = viewModel()
+) {
+    // Ranking real desde Firebase (users + progresoAprendizaje)
+    val state by rankingViewModel.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        rankingViewModel.escucharRanking()
+    }
+
+    RankingContent(
+        semanal = state.semanal,
+        historico = state.historico,
+        uidActual = state.uidActual,
+        onBack = { controller.popBackStack() }
+    )
+}
+
+
+// Contenido separado del ViewModel para que los Previews
+// funcionen sin Firebase
+@Composable
+private fun RankingContent(
+    semanal: List<UsuarioRanking>,
+    historico: List<UsuarioRanking>,
+    uidActual: String?,
+    onBack: () -> Unit,
     esSemanalInicial: Boolean = true
 ) {
     var esSemanal by rememberSaveable { mutableStateOf(esSemanalInicial) }
-    val lista = if (esSemanal) rankingSemanal else rankingHistorico
+    val lista = if (esSemanal) semanal else historico
+    val posicionUsuario = lista.find { it.uid == uidActual }?.puesto
 
     // OJO: el Column raíz NO lleva padding horizontal,
     // así el panel inferior puede ir de borde a borde.
@@ -135,7 +152,7 @@ fun RankingScreen(
     ) {
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Spacer(modifier = Modifier.height(8.dp))
-            HeaderRanking(onBack = { controller.popBackStack() })
+            HeaderRanking(onBack = onBack)
             Spacer(modifier = Modifier.height(12.dp))
             SelectorPestanas(
                 esSemanal = esSemanal,
@@ -147,9 +164,9 @@ fun RankingScreen(
         }
 
         if (esSemanal) {
-            VistaSemanal(lista = lista, modifier = Modifier.weight(1f))
+            VistaSemanal(lista = lista, uidActual = uidActual, modifier = Modifier.weight(1f))
         } else {
-            VistaHistorica(lista = lista, modifier = Modifier.weight(1f))
+            VistaHistorica(lista = lista, uidActual = uidActual, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -248,7 +265,7 @@ private fun BotonPestana(
 }
 
 @Composable
-private fun TarjetaMotivacion(posicion: Int) {
+private fun TarjetaMotivacion(posicion: Int?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -265,7 +282,7 @@ private fun TarjetaMotivacion(posicion: Int) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "#$posicion",
+                    text = if (posicion != null) "#$posicion" else "#–",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
@@ -274,7 +291,11 @@ private fun TarjetaMotivacion(posicion: Int) {
             Spacer(modifier = Modifier.width(14.dp))
             Column {
                 Text(
-                    text = "¡Estás haciendo un muy buen trabajo!",
+                    text = when (posicion) {
+                        null -> "Completa módulos para entrar al ranking"
+                        1 -> "¡Vas de primero, sigue así!"
+                        else -> "¡Estás haciendo un muy buen trabajo!"
+                    },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = DarkText
@@ -292,9 +313,11 @@ private fun TarjetaMotivacion(posicion: Int) {
 @Composable
 private fun VistaSemanal(
     lista: List<UsuarioRanking>,
+    uidActual: String?,
     modifier: Modifier = Modifier
 ) {
-    val resto = lista.filter { it.puesto > 3 }
+    // Los 3 primeros van al podio, el resto a la lista
+    val resto = lista.drop(3)
 
     Column(modifier = modifier.fillMaxWidth()) {
         // El podio va pegado al panel: sin SpaceBetween que deje huecos
@@ -334,8 +357,8 @@ private fun VistaSemanal(
                         )
                     }
                 }
-                items(resto, key = { it.puesto }) { usuario ->
-                    FilaRanking(usuario = usuario)
+                items(resto, key = { it.uid }) { usuario ->
+                    FilaRanking(usuario = usuario, esActual = usuario.uid == uidActual)
                 }
             }
         }
@@ -359,9 +382,11 @@ private fun Podio(
     lista: List<UsuarioRanking>,
     modifier: Modifier = Modifier
 ) {
-    val primero = lista.find { it.puesto == 1 }
-    val segundo = lista.find { it.puesto == 2 }
-    val tercero = lista.find { it.puesto == 3 }
+    // Por posición en la lista (ya viene ordenada), así
+    // un empate no deja un bloque del podio vacío
+    val primero = lista.getOrNull(0)
+    val segundo = lista.getOrNull(1)
+    val tercero = lista.getOrNull(2)
 
     val painter = painterResource(id = R.drawable.podio)
     val proporcion = 1.85f
@@ -432,19 +457,19 @@ private fun InfoPodio(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Corona ENCIMA del avatar (antes se montaba sobre la cara con offset)
-        if (esPrimero) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_crown),
-                contentDescription = null,
-                tint = Gold,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-        }
+        // Corona ENCIMA del avatar para todo el podio:
+        // oro, plata o bronce según el puesto
+        Icon(
+            painter = painterResource(id = R.drawable.ic_crown),
+            contentDescription = null,
+            tint = colorMedalla(usuario.puesto),
+            modifier = Modifier.size(if (esPrimero) 28.dp else 22.dp)
+        )
+        Spacer(modifier = Modifier.height(2.dp))
 
         Avatar(
-            res = usuario.avatarRes,
+            fotoUrl = usuario.fotoUrl,
+            nombre = usuario.nombre,
             size = if (esPrimero) 68.dp else 56.dp,
             borderColor = colorMedalla(usuario.puesto)
         )
@@ -467,11 +492,11 @@ private fun InfoPodio(
 }
 
 @Composable
-private fun FilaRanking(usuario: UsuarioRanking) {
+private fun FilaRanking(usuario: UsuarioRanking, esActual: Boolean = false) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(14.dp))
+            .background(if (esActual) AvatarBackground else Color.White, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -483,7 +508,7 @@ private fun FilaRanking(usuario: UsuarioRanking) {
             modifier = Modifier.width(24.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Avatar(res = usuario.avatarRes, size = 44.dp)
+        Avatar(fotoUrl = usuario.fotoUrl, nombre = usuario.nombre, size = 44.dp)
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -510,6 +535,7 @@ private fun FilaRanking(usuario: UsuarioRanking) {
 @Composable
 private fun VistaHistorica(
     lista: List<UsuarioRanking>,
+    uidActual: String?,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -519,19 +545,19 @@ private fun VistaHistorica(
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(lista, key = { it.puesto }) { usuario ->
-            TarjetaHistorica(usuario = usuario)
+        items(lista, key = { it.uid }) { usuario ->
+            TarjetaHistorica(usuario = usuario, esActual = usuario.uid == uidActual)
         }
     }
 }
 
 
 @Composable
-private fun TarjetaHistorica(usuario: UsuarioRanking) {
+private fun TarjetaHistorica(usuario: UsuarioRanking, esActual: Boolean = false) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = if (esActual) AvatarBackground else Color.White)
     ) {
         Row(
             modifier = Modifier
@@ -553,7 +579,7 @@ private fun TarjetaHistorica(usuario: UsuarioRanking) {
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Avatar(res = usuario.avatarRes, size = 48.dp)
+            Avatar(fotoUrl = usuario.fotoUrl, nombre = usuario.nombre, size = 48.dp)
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -612,22 +638,58 @@ private val HexagonShape = GenericShape { size, _ ->
 
 fun moveTo(value: Any, f: Float) {}
 
+// Fotos ya descargadas, para no volver a pedirlas al
+// cambiar de pestaña o hacer scroll
+private val cacheFotos = mutableMapOf<String, ImageBitmap>()
+
 @Composable
 private fun Avatar(
-    @DrawableRes res: Int,
+    fotoUrl: String,
+    nombre: String,
     size: Dp,
     borderColor: Color = Color.White
 ) {
-    Image(
-        painter = painterResource(id = res),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(AvatarBackground)
-            .border(2.dp, borderColor, CircleShape)
-    )
+    var foto by remember(fotoUrl) { mutableStateOf(cacheFotos[fotoUrl]) }
+
+    LaunchedEffect(fotoUrl) {
+        if (fotoUrl.isBlank() || foto != null) return@LaunchedEffect
+
+        runCatching { FirebaseStorage.getInstance().getReferenceFromUrl(fotoUrl) }
+            .getOrNull()
+            ?.getBytes(2L * 1024 * 1024)
+            ?.addOnSuccessListener { bytes ->
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()?.let {
+                    cacheFotos[fotoUrl] = it
+                    foto = it
+                }
+            }
+    }
+
+    val modifier = Modifier
+        .size(size)
+        .clip(CircleShape)
+        .background(AvatarBackground)
+        .border(2.dp, borderColor, CircleShape)
+
+    val bitmap = foto
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier
+        )
+    } else {
+        // Sin foto: la inicial del nombre
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Text(
+                text = nombre.take(1).uppercase(),
+                fontSize = (size.value * 0.4f).sp,
+                fontWeight = FontWeight.Bold,
+                color = MainGreen
+            )
+        }
+    }
 }
 
 // ============================================================
@@ -645,9 +707,11 @@ private fun RankingSemanalPreview() {
 
     RebottleTheme {
 
-        RankingScreen(
-            controller = rememberNavController(),
-            posicionUsuario = 4,
+        RankingContent(
+            semanal = previewRanking,
+            historico = previewRanking,
+            uidActual = "u4",
+            onBack = {},
             esSemanalInicial = true
         )
     }
@@ -669,9 +733,11 @@ private fun RankingHistoricoPreview() {
 
     RebottleTheme {
 
-        RankingScreen(
-            controller = rememberNavController(),
-            posicionUsuario = 4,
+        RankingContent(
+            semanal = previewRanking,
+            historico = previewRanking,
+            uidActual = "u4",
+            onBack = {},
             esSemanalInicial = false
         )
     }

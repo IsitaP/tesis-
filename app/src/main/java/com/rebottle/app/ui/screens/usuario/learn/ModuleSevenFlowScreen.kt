@@ -33,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,6 +159,13 @@ private fun ModuleSevenIntroScreen(
                 .clickable {
                     onBack()
                 }
+        )
+        Image(
+            painter = painterResource(id = R.drawable.m7_desafio),
+            contentDescription = "Ilustración de completado",
+            modifier = Modifier
+                .size(530.dp)
+                .offset(y = 160.dp)
         )
 
 
