@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -51,14 +52,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.rebottle.app.R
+import com.rebottle.app.model.EstadoSolicitud
 import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudViewModel
-import com.rebottle.app.model.cuentaComoAporte
 import com.rebottle.app.ui.theme.RebottleTheme
 import java.text.Normalizer
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
+
 
 
 // ============================================================
@@ -222,7 +224,9 @@ fun MisAportesScreen(
 
     MisAportesContent(
         controller = controller,
-        aportes = aportes
+        aportes = aportes,
+        cargando = state.isHistoryLoading,
+        error = state.historyError
     )
 }
 
@@ -234,10 +238,14 @@ fun MisAportesScreen(
  */
 private fun aportesDesde(solicitudes: List<Solicitud>): List<Aporte> =
     solicitudes
-        .filter { it.cuentaComoAporte() && it.materiales.isNotEmpty() }
+        .filter {
+            it.estado == EstadoSolicitud.RECOLECTADA.name &&
+                    it.materiales.isNotEmpty()
+        }
         .flatMap { solicitud ->
             val kgPorMaterial = solicitud.pesoKg.toDouble() / solicitud.materiales.size
-            val fecha = solicitud.creadaEn?.toDate()?.time ?: System.currentTimeMillis()
+            val fecha = (solicitud.completadaEn ?: solicitud.creadaEn)?.toDate()?.time
+                ?: System.currentTimeMillis()
 
             solicitud.materiales.map { material ->
                 Aporte(material = material, kg = kgPorMaterial, fechaMillis = fecha)
@@ -247,7 +255,9 @@ private fun aportesDesde(solicitudes: List<Solicitud>): List<Aporte> =
 @Composable
 private fun MisAportesContent(
     controller: NavController,
-    aportes: List<Aporte>
+    aportes: List<Aporte>,
+    cargando: Boolean = false,
+    error: String = ""
 ) {
 
     var selectedRange by remember { mutableStateOf(PeriodoAportes.MES) }
@@ -328,8 +338,26 @@ private fun MisAportesContent(
             totalKg = totalKg
         )
 
-        if (totalKg == 0.0) {
-            Text(
+        when {
+            cargando -> Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = MainGreen,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            error.isNotEmpty() -> Text(
+                text = error,
+                fontSize = 13.sp,
+                color = SecondaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            totalKg == 0.0 -> Text(
                 text = "Aún no tienes aportes en este período",
                 fontSize = 13.sp,
                 color = SecondaryText,
