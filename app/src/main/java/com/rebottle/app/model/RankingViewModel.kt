@@ -88,7 +88,7 @@ class RankingViewModel : ViewModel() {
 
         usersListener =
             firestore
-                .collection("users")
+                .collection("perfilesPublicos")
                 .whereEqualTo("role", UserRole.CIUDADANO.firestoreValue)
                 .addSnapshotListener { snapshot, error ->
 

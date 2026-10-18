@@ -156,6 +156,11 @@ fun ProfileUserScreen(
                         storageRef.downloadUrl.addOnSuccessListener { url ->
                             Firebase.firestore.collection("users").document(uid)
                                 .update("fotoUrl", url.toString())
+
+                            // Perfil público para el ranking
+                            Firebase.firestore.collection("perfilesPublicos").document(uid)
+                                .update("fotoUrl", url.toString())
+
                             subiendoFoto = false
                         }
                     }

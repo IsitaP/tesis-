@@ -7,8 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
+
 
 object PerfilCache {
 
@@ -31,7 +33,6 @@ object PerfilCache {
     }
 
     fun cargar(uid: String) {
-        // Si ya está en memoria para este usuario, no vuelve a pedir nada
         if (uidActual == uid && nombre != null) return
 
         if (uidActual != uid) limpiar()
@@ -44,6 +45,21 @@ object PerfilCache {
                 nombre = doc.getString("name")
 
                 val url = doc.getString("fotoUrl")
+                val role = doc.getString("role")
+
+                // Perfil público: lo lee el ranking
+                if (!role.isNullOrEmpty()) {
+                    Firebase.firestore.collection("perfilesPublicos").document(uid)
+                        .set(
+                            mapOf(
+                                "name" to (nombre ?: ""),
+                                "fotoUrl" to (url ?: ""),
+                                "role" to role
+                            ),
+                            SetOptions.merge()
+                        )
+                }
+
                 if (!url.isNullOrEmpty() && foto == null) {
                     runCatching { Firebase.storage.getReferenceFromUrl(url) }
                         .getOrNull()
