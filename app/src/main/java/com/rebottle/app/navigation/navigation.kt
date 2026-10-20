@@ -42,6 +42,8 @@ import com.rebottle.app.ui.screens.fundacion.rutas.DetalleRecolectorScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebottle.app.model.PuntosModulos
 import com.rebottle.app.model.PuntosViewModel
+import com.rebottle.app.model.RutasFundacionViewModel
+import com.rebottle.app.ui.screens.fundacion.rutas.FiltroRutasScreen
 import com.rebottle.app.ui.screens.fundacion.gestion.AsignarRecolectorScreen
 
 
@@ -73,6 +75,7 @@ enum class AppScreens {
     perfil,
     rutas,
     detalleRecolectorRuta,
+    filtroRutas,
 
     //CIUDADANO
     homeCiudadano,
@@ -113,6 +116,8 @@ fun Navigation() {
 
     // ViewModel de puntos compartido (módulos + Recompensas)
     val puntosViewModel: PuntosViewModel = viewModel()
+    // Compartido entre la lista de rutas y la pantalla de filtros
+    val rutasFundacionViewModel: RutasFundacionViewModel = viewModel()
 
     val startDestination = if (OnboardingPrefs.isOnboardingCompleted(context)) {
         AppScreens.login.name
@@ -135,7 +140,13 @@ fun Navigation() {
         composable(route = AppScreens.homeFundacion.name) { HomeFundacionScreen(navController) }
         composable(route = AppScreens.solicitudesFundacion.name) { RutasCreadasScreen(navController) }
         composable(route = AppScreens.perfil.name) { ProfileFundacionScreen(navController) }
-        composable(route = AppScreens.rutas.name) { RutasRecolectoresScreen(navController) }
+        composable(route = AppScreens.rutas.name) {
+            RutasRecolectoresScreen(navController, model = rutasFundacionViewModel)
+        }
+
+        composable(route = AppScreens.filtroRutas.name) {
+            FiltroRutasScreen(navController, model = rutasFundacionViewModel)
+        }
         composable(
             route = "${AppScreens.detalleRecolectorRuta.name}/{recolectorId}",
             arguments = listOf(navArgument("recolectorId") { type = NavType.StringType })

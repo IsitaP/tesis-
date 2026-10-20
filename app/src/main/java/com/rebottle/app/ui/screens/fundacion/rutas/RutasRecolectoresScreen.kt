@@ -82,15 +82,16 @@ fun RutasRecolectoresScreen(
 
     LaunchedEffect(Unit) { model.escuchar() }
 
-    val lista = remember(state.recolectores, busqueda) {
-        if (busqueda.isBlank()) {
-            state.recolectores
-        } else {
-            state.recolectores.filter {
-                it.nombre.contains(busqueda, ignoreCase = true) ||
+    val filtro by model.filtro.collectAsState()
+
+    val lista = remember(state.recolectores, busqueda, filtro) {
+        state.recolectores
+            .filter { filtro.aplica(it) }
+            .filter {
+                busqueda.isBlank() ||
+                        it.nombre.contains(busqueda, ignoreCase = true) ||
                         it.localidad.contains(busqueda, ignoreCase = true)
             }
-        }
     }
 
     val puntosMapa = remember(state.puntos) {
@@ -158,7 +159,8 @@ fun RutasRecolectoresScreen(
                 BuscadorRutas(
                     value = busqueda,
                     onValueChange = { busqueda = it },
-                    onFiltroClick = { /* pantalla de filtros */ },
+                    filtrosActivos = filtro.cantidad,
+                    onFiltroClick = { controller.navigate(AppScreens.filtroRutas.name) },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 12.dp, vertical = 12.dp)
@@ -209,7 +211,9 @@ fun RutasRecolectoresScreen(
 
                 when {
                     state.isLoading -> Box(
-                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(
@@ -226,7 +230,8 @@ fun RutasRecolectoresScreen(
                     )
 
                     lista.isEmpty() -> Text(
-                        text = "No hay recolectores para mostrar",
+                        text = if (filtro.cantidad > 0) "Ningún recolector coincide con el filtro"
+                        else "No hay recolectores para mostrar",
                         fontSize = 14.sp,
                         color = RebottleColors.SecondaryText,
                         modifier = Modifier.padding(20.dp)
@@ -260,6 +265,7 @@ fun RutasRecolectoresScreen(
 private fun BuscadorRutas(
     value: String,
     onValueChange: (String) -> Unit,
+    filtrosActivos: Int,
     onFiltroClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -275,7 +281,20 @@ private fun BuscadorRutas(
         },
         trailingIcon = {
             IconButton(onClick = onFiltroClick) {
-                Icon(Icons.Filled.Tune, contentDescription = "Filtros", tint = RebottleColors.MainGreen)
+                Box {
+                    Icon(Icons.Filled.Tune, contentDescription = "Filtros", tint = RebottleColors.MainGreen)
+                    if (filtrosActivos > 0) {
+                        Text(
+                            text = "$filtrosActivos",
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Naranja, CircleShape)
+                                .padding(horizontal = 4.dp)
+                        )
+                    }
+                }
             }
         },
         singleLine = true,

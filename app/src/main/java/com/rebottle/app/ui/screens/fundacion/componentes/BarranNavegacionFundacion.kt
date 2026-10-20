@@ -80,6 +80,7 @@ fun BarraNavegacionFundacion(
         ItemBarraFundacion(
             title = "Rutas",
             selected = currentRoute == AppScreens.rutas.name ||
+                    currentRoute == AppScreens.filtroRutas.name ||
                     currentRoute?.startsWith(AppScreens.detalleRecolectorRuta.name) == true,
             iconRes = R.drawable.icon_routes,
             modifier = Modifier.weight(1f),

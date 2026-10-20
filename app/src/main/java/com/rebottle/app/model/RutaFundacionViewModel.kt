@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.rebottle.app.ui.screens.auth.UserRole
+import com.rebottle.app.ui.screens.fundacion.rutas.FiltroRutas
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,10 @@ data class RecolectorRuta(
     val localidad: String,
     val estado: EstadoRecolectorVista,
     val pendientes: Int,
-    val rutaId: String?
+    val rutaId: String?,
+    val fecha: String = "",
+    val materiales: Set<String> = emptySet(),
+    val pesoKg: Int = 0
 )
 
 data class PuntoRuta(
@@ -55,7 +59,7 @@ data class RutasFundacionState(
 //
 //   users (role = recolector)      -> nombre, foto, estado, localidad
 //   rutas (ASIGNADA / EN_CURSO)    -> ruta de cada recolector
-//   solicitudes de esas rutas      -> pendientes y ubicaciones
+//   solicitudes de esas rutas      -> pendientes, material, peso
 //
 // "Terminando" = ruta EN_CURSO con una sola parada pendiente.
 // ============================================================
@@ -66,6 +70,9 @@ class RutasFundacionViewModel : ViewModel() {
 
     private val _state = MutableStateFlow(RutasFundacionState())
     val state: StateFlow<RutasFundacionState> = _state.asStateFlow()
+
+    private val _filtro = MutableStateFlow(FiltroRutas())
+    val filtro: StateFlow<FiltroRutas> = _filtro.asStateFlow()
 
     private var usuariosListener: ListenerRegistration? = null
     private var rutasListener: ListenerRegistration? = null
@@ -80,9 +87,22 @@ class RutasFundacionViewModel : ViewModel() {
     private var rutasListas = false
 
 
+    fun aplicarFiltro(nuevo: FiltroRutas) {
+        _filtro.value = nuevo
+    }
+
+    fun limpiarFiltro() {
+        _filtro.value = FiltroRutas()
+    }
+
+
     fun escuchar() {
 
-        if (usuariosListener != null) return
+        if (usuariosListener != null) {
+            // Si quedó en error (por ejemplo tras cerrar sesión), reinicia
+            if (_state.value.error == null) return
+            detener()
+        }
 
         usuariosListener =
             firestore
@@ -191,9 +211,20 @@ class RutasFundacionViewModel : ViewModel() {
 
                     val ruta = rutaPorRecolector[doc.id]
                     val ids = ruta?.let { idsDe(it) }.orEmpty()
+                    val docsRuta = ids.mapNotNull { solicitudes[it] }
 
                     val pendientes =
                         ids.count { solicitudes[it]?.getString("estado") !in resueltos }
+
+                    val materiales =
+                        docsRuta
+                            .flatMap { d ->
+                                (d.get("materiales") as? List<*>)
+                                    ?.mapNotNull { it as? String }.orEmpty()
+                            }
+                            .toSet()
+
+                    val peso = docsRuta.sumOf { it.getLong("pesoKg")?.toInt() ?: 0 }
 
                     val estadoRuta = ruta?.getString("estado")
 
@@ -223,7 +254,10 @@ class RutasFundacionViewModel : ViewModel() {
                             ?: "",
                         estado = vista,
                         pendientes = pendientes,
-                        rutaId = ruta?.id
+                        rutaId = ruta?.id,
+                        fecha = ruta?.getString("fechaRecoleccion").orEmpty(),
+                        materiales = materiales,
+                        pesoKg = peso
                     )
                 }
                 .sortedWith(
@@ -271,10 +305,24 @@ class RutasFundacionViewModel : ViewModel() {
     }
 
 
-    override fun onCleared() {
+    fun detener() {
         usuariosListener?.remove()
         rutasListener?.remove()
         solicitudesListeners.forEach { it.remove() }
+        usuariosListener = null
+        rutasListener = null
+        solicitudesListeners = emptyList()
+        solicitudesPorGrupo.clear()
+        recolectoresDocs = emptyList()
+        rutasDocs = emptyList()
+        idsEscuchados = emptyList()
+        usuariosListos = false
+        rutasListas = false
+        _state.value = RutasFundacionState()
+    }
+
+    override fun onCleared() {
+        detener()
         super.onCleared()
     }
 }
