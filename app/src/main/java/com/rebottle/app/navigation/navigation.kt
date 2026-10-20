@@ -38,10 +38,12 @@ import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
 import com.rebottle.app.ui.screens.fundacion.solicitudes.RutaDetalleScreen
 import com.rebottle.app.ui.screens.fundacion.rutas.RutasRecolectoresScreen
+import com.rebottle.app.ui.screens.fundacion.rutas.DetalleRecolectorScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebottle.app.model.PuntosModulos
 import com.rebottle.app.model.PuntosViewModel
 import com.rebottle.app.ui.screens.fundacion.gestion.AsignarRecolectorScreen
+
 
 import com.rebottle.app.ui.screens.usuario.learn.ModuleOneFlowScreen
 import com.rebottle.app.ui.screens.usuario.learn.ModuleTwoFlowScreen
@@ -70,6 +72,7 @@ enum class AppScreens {
     asignarRecolector,
     perfil,
     rutas,
+    detalleRecolectorRuta,
 
     //CIUDADANO
     homeCiudadano,
@@ -133,6 +136,13 @@ fun Navigation() {
         composable(route = AppScreens.solicitudesFundacion.name) { RutasCreadasScreen(navController) }
         composable(route = AppScreens.perfil.name) { ProfileFundacionScreen(navController) }
         composable(route = AppScreens.rutas.name) { RutasRecolectoresScreen(navController) }
+        composable(
+            route = "${AppScreens.detalleRecolectorRuta.name}/{recolectorId}",
+            arguments = listOf(navArgument("recolectorId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("recolectorId") ?: ""
+            DetalleRecolectorScreen(navController, recolectorId = id)
+        }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
 
         composable(

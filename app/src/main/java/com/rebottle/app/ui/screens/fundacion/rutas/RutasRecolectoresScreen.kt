@@ -65,6 +65,7 @@ import com.rebottle.app.model.RecolectorRuta
 import com.rebottle.app.model.RutasFundacionViewModel
 import com.rebottle.app.ui.screens.fundacion.componentes.BarraNavegacionFundacion
 import com.rebottle.app.ui.theme.RebottleColors
+import com.rebottle.app.navigation.AppScreens
 
 
 private val Naranja = Color(0xFFC96A3E)
@@ -238,7 +239,9 @@ fun RutasRecolectoresScreen(
                         items(lista, key = { it.uid }) { recolector ->
                             TarjetaRecolector(
                                 item = recolector,
-                                onClick = { /* detalle del recolector */ }
+                                onClick = {
+                                    controller.navigate("${AppScreens.detalleRecolectorRuta.name}/${recolector.uid}")
+                                }
                             )
                         }
                     }
