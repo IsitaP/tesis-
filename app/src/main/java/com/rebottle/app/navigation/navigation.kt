@@ -37,6 +37,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
 import com.rebottle.app.ui.screens.fundacion.solicitudes.RutaDetalleScreen
+import com.rebottle.app.ui.screens.fundacion.rutas.RutasRecolectoresScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebottle.app.model.PuntosModulos
 import com.rebottle.app.model.PuntosViewModel
@@ -131,7 +132,7 @@ fun Navigation() {
         composable(route = AppScreens.homeFundacion.name) { HomeFundacionScreen(navController) }
         composable(route = AppScreens.solicitudesFundacion.name) { RutasCreadasScreen(navController) }
         composable(route = AppScreens.perfil.name) { ProfileFundacionScreen(navController) }
-        composable(route = AppScreens.rutas.name) { ProfileFundacionScreen(navController) }
+        composable(route = AppScreens.rutas.name) { RutasRecolectoresScreen(navController) }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
 
         composable(

@@ -51,6 +51,13 @@ import com.rebottle.app.R
 import com.rebottle.app.ui.screens.recolector.componentes.EtiquetaEstado
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.rebottle.app.model.RutaProgresoViewModel
 
 private val BackgroundColor = RebottleColors.Background
 private val MainText = RebottleColors.MainText
@@ -62,12 +69,40 @@ private val ButtonText = Color(0xFF5A6255)
 @Composable
 fun PantallaDetalleAsignacionRecolector(
     controller: NavController,
-    asignacionId: String
+    asignacionId: String,
+    model: RutaProgresoViewModel = viewModel()
 ) {
-    val asignacion = asignacionesEjemplo.firstOrNull { it.id.toString() == asignacionId }
-        ?: asignacionesEjemplo.first()
+    val state by model.state.collectAsState()
 
-    var estado by remember { mutableStateOf(asignacion.estado) }
+    LaunchedEffect(Unit) {
+        FirebaseAuth.getInstance().currentUser?.uid?.let { model.escucharRutaDe(it) }
+    }
+
+    val fecha = formatearFecha(state.ruta?.fechaRecoleccion.orEmpty())
+
+    val asignacion = state.paradas
+        .firstOrNull { it.solicitudId == asignacionId }
+        ?.aAsignacion(fecha)
+
+    // Mientras llega la información, o si la parada ya no existe
+    if (asignacion == null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(BackgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            if (state.isLoading) {
+                CircularProgressIndicator(color = RebottleColors.MainGreen)
+            } else {
+                Text("No encontramos esta asignación", color = SecondaryText)
+            }
+        }
+        return
+    }
+
+    val estado = asignacion.estado
+    val numero = state.paradas.indexOfFirst { it.solicitudId == asignacionId } + 1
 
     val cardColor = when (estado) {
         EstadoAsignacion.COMPLETADA -> Color(0xFFE3EDDB)
@@ -113,7 +148,7 @@ fun PantallaDetalleAsignacionRecolector(
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = "Asignación # ${asignacion.id}",
+                    text = "Asignación # $numero",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MainText
@@ -187,19 +222,21 @@ fun PantallaDetalleAsignacionRecolector(
                             )
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_clock),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = BrownIcon
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = asignacion.hora,
-                                fontSize = 14.sp,
-                                color = MainText
-                            )
+                        if (asignacion.hora.isNotBlank()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_clock),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = BrownIcon
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = asignacion.hora,
+                                    fontSize = 14.sp,
+                                    color = MainText
+                                )
+                            }
                         }
                     }
 
@@ -355,9 +392,8 @@ fun PantallaDetalleAsignacionRecolector(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = {
-                        estado = EstadoAsignacion.COMPLETADA
-                    },
+                    onClick = { model.completarParada(asignacion.id) },
+                    enabled = state.resolviendoId == null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -367,12 +403,17 @@ fun PantallaDetalleAsignacionRecolector(
                     )
                 ) {
                     Text(
-                        text = "Marcar como Completada",
+                        text = if (state.resolviendoId != null) "Guardando..." else "Marcar como Completada",
                         color = Color.White,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
+            }
+
+            state.resolucionError?.let { mensaje ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = mensaje, fontSize = 13.sp, color = Color(0xFFC94338))
             }
 
             Spacer(modifier = Modifier.height(24.dp))

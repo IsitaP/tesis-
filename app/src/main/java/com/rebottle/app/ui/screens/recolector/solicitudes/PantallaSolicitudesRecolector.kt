@@ -48,6 +48,13 @@ import com.rebottle.app.ui.screens.recolector.componentes.BarraNavegacionRecolec
 import com.rebottle.app.ui.screens.recolector.componentes.TarjetaAsignacionRecolector
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.rebottle.app.model.RutaProgresoViewModel
+
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
 private val MainText = RebottleColors.MainText
@@ -55,14 +62,26 @@ private val MainText = RebottleColors.MainText
 
 @Composable
 fun PantallaSolicitudesRecolector(
-    controller: NavController
+    controller: NavController,
+    model: RutaProgresoViewModel = viewModel()
 ) {
 
     var busqueda by remember { mutableStateOf("") }
 
-    val asignaciones = asignacionesEjemplo
-    val pendientes = asignaciones.count { it.estado == EstadoAsignacion.PENDIENTE }
-    val completadas = asignaciones.count { it.estado == EstadoAsignacion.COMPLETADA }
+    val state by model.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        FirebaseAuth.getInstance().currentUser?.uid?.let { model.escucharRutaDe(it) }
+    }
+
+    val fecha = formatearFecha(state.ruta?.fechaRecoleccion.orEmpty())
+
+    val asignaciones = remember(state.paradas, fecha) {
+        state.paradas.map { it.aAsignacion(fecha) }
+    }
+
+    val pendientes = state.pendientes
+    val completadas = state.completadas
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -160,6 +179,27 @@ fun PantallaSolicitudesRecolector(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                when {
+                    state.isLoading -> Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(24.dp))
+                    }
+
+                    state.error != null -> Text(
+                        text = state.error ?: "",
+                        fontSize = 13.sp,
+                        color = Color(0xFF7F887A)
+                    )
+
+                    asignaciones.isEmpty() -> Text(
+                        text = "No tienes una ruta asignada por ahora",
+                        fontSize = 14.sp,
+                        color = Color(0xFF7F887A)
+                    )
+                }
+
                 asignaciones.forEachIndexed { index, asignacion ->
                     TarjetaAsignacionRecolector(
                         numero = index + 1,

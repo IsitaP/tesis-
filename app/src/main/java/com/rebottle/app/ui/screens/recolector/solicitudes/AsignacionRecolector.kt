@@ -1,5 +1,8 @@
 package com.rebottle.app.ui.screens.recolector.solicitudes
 
+import com.rebottle.app.model.EstadoParada
+import com.rebottle.app.model.MaterialType
+import com.rebottle.app.model.ParadaRuta
 data class AsignacionRecolector(
     val id: String,
     val codigo: String,
@@ -55,3 +58,36 @@ val asignacionesEjemplo = listOf(
         usuario = "Carlos Vera"
     )
 )
+
+// ----------------------------------------------------
+// ADAPTADOR: parada real (Firestore) -> modelo de la UI
+// ----------------------------------------------------
+
+fun ParadaRuta.aAsignacion(fecha: String): AsignacionRecolector =
+    AsignacionRecolector(
+        id = solicitudId,
+        codigo = "#$solicitudId",
+        estado = when (estado) {
+            EstadoParada.COMPLETADA -> EstadoAsignacion.COMPLETADA
+            EstadoParada.CANCELADA -> EstadoAsignacion.CANCELADA
+            EstadoParada.PENDIENTE -> EstadoAsignacion.PENDIENTE
+        },
+        direccion = direccion,
+        fecha = fecha,
+        hora = "",          // todavía no se guarda la hora por parada
+        materiales = materiales.map { nombre ->
+            MaterialType.values().firstOrNull { it.name == nombre }?.label ?: nombre
+        },
+        pesoKg = pesoKg,
+        usuario = ""
+    )
+
+fun formatearFecha(iso: String): String =
+    runCatching {
+        val fecha = java.time.LocalDate.parse(iso)
+        val mes = fecha.month.getDisplayName(
+            java.time.format.TextStyle.FULL,
+            java.util.Locale.forLanguageTag("es-CO")
+        )
+        "${mes.replaceFirstChar { it.uppercase() }} ${fecha.dayOfMonth}"
+    }.getOrDefault(iso)

@@ -84,7 +84,9 @@ fun TarjetaAsignacionRecolector(
 
             Text(text = "Material: ${asignacion.materiales.joinToString(", ")}", fontSize = 14.sp, color = Color(0xFF5B5F55))
             Text(text = "Peso: ${asignacion.pesoKg} kg", fontSize = 14.sp, color = Color(0xFF5B5F55))
-            Text(text = "Hora: ${asignacion.hora}", fontSize = 14.sp, color = Color(0xFF5B5F55))
+            if (asignacion.hora.isNotBlank()) {
+                Text(text = "Hora: ${asignacion.hora}", fontSize = 14.sp, color = Color(0xFF5B5F55))
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
