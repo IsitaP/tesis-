@@ -972,8 +972,9 @@ private fun ReBottleProfileBottomBar(
 
                 selected = currentRoute == AppScreens.rutas.name,
                 onClick = {
-                    // TODO: descomentar cuando exista la pantalla de rutas
-                    // controller.navigate(AppScreens.rutas.name)
+                    if (currentRoute != AppScreens.rutas.name) {
+                        controller.navigate(AppScreens.rutas.name)
+                    }
                 },
 
                 icon = {

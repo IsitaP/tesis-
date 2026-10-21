@@ -38,6 +38,14 @@ import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
 import com.rebottle.app.model.PerfilCache
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rebottle.app.model.EstadoParada
+import com.rebottle.app.model.MaterialType
+import com.rebottle.app.model.RutaProgresoViewModel
+import com.rebottle.app.navigation.AppScreens
+import java.util.Locale
 
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
@@ -53,8 +61,18 @@ private val SecondaryText = RebottleColors.SecondaryText
 
 @Composable
 fun PantallaInicioRecolector(
-    controller: NavController
+    controller: NavController,
+    model: RutaProgresoViewModel = viewModel()
 ) {
+
+    val state by model.state.collectAsState()
+
+    LaunchedEffect(Unit) {
+        FirebaseAuth.getInstance().currentUser?.uid?.let { model.escucharRutaDe(it) }
+    }
+
+    val ruta = state.ruta
+    val siguiente = state.paradas.firstOrNull { it.estado == EstadoParada.PENDIENTE }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -89,10 +107,19 @@ fun PantallaInicioRecolector(
             Spacer(modifier = Modifier.height(8.dp))
             TarjetaAccionRecolector(
                 title = "Solicitudes asignadas",
-                lines = listOf("12 nuevas", "5 aceptadas", "18 completadas hoy"),
+                lines = if (ruta == null) {
+                    listOf("Sin ruta asignada")
+                } else {
+                    listOf(
+                        "${state.pendientes} pendientes",
+                        "${state.completadas} completadas",
+                        "${state.total} en total"
+                    )
+                },
                 linkText = "Ver todas →",
                 imageRes = R.drawable.fundacion_requests,
-                cardHeight = 162.dp
+                cardHeight = 162.dp,
+                onLinkClick = { controller.navigate(AppScreens.solicitudesRecolector.name) }
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -101,10 +128,27 @@ fun PantallaInicioRecolector(
             Spacer(modifier = Modifier.height(8.dp))
             TarjetaAccionRecolector(
                 title = "Siguiente recolección",
-                lines = listOf("Barrio La Floresta", "10:30 AM", "Usuario: Juan Pérez"),
-                linkText = "Iniciar ruta →",
+                lines = if (siguiente == null) {
+                    listOf(if (ruta == null) "Sin ruta asignada" else "No quedan paradas pendientes")
+                } else {
+                    listOf(
+                        siguiente.direccion,
+                        siguiente.nombreLugar.ifBlank { materialesLegibles(siguiente.materiales) },
+                        "Peso: ${siguiente.pesoKg} kg"
+                    )
+                },
+                linkText = if (siguiente == null) "Ver solicitudes →" else "Ver parada →",
                 imageRes = R.drawable.fundacion_route,
-                cardHeight = 165.dp
+                cardHeight = 165.dp,
+                onLinkClick = {
+                    if (siguiente != null) {
+                        controller.navigate(
+                            "${AppScreens.detalleAsignacionRecolector.name}/${siguiente.solicitudId}"
+                        )
+                    } else {
+                        controller.navigate(AppScreens.solicitudesRecolector.name)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -113,14 +157,39 @@ fun PantallaInicioRecolector(
             Spacer(modifier = Modifier.height(8.dp))
             TarjetaAccionRecolector(
                 title = "Recorrido asignado",
-                lines = listOf("5 paradas", "Distancia: 8.2 km", "Tiempo estimado: 1 h 40 min"),
-                linkText = "Ver mapa →",
+                lines = if (ruta == null) {
+                    listOf("Sin ruta asignada")
+                } else {
+                    listOf(
+                        "${state.total} paradas",
+                        "Distancia: ${formatoKm(ruta.distanciaTotalMetros)}",
+                        "Tiempo estimado: ${formatoDuracion(ruta.duracionTotalSegundos)}"
+                    )
+                },
+                linkText = "Ver paradas →",
                 imageRes = R.drawable.fundacion_summary,
-                cardHeight = 140.dp
+                cardHeight = 140.dp,
+                onLinkClick = { controller.navigate(AppScreens.solicitudesRecolector.name) }
             )
         }
     }
 }
+
+
+private fun formatoKm(metros: Long): String =
+    String.format(Locale.forLanguageTag("es-CO"), "%.1f km", metros / 1000.0)
+
+private fun formatoDuracion(segundos: Long): String {
+    val minutos = (segundos / 60).toInt()
+    val horas = minutos / 60
+    val resto = minutos % 60
+    return if (horas > 0) "$horas h $resto min" else "$minutos min"
+}
+
+private fun materialesLegibles(materiales: List<String>): String =
+    materiales.joinToString(", ") { nombre ->
+        MaterialType.values().firstOrNull { it.name == nombre }?.label ?: nombre
+    }
 
 
 // ----------------------------------------------------

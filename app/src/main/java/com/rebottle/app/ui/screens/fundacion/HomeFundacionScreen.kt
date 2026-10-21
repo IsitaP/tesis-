@@ -792,8 +792,9 @@ private fun ReBottleBottomBar(
             NavigationBarItem(
                 selected = currentRoute == AppScreens.rutas.name,
                 onClick = {
-                    // TODO: descomentar cuando exista la pantalla de rutas
-                    // controller.navigate(AppScreens.rutas.name)
+                    if (currentRoute != AppScreens.rutas.name) {
+                        controller.navigate(AppScreens.rutas.name)
+                    }
                 },
                 icon = { BottomNavIcon(iconRes = R.drawable.icon_routes, contentDescription = "Rutas", size = 42.dp) },
                 label = { Text(text = "Rutas", fontSize = 12.sp, modifier = Modifier.offset(y = (-4).dp)) },
