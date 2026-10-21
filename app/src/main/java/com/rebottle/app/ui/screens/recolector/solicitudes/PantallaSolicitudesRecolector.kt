@@ -54,10 +54,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.rebottle.app.model.RutaProgresoViewModel
+import java.text.Normalizer
 
 private val BackgroundColor = RebottleColors.Background
 private val MainGreen = RebottleColors.MainGreen
 private val MainText = RebottleColors.MainText
+
+private fun normalizarTexto(texto: String): String {
+    return Normalizer
+        .normalize(texto, Normalizer.Form.NFD)
+        .replace("\\p{Mn}+".toRegex(), "")
+        .lowercase()
+        .trim()
+}
 
 
 @Composable
@@ -79,6 +88,31 @@ fun PantallaSolicitudesRecolector(
     val asignaciones = remember(state.paradas, fecha) {
         state.paradas.map { it.aAsignacion(fecha) }
     }
+    // ============================================================
+// BUSCADOR
+// ============================================================
+
+    val textoBusqueda = normalizarTexto(busqueda)
+
+    val asignacionesFiltradas = asignaciones
+        .withIndex()
+        .filter { elemento ->
+
+            val numeroAsignacion =
+                (elemento.index + 1).toString()
+
+            val asignacion =
+                elemento.value
+
+            val textoAsignacion =
+                normalizarTexto(
+                    asignacion.toString()
+                )
+
+            textoBusqueda.isBlank() ||
+                    numeroAsignacion.contains(textoBusqueda) ||
+                    textoAsignacion.contains(textoBusqueda)
+        }
 
     val pendientes = state.pendientes
     val completadas = state.completadas
@@ -184,7 +218,9 @@ fun PantallaSolicitudesRecolector(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(color = MainGreen, modifier = Modifier.size(24.dp)
+                        )
+
                     }
 
                     state.error != null -> Text(
@@ -198,14 +234,32 @@ fun PantallaSolicitudesRecolector(
                         fontSize = 14.sp,
                         color = Color(0xFF7F887A)
                     )
+                    asignacionesFiltradas.isEmpty() -> Text(
+                        text = "No se encontraron resultados para \"$busqueda\"",
+                        fontSize = 14.sp,
+                        color = Color(0xFF7F887A)
+                    )
                 }
 
-                asignaciones.forEachIndexed { index, asignacion ->
+                asignacionesFiltradas.forEach { elemento ->
+
+                    val indexOriginal =
+                        elemento.index
+
+                    val asignacion =
+                        elemento.value
+
+
                     TarjetaAsignacionRecolector(
-                        numero = index + 1,
+                        numero = indexOriginal + 1,
+
                         asignacion = asignacion,
+
                         onClick = {
-                            controller.navigate("${AppScreens.detalleAsignacionRecolector.name}/${asignacion.id}")
+
+                            controller.navigate(
+                                "${AppScreens.detalleAsignacionRecolector.name}/${asignacion.id}"
+                            )
                         }
                     )
                 }
