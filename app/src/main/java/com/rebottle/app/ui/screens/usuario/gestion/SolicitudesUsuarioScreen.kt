@@ -67,6 +67,8 @@ import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.usuario.inicio.ReBottleBottomBar
 import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
+import java.text.Normalizer
+
 
 
 private val BackgroundColor = RebottleColors.Background
@@ -105,6 +107,45 @@ fun SolicitudesUsuarioScreenContent(
     onDetailsClick: (Solicitud) -> Unit = {}
 ) {
     var busqueda by remember { mutableStateOf("") }
+
+    val textoBusqueda = normalizarTexto(busqueda)
+
+    val solicitudesFiltradas = state.solicitudes.filter { solicitud ->
+
+        val materiales =
+            normalizarTexto(
+                solicitud.materiales.joinToString(" ")
+            )
+
+        val direccion =
+            normalizarTexto(solicitud.direccion)
+
+        val estado =
+            normalizarTexto(solicitud.estado)
+
+        val fecha =
+            normalizarTexto(solicitud.fechaRecoleccion)
+
+        val id =
+            normalizarTexto(solicitud.id)
+
+        val peso =
+            solicitud.pesoKg.toString()
+
+        textoBusqueda.isBlank() ||
+
+                materiales.contains(textoBusqueda) ||
+
+                direccion.contains(textoBusqueda) ||
+
+                estado.contains(textoBusqueda) ||
+
+                fecha.contains(textoBusqueda) ||
+
+                id.contains(textoBusqueda) ||
+
+                peso.contains(textoBusqueda)
+    }
 
     // Total neto de kg (sin separar por material) y número de
     // recolecciones, contando todas menos las canceladas
@@ -237,7 +278,7 @@ fun SolicitudesUsuarioScreenContent(
                 }
             } else {
                 items(
-                    items = state.solicitudes,
+                    items = solicitudesFiltradas,
                     key = { it.id }
                 ) { solicitud ->
                     SolicitudCard(
@@ -587,6 +628,13 @@ private fun formatMateriales(materiales: List<String>): String {
         }
     }.joinToString(", ")
 }
+private fun normalizarTexto(texto: String): String {
+    return Normalizer
+        .normalize(texto, Normalizer.Form.NFD)
+        .replace("\\p{Mn}+".toRegex(), "")
+        .lowercase()
+        .trim()
+}
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -619,3 +667,4 @@ private fun SolicitudesUsuarioScreenPreview() {
         )
     }
 }
+
