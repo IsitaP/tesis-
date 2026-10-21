@@ -38,6 +38,7 @@ import com.rebottle.app.model.MapaViewModel
 import com.rebottle.app.model.Ruta
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import java.text.Normalizer
 
 
 // ============================================================
@@ -68,6 +69,14 @@ private val BorderOrange =
 private val Brown =
     Color(0xFFA55E37)
 
+
+private fun normalizarTexto(texto: String): String {
+    return Normalizer
+        .normalize(texto, Normalizer.Form.NFD)
+        .replace("\\p{Mn}+".toRegex(), "")
+        .lowercase()
+        .trim()
+}
 
 // ============================================================
 // PANTALLA PRINCIPAL
@@ -151,9 +160,10 @@ private fun CollectionRoutesContent(
             searchText
         ) {
 
-            if (
-                searchText.isBlank()
-            ) {
+            val textoBusqueda =
+                normalizarTexto(searchText)
+
+            if (textoBusqueda.isBlank()) {
 
                 rutas
 
@@ -161,19 +171,91 @@ private fun CollectionRoutesContent(
 
                 rutas.filter { ruta ->
 
-                    ruta.id.contains(
-                        searchText,
-                        ignoreCase = true
+                    val id =
+                        normalizarTexto(
+                            ruta.id
+                        )
+
+                    val estado =
+                        normalizarTexto(
+                            formatEstadoRuta(
+                                ruta.estado
+                            )
+                        )
+
+                    val fecha =
+                        normalizarTexto(
+                            formatearFecha(
+                                ruta.fechaRecoleccion
+                            )
+                        )
+
+                    val solicitudes =
+                        normalizarTexto(
+                            "${ruta.solicitudesIds.size} solicitudes"
+                        )
+
+                    val puntos =
+                        normalizarTexto(
+                            "${ruta.ordenSolicitudes.size} puntos de recoleccion"
+                        )
+
+                    val distanciaKm =
+                        ruta.distanciaTotalMetros /
+                                1000.0
+
+                    val distancia =
+                        normalizarTexto(
+                            String.format(
+                                "%.1f km",
+                                distanciaKm
+                            )
+                        )
+
+                    val minutos =
+                        if (
+                            ruta.duracionTotalSegundos <= 0
+                        ) {
+                            0
+                        } else {
+                            (
+                                    ruta.duracionTotalSegundos +
+                                            59
+                                    ) / 60
+                        }
+
+                    val duracion =
+                        normalizarTexto(
+                            "$minutos min"
+                        )
+
+
+                    id.contains(
+                        textoBusqueda
                     ) ||
 
-                            ruta.fechaRecoleccion.contains(
-                                searchText,
-                                ignoreCase = true
+                            estado.contains(
+                                textoBusqueda
                             ) ||
 
-                            ruta.estado.contains(
-                                searchText,
-                                ignoreCase = true
+                            fecha.contains(
+                                textoBusqueda
+                            ) ||
+
+                            solicitudes.contains(
+                                textoBusqueda
+                            ) ||
+
+                            puntos.contains(
+                                textoBusqueda
+                            ) ||
+
+                            distancia.contains(
+                                textoBusqueda
+                            ) ||
+
+                            duracion.contains(
+                                textoBusqueda
                             )
                 }
             }
