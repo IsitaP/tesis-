@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.compose.foundation.clickable
 
 // ----------------------------------------------------
 // COLORES
@@ -49,7 +49,8 @@ fun TarjetaAccionRecolector(
     imageRes: Int,
     modifier: Modifier = Modifier,
     cardHeight: Dp = 162.dp,
-    imageSize: Dp = 150.dp
+    imageSize: Dp = 150.dp,
+    onLinkClick: () -> Unit = {}
 ) {
 
     Card(
@@ -90,7 +91,8 @@ fun TarjetaAccionRecolector(
                     text = linkText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen
+                    color = MainGreen,
+                    modifier = Modifier.clickable { onLinkClick() }
                 )
             }
 

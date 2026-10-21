@@ -1,23 +1,28 @@
 package com.rebottle.app.ui.screens.fundacion.rutas
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.material3.Text
+import android.graphics.Color as AndroidColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.toArgb
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.rebottle.app.ui.theme.RebottleColors
-import kotlin.math.cos
 
 
 data class PuntoMapa(
@@ -28,8 +33,8 @@ data class PuntoMapa(
 
 
 /**
- * Mapa esquemático: dibuja el recorrido y las paradas sin calles.
- * Cuando haya Google Maps se reemplaza por uno real con la misma firma.
+ * Mapa de Google con el recorrido (polyline) y las paradas.
+ * Encuadra automáticamente todo lo que haya para mostrar.
  */
 @Composable
 fun MapaParadas(
@@ -38,90 +43,71 @@ fun MapaParadas(
     modifier: Modifier = Modifier
 ) {
 
-    val trazo = remember(polyline) { decodificarPolyline(polyline) }
+    val trazo = remember(polyline) {
+        decodificarPolyline(polyline).map { LatLng(it.first, it.second) }
+    }
 
-    Box(
-        modifier = modifier.background(Color(0xFFE9EDE3)),
-        contentAlignment = Alignment.Center
-    ) {
+    val todos = remember(trazo, puntos) {
+        trazo + puntos.map { LatLng(it.latitud, it.longitud) }
+    }
 
-        if (puntos.isEmpty() && trazo.isEmpty()) {
-            Text(
-                text = "Sin paradas para mostrar",
-                fontSize = 13.sp,
-                color = RebottleColors.SecondaryText
-            )
-            return@Box
+    // Bogotá por defecto, mientras no haya nada que mostrar
+    val camara = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(4.7110, -74.0721), 11f)
+    }
+
+    var mapaCargado by remember { mutableStateOf(false) }
+
+    LaunchedEffect(todos, mapaCargado) {
+
+        if (!mapaCargado || todos.isEmpty()) return@LaunchedEffect
+
+        if (todos.size == 1) {
+            camara.move(CameraUpdateFactory.newLatLngZoom(todos.first(), 15f))
+            return@LaunchedEffect
         }
 
-        Canvas(modifier = Modifier.matchParentSize()) {
+        val limites = LatLngBounds.builder().apply { todos.forEach { include(it) } }.build()
 
-            // Cuadrícula suave de fondo
-            val paso = 36.dp.toPx()
-            var x = 0f
-            while (x < size.width) {
-                drawLine(Color(0x14000000), Offset(x, 0f), Offset(x, size.height), 1f)
-                x += paso
-            }
-            var y = 0f
-            while (y < size.height) {
-                drawLine(Color(0x14000000), Offset(0f, y), Offset(size.width, y), 1f)
-                y += paso
-            }
+        camara.move(CameraUpdateFactory.newLatLngBounds(limites, 100))
+    }
 
-            val todos = trazo + puntos.map { it.latitud to it.longitud }
+    GoogleMap(
+        modifier = modifier,
+        cameraPositionState = camara,
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = false,
+            mapToolbarEnabled = false,
+            myLocationButtonEnabled = false
+        ),
+        onMapLoaded = { mapaCargado = true }
+    ) {
 
-            val minLat = todos.minOf { it.first }
-            val maxLat = todos.maxOf { it.first }
-            val minLng = todos.minOf { it.second }
-            val maxLng = todos.maxOf { it.second }
-
-            val kx = cos(Math.toRadians((minLat + maxLat) / 2.0))
-            val anchoGeo = ((maxLng - minLng) * kx).coerceAtLeast(1e-6)
-            val altoGeo = (maxLat - minLat).coerceAtLeast(1e-6)
-
-            val margen = 28.dp.toPx().toDouble()
-            val ancho = size.width.toDouble()
-            val alto = size.height.toDouble()
-
-            val escala = minOf(
-                (ancho - 2 * margen) / anchoGeo,
-                (alto - 2 * margen) / altoGeo
+        if (trazo.size >= 2) {
+            Polyline(
+                points = trazo,
+                color = RebottleColors.MainGreen,
+                width = 12f
             )
+        }
 
-            val offX = (ancho - anchoGeo * escala) / 2.0
-            val offY = (alto - altoGeo * escala) / 2.0
-
-            fun proyectar(lat: Double, lng: Double) = Offset(
-                (offX + (lng - minLng) * kx * escala).toFloat(),
-                (offY + (maxLat - lat) * escala).toFloat()
-            )
-
-            if (trazo.size >= 2) {
-                val path = Path()
-                trazo.forEachIndexed { i, (lat, lng) ->
-                    val p = proyectar(lat, lng)
-                    if (i == 0) path.moveTo(p.x, p.y) else path.lineTo(p.x, p.y)
-                }
-                drawPath(
-                    path = path,
-                    color = RebottleColors.MainGreen,
-                    style = Stroke(
-                        width = 4.dp.toPx(),
-                        cap = StrokeCap.Round,
-                        join = StrokeJoin.Round
-                    )
+        puntos.forEach { punto ->
+            key(punto.latitud, punto.longitud, punto.color) {
+                Marker(
+                    state = rememberMarkerState(position = LatLng(punto.latitud, punto.longitud)),
+                    icon = BitmapDescriptorFactory.defaultMarker(tonoDe(punto.color))
                 )
-            }
-
-            puntos.forEach { punto ->
-                val c = proyectar(punto.latitud, punto.longitud)
-                drawCircle(Color.White, radius = 11.dp.toPx(), center = c)
-                drawCircle(punto.color, radius = 8.dp.toPx(), center = c)
-                drawCircle(Color.White, radius = 3.dp.toPx(), center = c)
             }
         }
     }
+}
+
+
+// Convierte un color de Compose al matiz que usan los marcadores de Google
+private fun tonoDe(color: Color): Float {
+    val hsv = FloatArray(3)
+    AndroidColor.colorToHSV(color.toArgb(), hsv)
+    return hsv[0]
 }
 
 
