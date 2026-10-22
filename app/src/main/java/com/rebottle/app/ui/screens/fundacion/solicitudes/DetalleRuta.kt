@@ -1473,118 +1473,25 @@ private fun RecoleccionDetailCard(
 
 
                 // =============================================
-                // VER SOLICITUDES
-                // =============================================
-
-                OutlinedButton(
-                    onClick = {
-
-                        controller.navigate(
-                            AppScreens.solicitudesFundacion.name
-                        )
-                    },
-
-                    modifier =
-                        Modifier.weight(
-                            1f
-                        ),
-
-                    shape =
-                        RoundedCornerShape(
-                            12.dp
-                        ),
-
-                    border =
-                        BorderStroke(
-                            1.dp,
-                            ButtonBorder
-                        ),
-
-                    colors =
-                        ButtonDefaults
-                            .outlinedButtonColors(
-
-                                containerColor =
-                                    Color.White,
-
-                                contentColor =
-                                    ButtonText
-                            ),
-
-                    contentPadding =
-                        PaddingValues(
-                            horizontal =
-                                6.dp,
-
-                            vertical =
-                                8.dp
-                        )
-                ) {
-
-
-                    Row(
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
-
-
-                        Icon(
-                            painter =
-                                painterResource(
-                                    id =
-                                        R.drawable
-                                            .ic_box
-                                ),
-
-                            contentDescription =
-                                null,
-
-                            modifier =
-                                Modifier.size(
-                                    21.dp
-                                ),
-
-                            tint =
-                                BrownIcon
-                        )
-
-
-                        Spacer(
-                            modifier =
-                                Modifier.width(
-                                    5.dp
-                                )
-                        )
-
-
-                        Text(
-                            text =
-                                "Ver solicitudes",
-
-                            fontSize =
-                                11.sp,
-
-                            color =
-                                ButtonText,
-
-                            lineHeight =
-                                13.sp,
-
-                            textAlign =
-                                TextAlign.Start
-                        )
-                    }
-                }
-
-
-                // =============================================
                 // VER RECORRIDO
                 // =============================================
 
+                // Abre el mapa y detalle del recolector asignado a esta ruta
                 OutlinedButton(
                     onClick = {
 
+                        ruta.recolectorId
+                            ?.takeIf { it.isNotBlank() }
+                            ?.let { recolectorId ->
+
+                                controller.navigate(
+                                    "${AppScreens.detalleRecolectorRuta.name}/$recolectorId"
+                                )
+                            }
                     },
+
+                    enabled =
+                        !ruta.recolectorId.isNullOrBlank(),
 
                     modifier =
                         Modifier.weight(

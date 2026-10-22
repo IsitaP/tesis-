@@ -76,6 +76,7 @@ enum class AppScreens {
     perfil,
     rutas,
     detalleRecolectorRuta,
+    detalleParadaRecolector,
     filtroRutas,
     aportesFundacion,
 
@@ -156,6 +157,23 @@ fun Navigation() {
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getString("recolectorId") ?: ""
             DetalleRecolectorScreen(navController, recolectorId = id)
+        }
+        // Detalle de una solicitud de la ruta de un recolector (solo lectura)
+        composable(
+            route = "${AppScreens.detalleParadaRecolector.name}/{recolectorId}/{solicitudId}",
+            arguments = listOf(
+                navArgument("recolectorId") { type = NavType.StringType },
+                navArgument("solicitudId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val recolectorId = backStackEntry.arguments?.getString("recolectorId") ?: ""
+            val solicitudId = backStackEntry.arguments?.getString("solicitudId") ?: ""
+            PantallaDetalleAsignacionRecolector(
+                navController,
+                asignacionId = solicitudId,
+                recolectorId = recolectorId,
+                soloLectura = true
+            )
         }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
         composable(route = AppScreens.aportesFundacion.name) {
