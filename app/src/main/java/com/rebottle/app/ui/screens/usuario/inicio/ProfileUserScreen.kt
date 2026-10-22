@@ -462,8 +462,12 @@ private fun ReBottleUsuarioProfileBottomBar(
                 colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
             )
             NavigationBarItem(
-                selected = false,
-                onClick = { /* TODO: recompensas */ },
+                selected = currentRoute == AppScreens.recompensas.name,
+                onClick = {
+                    if (currentRoute != AppScreens.recompensas.name) {
+                        controller.navigate(AppScreens.recompensas.name)
+                    }
+                },
                 icon = { Image(painter = painterResource(id = R.drawable.icon_rewards), contentDescription = "Recompensas", modifier = Modifier.size(25.dp)) },
                 label = { Text(text = "Recompensas", fontSize = 12.sp) },
                 colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)

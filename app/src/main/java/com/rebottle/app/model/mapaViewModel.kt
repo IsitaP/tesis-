@@ -35,6 +35,10 @@ data class Ruta(
 
     val fechaRecoleccion: String = "",
 
+    // Hora de salida que define la fundación ("HH:mm").
+    // Vacía = todavía no se ha definido.
+    val hora: String = "",
+
     val estado: String = EstadoRuta.PUBLICADA.name,
 
     val recolectorId: String? = null,
@@ -279,6 +283,10 @@ class MapaViewModel : ViewModel() {
                                     fechaRecoleccion =
                                         document.getString(
                                             "fechaRecoleccion"
+                                        ) ?: "",
+                                    hora =
+                                        document.getString(
+                                            "hora"
                                         ) ?: "",
 
 
@@ -644,6 +652,30 @@ class MapaViewModel : ViewModel() {
                     )
             }
     }
+
+    // ========================================================
+    // HORA DE LA RUTA
+    // ========================================================
+
+    // Se guarda como "HH:mm" (24 h). El Inicio de la fundación
+    // la usa para saber cuál es la próxima ruta.
+    fun actualizarHoraRuta(
+        rutaId: String,
+        hora: String,
+        onError: (String) -> Unit = {}
+    ) {
+
+        if (rutaId.isBlank()) return
+
+        firestore
+            .collection("rutas")
+            .document(rutaId)
+            .update("hora", hora)
+            .addOnFailureListener { exception ->
+                onError(exception.message ?: "No se pudo guardar la hora")
+            }
+    }
+
 
     fun limpiarEstadoAsignacion() {
 

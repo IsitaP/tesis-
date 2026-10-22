@@ -38,8 +38,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -428,86 +426,6 @@ fun ProfileFundacionScreen(
                     modifier =
                         Modifier.height(16.dp)
                 )
-                // ------------------------------------------------
-// GESTIÓN
-// ------------------------------------------------
-
-                Text(
-                    text = "Gestión",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainText
-                )
-
-                Spacer(
-                    modifier = Modifier.height(9.dp)
-                )
-
-
-// ------------------------------------------------
-// ADMINISTRAR SOLICITUDES
-// ------------------------------------------------
-
-                Button(
-                    onClick = {
-
-                        // Va a ManageRequestsScreen
-                        //onManageRequestsClick()
-                    },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp),
-
-                    shape = RoundedCornerShape(50.dp),
-
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MainGreen
-                    )
-                ) {
-
-                    Text(
-                        text = "Administrar solicitudes",
-                        color = Color.White,
-                        fontSize = 18.sp
-                    )
-                }
-
-
-                Spacer(
-                    modifier = Modifier.height(10.dp)
-                )
-
-
-// ------------------------------------------------
-// ADMINISTRAR RECOLECTORES
-// ------------------------------------------------
-
-                Button(
-                    onClick = {
-
-                        // Va a ManageCollectorsScreen
-                        //onManageCollectorsClick()
-                    },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp),
-
-                    shape = RoundedCornerShape(50.dp),
-
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MainGreen
-                    )
-                ) {
-
-                    Text(
-                        text = "Administrar recolectores",
-                        color = Color.White,
-                        fontSize = 18.sp
-                    )
-                }
-
 
                 Spacer(
                     modifier = Modifier.height(25.dp)
@@ -975,7 +893,9 @@ private fun ReBottleProfileBottomBar(
 
                 selected = currentRoute == AppScreens.solicitudesFundacion.name,
                 onClick = {
-                    controller.navigate(AppScreens.solicitudesFundacion.name)
+                    if (currentRoute != AppScreens.solicitudesFundacion.name) {
+                        controller.navigate(AppScreens.solicitudesFundacion.name)
+                    }
                 },
 
                 icon = {
@@ -1082,7 +1002,9 @@ private fun ReBottleProfileBottomBar(
 
                 selected = currentRoute == AppScreens.perfil.name,
                 onClick = {
-                    controller.navigate(AppScreens.perfil.name)
+                    if (currentRoute != AppScreens.perfil.name) {
+                        controller.navigate(AppScreens.perfil.name)
+                    }
                 },
 
                 icon = {

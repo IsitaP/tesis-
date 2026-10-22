@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebottle.app.ui.screens.recolector.solicitudes.AsignacionRecolector
@@ -96,7 +97,10 @@ fun TarjetaAsignacionRecolector(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Filled.LocationOn,
                         contentDescription = null,
@@ -104,9 +108,15 @@ fun TarjetaAsignacionRecolector(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = asignacion.direccion, fontSize = 14.sp, color = Color(0xFF34382F))
+                    Text(
+                        text = asignacion.direccion,
+                        fontSize = 14.sp,
+                        color = Color(0xFF34382F),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Ver detalles →",
                     fontSize = 14.sp,

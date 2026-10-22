@@ -54,7 +54,7 @@ import com.rebottle.app.ui.screens.recolector.solicitudes.formatearFecha
 import com.rebottle.app.ui.theme.RebottleColors
 
 
-private enum class Campo { RECOLECTOR, LOCALIDAD, FECHA, HORA, MATERIAL, PESO }
+private enum class Campo { RECOLECTOR, FECHA, MATERIAL, PESO }
 
 
 @Composable
@@ -75,13 +75,6 @@ fun FiltroRutasScreen(
 
     // Opciones: solo lo que existe hoy en los datos
     val opcionesRecolector = recolectores.map { it.uid to it.nombre }
-
-    val opcionesLocalidad =
-        recolectores.map { it.localidad }
-            .filter { it.isNotBlank() }
-            .distinct()
-            .sorted()
-            .map { it to it }
 
     val opcionesFecha =
         recolectores.map { it.fecha }
@@ -153,16 +146,6 @@ fun FiltroRutasScreen(
                 )
 
                 FiltroDesplegable(
-                    titulo = "Localidad",
-                    icono = { IconoRecurso(R.drawable.ic_location_pin) },
-                    opciones = opcionesLocalidad,
-                    seleccion = borrador.localidad,
-                    expandido = abierto == Campo.LOCALIDAD,
-                    onToggle = { abierto = if (abierto == Campo.LOCALIDAD) null else Campo.LOCALIDAD },
-                    onElegir = { borrador = borrador.copy(localidad = it); abierto = null }
-                )
-
-                FiltroDesplegable(
                     titulo = "Fecha",
                     icono = { IconoRecurso(R.drawable.ic_calendar) },
                     opciones = opcionesFecha,
@@ -170,17 +153,6 @@ fun FiltroRutasScreen(
                     expandido = abierto == Campo.FECHA,
                     onToggle = { abierto = if (abierto == Campo.FECHA) null else Campo.FECHA },
                     onElegir = { borrador = borrador.copy(fecha = it); abierto = null }
-                )
-
-                FiltroDesplegable(
-                    titulo = "Hora",
-                    icono = { IconoRecurso(R.drawable.ic_clock) },
-                    opciones = emptyList(),
-                    seleccion = null,
-                    expandido = false,
-                    habilitado = false,
-                    onToggle = {},
-                    onElegir = {}
                 )
 
                 FiltroDesplegable(

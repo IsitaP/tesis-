@@ -88,15 +88,16 @@ fun BarraNavegacionRecolector(
             }
         )
 
-        // RUTAS (aún sin pantalla)
+        // RUTAS
         ItemBarraRecolector(
             title = "Rutas",
-            selected = currentRoute == AppScreens.rutas.name,
+            selected = currentRoute == AppScreens.rutasRecolector.name,
             iconRes = R.drawable.icon_routes,
             modifier = Modifier.weight(1f),
             onClick = {
-                // TODO: descomentar cuando exista PantallaRutasRecolector
-                // controller.navigate(AppScreens.rutas.name)
+                if (currentRoute != AppScreens.rutasRecolector.name) {
+                    controller.navigate(AppScreens.rutasRecolector.name)
+                }
             }
         )
 

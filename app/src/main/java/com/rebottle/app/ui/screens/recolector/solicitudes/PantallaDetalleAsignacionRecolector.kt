@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -315,7 +314,7 @@ fun PantallaDetalleAsignacionRecolector(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Botones internos de Mapa y Contactar
+                    // Botón interno de Mapa
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -333,7 +332,7 @@ fun PantallaDetalleAsignacionRecolector(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
+                                horizontalArrangement = Arrangement.Center
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_location_pin),
@@ -343,39 +342,7 @@ fun PantallaDetalleAsignacionRecolector(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Ver\nmapa",
-                                    fontSize = 12.sp,
-                                    color = ButtonText,
-                                    lineHeight = 14.sp,
-                                    textAlign = TextAlign.Start
-                                )
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = { /* TODO: Contactar usuario */ },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, ButtonBorder),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.White,
-                                contentColor = ButtonText
-                            ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.ChatBubble,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp),
-                                    tint = BrownIcon
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Contactar\nusuario",
+                                    text = "Ver mapa",
                                     fontSize = 12.sp,
                                     color = ButtonText,
                                     lineHeight = 14.sp,
