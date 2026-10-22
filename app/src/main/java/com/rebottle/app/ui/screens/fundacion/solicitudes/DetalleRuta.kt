@@ -1,5 +1,6 @@
 package com.rebottle.app.ui.screens.fundacion.solicitudes
 
+import android.app.TimePickerDialog
 import android.widget.Toast
 
 import androidx.compose.foundation.BorderStroke
@@ -15,8 +16,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -393,12 +396,25 @@ private fun RecoleccionDetalleContent(
             // CARD DETALLE
             // =================================================
 
+            val context =
+                LocalContext.current
+
             RecoleccionDetailCard(
                 ruta =
                     ruta,
 
                 controller =
-                    controller
+                    controller,
+
+                onCambiarHora = { hora ->
+                    mapaViewModel.actualizarHoraRuta(
+                        rutaId = ruta.id,
+                        hora = hora,
+                        onError = { mensaje ->
+                            Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+                        }
+                    )
+                }
             )
 
 
@@ -632,28 +648,43 @@ private fun RecoleccionDetalleContent(
         // PAISAJE
         //
         // weight(1f) hace que use solamente el espacio
-        // que quede disponible en la pantalla.
+        // que quede disponible en la pantalla; heightIn
+        // lo limita para que no ocupe tanto.
         // ====================================================
 
-        Image(
-            painter =
-                painterResource(
-                    id =
-                        R.drawable
-                            .solicitudes_paisaje
-                ),
-
-            contentDescription =
-                null,
-
+        Box(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .weight(1f),
 
-            contentScale =
-                ContentScale.FillWidth
-        )
+            contentAlignment =
+                Alignment.BottomCenter
+        ) {
+
+            Image(
+                painter =
+                    painterResource(
+                        id =
+                            R.drawable
+                                .solicitudes_paisaje
+                    ),
+
+                contentDescription =
+                    null,
+
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 150.dp),
+
+                contentScale =
+                    ContentScale.Crop,
+
+                alignment =
+                    Alignment.BottomCenter
+            )
+        }
     }
 }
 
@@ -673,8 +704,9 @@ private fun RecoleccionHeader(
         modifier =
             modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(
-                    top = 20.dp,
+                    top = 16.dp,
                     start = 20.dp,
                     end = 20.dp,
                     bottom = 12.dp
@@ -743,8 +775,24 @@ private fun RecoleccionHeader(
 private fun RecoleccionDetailCard(
     ruta: Ruta,
     controller: NavController,
+    onCambiarHora: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+
+    val context =
+        LocalContext.current
+
+    // Reloj para elegir la hora de salida de la ruta
+    val abrirReloj = {
+        val actual = horaDeTexto(ruta.hora)
+        TimePickerDialog(
+            context,
+            { _, h, m -> onCambiarHora("%02d:%02d".format(h, m)) },
+            actual?.first ?: 8,
+            actual?.second ?: 0,
+            false
+        ).show()
+    }
 
     // ========================================================
     // DISTANCIA
@@ -1074,6 +1122,81 @@ private fun RecoleccionDetailCard(
                             MainText
                     )
                 }
+            }
+
+
+            Spacer(
+                modifier =
+                    Modifier.height(
+                        9.dp
+                    )
+            )
+
+
+            // =================================================
+            // HORA DE LA RUTA
+            // =================================================
+
+            Row(
+                modifier =
+                    Modifier.clickable { abrirReloj() },
+
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    painter =
+                        painterResource(
+                            id = R.drawable.ic_clock
+                        ),
+
+                    contentDescription =
+                        null,
+
+                    modifier =
+                        Modifier.size(19.dp),
+
+                    tint =
+                        BrownIcon
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.width(8.dp)
+                )
+
+                Text(
+                    text =
+                        formatearHora(ruta.hora)
+                            ?.let { "Hora: $it" }
+                            ?: "Sin hora definida",
+
+                    fontSize =
+                        13.sp,
+
+                    color =
+                        MainText
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.width(10.dp)
+                )
+
+                Text(
+                    text =
+                        if (ruta.hora.isBlank()) "Definir hora" else "Cambiar",
+
+                    fontSize =
+                        13.sp,
+
+                    fontWeight =
+                        FontWeight.SemiBold,
+
+                    color =
+                        PrimaryGreen
+                )
             }
 
 
@@ -1612,6 +1735,34 @@ private fun StatusBadge(
 // ============================================================
 // FORMATEAR FECHA
 // ============================================================
+
+// "14:30" -> (14, 30). null si no hay hora válida.
+private fun horaDeTexto(
+    hora: String
+): Pair<Int, Int>? {
+
+    val partes = hora.split(":")
+
+    val h = partes.getOrNull(0)?.trim()?.toIntOrNull() ?: return null
+    val m = partes.getOrNull(1)?.trim()?.toIntOrNull() ?: return null
+
+    return if (h in 0..23 && m in 0..59) h to m else null
+}
+
+
+// "14:30" -> "2:30 PM"
+private fun formatearHora(
+    hora: String
+): String? {
+
+    val (h, m) = horaDeTexto(hora) ?: return null
+
+    val sufijo = if (h < 12) "AM" else "PM"
+    val h12 = if (h % 12 == 0) 12 else h % 12
+
+    return "%d:%02d %s".format(h12, m, sufijo)
+}
+
 
 private fun formatearFecha(
     fecha: String

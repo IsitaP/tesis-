@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,12 +48,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.firebase.auth.FirebaseAuth
 import com.rebottle.app.R
+import com.rebottle.app.model.HomeFundacionState
+import com.rebottle.app.model.HomeFundacionViewModel
 import com.rebottle.app.model.PerfilCache
 import com.rebottle.app.navigation.AppScreens
+import com.rebottle.app.ui.screens.usuario.gamificacion.formatKg
 import com.rebottle.app.ui.theme.RebottleColors
 
 // ----------------------------------------------------
@@ -74,8 +80,12 @@ private val SecondaryText = RebottleColors.SecondaryText
 
 @Composable
 fun HomeFundacionScreen(
-   controller: NavController
+   controller: NavController,
+   model: HomeFundacionViewModel = viewModel()
 ) {
+
+    // Datos reales: solicitudes y rutas en tiempo real
+    val state by model.state.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -136,7 +146,10 @@ fun HomeFundacionScreen(
             )
 
 
-            RequestsCard()
+            RequestsCard(
+                state = state,
+                onClick = { controller.navigate(AppScreens.solicitudesFundacion.name) }
+            )
 
 
             Spacer(
@@ -154,7 +167,16 @@ fun HomeFundacionScreen(
             )
 
 
-            NextRouteCard()
+            NextRouteCard(
+                state = state,
+                onClick = {
+                    // El detalle solo muestra rutas publicadas o asignadas;
+                    // una ruta en curso se sigue desde Rutas.
+                    val ruta = state.proximaRuta
+                    if (ruta != null && !ruta.enCurso) controller.navigate("${AppScreens.detalleRuta.name}/${ruta.rutaId}")
+                    else controller.navigate(AppScreens.rutas.name)
+                }
+            )
 
 
             Spacer(
@@ -172,7 +194,10 @@ fun HomeFundacionScreen(
             )
 
 
-            DailySummaryCard()
+            DailySummaryCard(
+                state = state,
+                onClick = { controller.navigate(AppScreens.aportesFundacion.name) }
+            )
         }
     }
 }
@@ -286,11 +311,15 @@ private fun SectionTitle(
 // ----------------------------------------------------
 
 @Composable
-private fun RequestsCard() {
+private fun RequestsCard(
+    state: HomeFundacionState,
+    onClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .height(162.dp),
 
         shape =
@@ -362,14 +391,14 @@ private fun RequestsCard() {
 
 
                 Text(
-                    text = "12 nuevas",
+                    text = if (state.nuevas == 1) "1 nueva" else "${state.nuevas} nuevas",
                     fontSize = 14.sp,
                     color = SecondaryText
                 )
 
 
                 Text(
-                    text = "5 aceptadas",
+                    text = if (state.aceptadas == 1) "1 aceptada" else "${state.aceptadas} aceptadas",
                     fontSize = 14.sp,
                     color = SecondaryText
                 )
@@ -377,7 +406,8 @@ private fun RequestsCard() {
 
                 Text(
                     text =
-                        "18 completadas hoy",
+                        if (state.completadasHoy == 1) "1 completada hoy"
+                        else "${state.completadasHoy} completadas hoy",
 
                     fontSize = 14.sp,
 
@@ -429,11 +459,15 @@ private fun RequestsCard() {
 // ----------------------------------------------------
 
 @Composable
-private fun NextRouteCard() {
+private fun NextRouteCard(
+    state: HomeFundacionState,
+    onClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .height(165.dp),
 
         shape =
@@ -475,6 +509,8 @@ private fun NextRouteCard() {
                     Modifier.weight(1f)
             ) {
 
+                val ruta = state.proximaRuta
+
                 Text(
                     text =
                         "Siguiente recolección",
@@ -496,7 +532,11 @@ private fun NextRouteCard() {
 
                 Text(
                     text =
-                        "Barrio La Floresta",
+                        ruta?.lugar ?: "No hay rutas pendientes",
+
+                    maxLines = 1,
+
+                    overflow = TextOverflow.Ellipsis,
 
                     fontSize = 14.sp,
 
@@ -504,31 +544,42 @@ private fun NextRouteCard() {
                 )
 
 
+                if (ruta != null) {
+
                 Text(
-                    text = "10:30 AM",
+                    text = ruta.cuando,
                     fontSize = 14.sp,
+                    color = if (ruta.enCurso) MainGreen else SecondaryText
+                )
+
+
+                Text(
+                    text =
+                        "Usuario: ${ruta.usuario}",
+
+                    maxLines = 1,
+
+                    overflow = TextOverflow.Ellipsis,
+
+                    fontSize = 14.sp,
+
                     color = SecondaryText
                 )
 
 
                 Text(
                     text =
-                        "Usuario: Juan Pérez",
+                        "Recolector: ${ruta.recolector}",
+
+                    maxLines = 1,
+
+                    overflow = TextOverflow.Ellipsis,
 
                     fontSize = 14.sp,
 
                     color = SecondaryText
                 )
-
-
-                Text(
-                    text =
-                        "Recolector: Lucho Díaz",
-
-                    fontSize = 14.sp,
-
-                    color = SecondaryText
-                )
+                }
 
 
                 Spacer(
@@ -538,7 +589,7 @@ private fun NextRouteCard() {
 
 
                 Text(
-                    text = "Ver ruta →",
+                    text = if (ruta != null) "Ver ruta →" else "Ver rutas →",
                     fontSize = 15.sp,
                     fontWeight =
                         FontWeight.Medium,
@@ -574,12 +625,16 @@ private fun NextRouteCard() {
 // ----------------------------------------------------
 
 @Composable
-private fun DailySummaryCard() {
+private fun DailySummaryCard(
+    state: HomeFundacionState,
+    onClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp),
+            .clickable { onClick() }
+            .height(150.dp),
 
         shape =
             RoundedCornerShape(7.dp),
@@ -641,7 +696,8 @@ private fun DailySummaryCard() {
 
                 Text(
                     text =
-                        "12 recolecciones realizadas",
+                        if (state.completadasHoy == 1) "1 recolección realizada"
+                        else "${state.completadasHoy} recolecciones realizadas",
 
                     fontSize = 14.sp,
 
@@ -651,12 +707,21 @@ private fun DailySummaryCard() {
 
                 Text(
                     text =
-                        "48 kg de materiales reciclados",
+                        "${formatKg(state.kgRecicladosHoy)} de materiales reciclados",
 
                     fontSize = 14.sp,
 
                     color = SecondaryText
                 )
+
+
+                if (state.kgPorRecolectarHoy > 0) {
+                    Text(
+                        text = "${formatKg(state.kgPorRecolectarHoy)} por recolectar hoy",
+                        fontSize = 14.sp,
+                        color = SecondaryText
+                    )
+                }
 
 
                 Spacer(
@@ -777,7 +842,9 @@ private fun ReBottleBottomBar(
             NavigationBarItem(
                 selected = currentRoute == AppScreens.solicitudesFundacion.name,
                 onClick = {
-                    controller.navigate(AppScreens.solicitudesFundacion.name)
+                    if (currentRoute != AppScreens.solicitudesFundacion.name) {
+                        controller.navigate(AppScreens.solicitudesFundacion.name)
+                    }
                 },
                 icon = { BottomNavIcon(iconRes = R.drawable.icon_collection, contentDescription = "Solicitudes") },
                 label = { Text(text = "Solicitudes", fontSize = 12.sp) },
@@ -809,7 +876,9 @@ private fun ReBottleBottomBar(
             NavigationBarItem(
                 selected = currentRoute == AppScreens.perfil.name,
                 onClick = {
-                    controller.navigate(AppScreens.perfil.name)
+                    if (currentRoute != AppScreens.perfil.name) {
+                        controller.navigate(AppScreens.perfil.name)
+                    }
                 },
                 icon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Perfil", modifier = Modifier.size(26.dp)) },
                 label = { Text(text = "Perfil", fontSize = 12.sp) },

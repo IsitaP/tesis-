@@ -895,12 +895,14 @@ private fun StatCard(
 
     Card(
         modifier =
-            modifier.shadow(
-                2.dp,
-                RoundedCornerShape(
-                    20.dp
-                )
-            ),
+            modifier
+                .height(88.dp)
+                .shadow(
+                    2.dp,
+                    RoundedCornerShape(
+                        20.dp
+                    )
+                ),
 
         shape =
             RoundedCornerShape(
@@ -916,9 +918,11 @@ private fun StatCard(
 
         Row(
             modifier =
-                Modifier.padding(
-                    16.dp
-                ),
+                Modifier
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = 16.dp
+                    ),
 
             verticalAlignment =
                 Alignment.CenterVertically
@@ -992,6 +996,12 @@ private fun StatCard(
 
                     fontSize =
                         12.sp,
+
+                    lineHeight =
+                        14.sp,
+
+                    maxLines =
+                        2,
 
                     color =
                         SecondaryText
