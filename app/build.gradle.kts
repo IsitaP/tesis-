@@ -11,6 +11,11 @@ val localProperties = Properties().apply {
 
 val placesApiKey = localProperties.getProperty("PLACES_API_KEY") ?: ""
 
+// Sin esta key Google Maps se queda en blanco y Places no inicializa
+if (placesApiKey.isBlank()) {
+    logger.warn("⚠ Falta PLACES_API_KEY en local.properties: el mapa de Rutas saldrá en blanco")
+}
+
 android {
     namespace = "com.rebottle.app"
     compileSdk {

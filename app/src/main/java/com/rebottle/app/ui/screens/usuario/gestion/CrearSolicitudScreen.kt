@@ -102,8 +102,18 @@ fun CreateRequestScreen(
     // GOOGLE PLACES CLIENT
     // ============================================================
 
+    // Si falta la PLACES_API_KEY en local.properties, Places no se
+    // inicializa y createClient() cerraría la app. En ese caso el
+    // cliente queda en null y el buscador avisa en vez de crashear.
     val placesClient = remember(context) {
-        Places.createClient(context)
+        if (Places.isInitialized()) Places.createClient(context) else null
+    }
+
+    LaunchedEffect(placesClient) {
+        if (placesClient == null) {
+            Log.e("Places", "Places no está inicializado: revisa PLACES_API_KEY en local.properties")
+            model.updateLocationError("El buscador de direcciones no está disponible")
+        }
     }
 
 
@@ -182,7 +192,7 @@ fun CreateRequestScreen(
 
 
         // Evitamos buscar con 0 o 1 caracteres.
-        if (query.length < 2) {
+        if (query.length < 2 || placesClient == null) {
 
             predictions = emptyList()
             isSearching = false
@@ -266,6 +276,8 @@ fun CreateRequestScreen(
     fun selectPrediction(
         prediction: AutocompletePrediction
     ) {
+
+        if (placesClient == null) return
 
         val placeFields = listOf(
 

@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -812,18 +813,67 @@ class SolicitudViewModel : ViewModel() {
             )
 
 
+        escucharConsulta(
+            firestore
+                .collection("solicitudes")
+                .whereEqualTo("usuarioId", usuarioActual.uid)
+        )
+    }
+
+
+    // ========================================================
+    // ESCUCHAR APORTES QUE RECIBE LA FUNDACIÓN
+    // ========================================================
+
+    // La fundación recibe todo lo que ya se recolectó, venga del
+    // usuario que venga. Llena el mismo state.solicitudes, así las
+    // pantallas de aportes funcionan igual que en el usuario.
+    fun escucharSolicitudesFundacion() {
+
+        if (auth.currentUser == null) {
+
+            solicitudesListener?.remove()
+
+            _state.value =
+                _state.value.copy(
+                    solicitudes = emptyList(),
+                    isHistoryLoading = false,
+                    historyError = "No hay un usuario autenticado"
+                )
+
+            return
+        }
+
+        _state.value =
+            _state.value.copy(
+                isHistoryLoading = true,
+                historyError = ""
+            )
+
+        escucharConsulta(
+            firestore
+                .collection("solicitudes")
+                .whereEqualTo("estado", EstadoSolicitud.RECOLECTADA.name)
+        )
+    }
+
+
+    // ========================================================
+    // LISTENER COMPARTIDO (usuario y fundación)
+    // ========================================================
+
+    private fun escucharConsulta(
+        consulta: Query
+    ) {
+
+        // Evita crear varios listeners.
+        solicitudesListener
+            ?.remove()
+
+
         solicitudesListener =
 
-            firestore
-                .collection(
-                    "solicitudes"
-                )
-                .whereEqualTo(
-
-                    "usuarioId",
-
-                    usuarioActual.uid
-                )
+            consulta
                 .addSnapshotListener { snapshot, error ->
 
 

@@ -76,6 +76,7 @@ enum class AppScreens {
     rutas,
     detalleRecolectorRuta,
     filtroRutas,
+    aportesFundacion,
 
     //CIUDADANO
     homeCiudadano,
@@ -155,6 +156,9 @@ fun Navigation() {
             DetalleRecolectorScreen(navController, recolectorId = id)
         }
         composable(route = AppScreens.editarPerfilFundacion.name) { EditarPerfilFundacionScreen(navController) }
+        composable(route = AppScreens.aportesFundacion.name) {
+            MisAportesScreen(controller = navController, deFundacion = true)
+        }
 
         composable(
             route = "${AppScreens.detalleRuta.name}/{rutaId}",

@@ -98,6 +98,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 import com.rebottle.app.model.PerfilCache
+import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.ui.screens.auth.UserRole
+import com.rebottle.app.ui.screens.usuario.gamificacion.MaterialPrincipal
+import com.rebottle.app.ui.screens.usuario.gamificacion.PeriodoAportes
+import com.rebottle.app.ui.screens.usuario.gamificacion.formatKg
+import com.rebottle.app.ui.screens.usuario.gamificacion.formatPorcentaje
+import com.rebottle.app.ui.screens.usuario.gamificacion.kgEnPeriodo
+import com.rebottle.app.ui.screens.usuario.gamificacion.materialPrincipal
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -118,7 +128,8 @@ private val SecondaryText = RebottleColors.SecondaryText
 
 @Composable
 fun ProfileFundacionScreen(
-    controller: NavController
+    controller: NavController,
+    solicitudViewModel: SolicitudViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
@@ -129,12 +140,28 @@ fun ProfileFundacionScreen(
     val selectedImageBitmap = PerfilCache.foto
     var subiendoFoto by remember { mutableStateOf(false) }
 
+    // Aportes recibidos: misma lógica que "Mis aportes" del usuario,
+    // pero con todas las solicitudes recolectadas
+    val solicitudState by solicitudViewModel.state.collectAsState()
+    val recibidas = solicitudState.solicitudes
+    val principal = remember(recibidas) { materialPrincipal(recibidas) }
+    val kgMes = remember(recibidas) { kgEnPeriodo(recibidas, PeriodoAportes.MES) }
+    var recolectores by remember { mutableStateOf<Int?>(null) }
+
     // ------------------------------------------------
     // CARGAR DATOS + FOTO DESDE STORAGE
     // ------------------------------------------------
 
     LaunchedEffect(uid) {
-        if (uid != null) PerfilCache.cargar(uid)
+        if (uid != null) {
+            PerfilCache.cargar(uid)
+            solicitudViewModel.escucharSolicitudesFundacion()
+
+            Firebase.firestore.collection("users")
+                .whereEqualTo("role", UserRole.RECOLECTOR.firestoreValue)
+                .get()
+                .addOnSuccessListener { recolectores = it.size() }
+        }
     }
 
     // ------------------------------------------------
@@ -369,7 +396,11 @@ fun ProfileFundacionScreen(
 
                         fontSize = 14.sp,
 
-                        color = MainGreen
+                        color = MainGreen,
+
+                        modifier = Modifier.clickable {
+                            controller.navigate(AppScreens.aportesFundacion.name)
+                        }
                     )
                 }
 
@@ -384,7 +415,13 @@ fun ProfileFundacionScreen(
                 // CARD RESUMEN
                 // ------------------------------------------------
 
-                ProfileSummaryCard()
+                ProfileSummaryCard(
+                    principal = principal,
+                    kgMes = kgMes,
+                    totalRecolecciones = recibidas.size,
+                    recolectores = recolectores,
+                    onClick = { controller.navigate(AppScreens.aportesFundacion.name) }
+                )
 
 
                 Spacer(
@@ -594,13 +631,20 @@ private fun ProfileHeader(
 // ----------------------------------------------------
 
 @Composable
-private fun ProfileSummaryCard() {
+private fun ProfileSummaryCard(
+    principal: MaterialPrincipal?,
+    kgMes: Double,
+    totalRecolecciones: Int,
+    recolectores: Int?,
+    onClick: () -> Unit
+) {
 
     Card(
 
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp),
+            .height(180.dp)
+            .clickable { onClick() },
 
         shape =
             RoundedCornerShape(13.dp),
@@ -692,8 +736,9 @@ private fun ProfileSummaryCard() {
 
                 ) {
 
+                    // Material que más ha recibido y sus kg
                     Text(
-                        text = "8 Kg",
+                        text = formatKg(principal?.kg ?: 0.0),
 
                         fontSize = 20.sp,
 
@@ -705,7 +750,7 @@ private fun ProfileSummaryCard() {
 
 
                     Text(
-                        text = "Plástico",
+                        text = principal?.nombre ?: "Sin aportes",
 
                         fontSize = 14.sp,
 
@@ -732,8 +777,9 @@ private fun ProfileSummaryCard() {
 
                 ) {
 
+                    // Qué porcentaje de todo lo recibido es ese material
                     Text(
-                        text = "13,5%",
+                        text = formatPorcentaje(principal?.porcentaje ?: 0f),
 
                         fontSize = 20.sp,
 
@@ -769,9 +815,14 @@ private fun ProfileSummaryCard() {
             Text(
 
                 text =
-                    "100 Kg de material recolectado este mes\n" +
-                            "20 recolecciones realizadas\n" +
-                            "50 recolectores activos",
+                    "${formatKg(kgMes)} de material recolectado este mes\n" +
+                            (if (totalRecolecciones == 1) "1 recolección realizada"
+                            else "$totalRecolecciones recolecciones realizadas") + "\n" +
+                            when (recolectores) {
+                                null -> "Cargando recolectores…"
+                                1 -> "1 recolector registrado"
+                                else -> "$recolectores recolectores registrados"
+                            },
 
                 fontSize = 16.sp,
 

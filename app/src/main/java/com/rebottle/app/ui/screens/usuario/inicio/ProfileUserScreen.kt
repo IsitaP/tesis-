@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -253,12 +254,20 @@ fun ProfileUserScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Impacto", fontSize = 22.sp, fontWeight = FontWeight.Medium, color = MainText)
-                    Text(text = "Ver más →", fontSize = 14.sp, color = MainGreen)
+                    Text(
+                        text = "Ver más →",
+                        fontSize = 14.sp,
+                        color = MainGreen,
+                        modifier = Modifier.clickable {
+                            controller.navigate(AppScreens.misAportes.name)
+                        }
+                    )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 ProfileUsuarioSummaryCard(
                     totalRecolecciones = totalRecolecciones,
-                    principal = principal
+                    principal = principal,
+                    onClick = { controller.navigate(AppScreens.misAportes.name) }
                 )
                 Spacer(modifier = Modifier.height(25.dp))
             }
@@ -370,10 +379,11 @@ private fun FotoPerfilUsuario(selectedImageBitmap: ImageBitmap?) {
 @Composable
 private fun ProfileUsuarioSummaryCard(
     totalRecolecciones: Int,
-    principal: MaterialPrincipal?
+    principal: MaterialPrincipal?,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().height(160.dp),
+        modifier = Modifier.fillMaxWidth().height(160.dp).clickable { onClick() },
         shape = RoundedCornerShape(13.dp),
         border = BorderStroke(width = 1.dp, color = BorderGreen),
         colors = CardDefaults.cardColors(containerColor = LightGreen),

@@ -201,6 +201,10 @@ fun materialPrincipal(solicitudes: List<Solicitud>): MaterialPrincipal? =
         .maxByOrNull { it.kg }
         ?.let { MaterialPrincipal(it.titulo, it.kg, it.porcentaje) }
 
+/** Kg reciclados en el período (mismo cálculo que la gráfica). */
+fun kgEnPeriodo(solicitudes: List<Solicitud>, periodo: PeriodoAportes): Double =
+    resumir(aportesDesde(solicitudes), periodo).sumOf { it.kg }
+
 
 // ============================================================
 // PANTALLA
@@ -209,13 +213,16 @@ fun materialPrincipal(solicitudes: List<Solicitud>): MaterialPrincipal? =
 @Composable
 fun MisAportesScreen(
     controller: NavController,
-    model: SolicitudViewModel = viewModel()
+    model: SolicitudViewModel = viewModel(),
+    // true = la fundación ve todo lo que ha recibido de los usuarios
+    deFundacion: Boolean = false
 ) {
-    // Aportes reales: salen de las solicitudes del usuario
+    // Aportes reales: salen de las solicitudes recolectadas
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        model.escucharSolicitudesUsuario()
+    LaunchedEffect(deFundacion) {
+        if (deFundacion) model.escucharSolicitudesFundacion()
+        else model.escucharSolicitudesUsuario()
     }
 
     val aportes = remember(state.solicitudes) {
@@ -226,7 +233,10 @@ fun MisAportesScreen(
         controller = controller,
         aportes = aportes,
         cargando = state.isHistoryLoading,
-        error = state.historyError
+        error = state.historyError,
+        titulo = if (deFundacion) "Aportes recibidos" else "Mis aportes",
+        textoVacio = if (deFundacion) "Aún no hay aportes recibidos en este período"
+        else "Aún no tienes aportes en este período"
     )
 }
 
@@ -257,7 +267,9 @@ private fun MisAportesContent(
     controller: NavController,
     aportes: List<Aporte>,
     cargando: Boolean = false,
-    error: String = ""
+    error: String = "",
+    titulo: String = "Mis aportes",
+    textoVacio: String = "Aún no tienes aportes en este período"
 ) {
 
     var selectedRange by remember { mutableStateOf(PeriodoAportes.MES) }
@@ -299,7 +311,7 @@ private fun MisAportesContent(
             }
 
             Text(
-                text = "Mis aportes",
+                text = titulo,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = DarkGreen,
@@ -358,7 +370,7 @@ private fun MisAportesContent(
             )
 
             totalKg == 0.0 -> Text(
-                text = "Aún no tienes aportes en este período",
+                text = textoVacio,
                 fontSize = 13.sp,
                 color = SecondaryText,
                 textAlign = TextAlign.Center,
