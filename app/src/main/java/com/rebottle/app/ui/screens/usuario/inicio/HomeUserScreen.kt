@@ -812,7 +812,9 @@ fun ReBottleBottomBar(
                 Modifier.weight(1f),
 
             onClick = {
-                controller.navigate(AppScreens.solicitudesUsuario.name)
+                if (currentRoute != AppScreens.solicitudesUsuario.name) {
+                    controller.navigate(AppScreens.solicitudesUsuario.name)
+                }
             }
         )
 
@@ -824,9 +826,7 @@ fun ReBottleBottomBar(
         ReBottleBottomItem(
             title = "Recompensas",
 
-            // Todavía queda false mientras no exista
-            // la pantalla correspondiente.
-            selected = false,
+            selected = currentRoute == AppScreens.recompensas.name,
 
             iconRes =
                 R.drawable.icon_rewards,
