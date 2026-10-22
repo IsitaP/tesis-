@@ -1111,8 +1111,14 @@ fun SolicitudDetalleScreenU(
                                     fontSize =
                                         12.sp,
 
+                                    fontWeight =
+                                        FontWeight.ExtraBold,
+
+                                    textDecoration =
+                                        TextDecoration.Underline,
+
                                     color =
-                                        SecondaryText
+                                        MainText
                                 )
                             }
                         }
