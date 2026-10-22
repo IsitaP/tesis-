@@ -201,6 +201,8 @@ private fun RecompensasFlowContent(
                 nivel = nivel,
                 modulosCompletados = modulosCompletados,
 
+                equipados = equipados,
+
                 onBack = {
                     controller.popBackStack()
                 },
@@ -326,6 +328,7 @@ private fun RecompensasScreen(
     puntos: Int,
     nivel: Int,
     modulosCompletados: Set<String> = emptySet(),
+    equipados: Map<SlotQuis, ItemQuis>,
     onBack: () -> Unit,
     onRedimirClick: () -> Unit
 ) {
@@ -408,21 +411,22 @@ private fun RecompensasScreen(
         // QUIS
         // ====================================================
 
-        Image(
-            painter = painterResource(
-                id = R.drawable.recompensas_quis
-            ),
-
-            contentDescription =
-                "Quis",
-
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(165.dp),
 
-            contentScale =
-                ContentScale.Fit
-        )
+            contentAlignment = Alignment.Center
+        ) {
+
+            QuisPersonalizable(
+                equipados = equipados,
+
+                modifier = Modifier
+                    .height(165.dp)
+                    .fillMaxWidth()
+            )
+        }
 
 
         Spacer(
@@ -1631,6 +1635,7 @@ private fun RecompensasPreview() {
             nivel = 6,
             modulosCompletados = setOf("M1", "M2", "M3"),
             onBack = {},
+            equipados = emptyMap(),
             onRedimirClick = {}
         )
     }
