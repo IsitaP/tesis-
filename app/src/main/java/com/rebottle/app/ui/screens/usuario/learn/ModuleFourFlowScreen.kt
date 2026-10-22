@@ -283,10 +283,15 @@ private fun ModuleFourDragScreen(
         R.drawable.m4_can
     } else {
         R.drawable.m4_box
+
     }
 
-    // Tanto la lata como el cartón van a bolsa blanca
-    val correctBin = M4Bin.WHITE
+
+    val correctBin = if (currentItem == 0) {
+        M4Bin.BLACK   // lata
+    } else {
+        M4Bin.WHITE   // caja
+    }
 
     var dragOffset by remember(currentItem) {
         mutableStateOf(Offset.Zero)
