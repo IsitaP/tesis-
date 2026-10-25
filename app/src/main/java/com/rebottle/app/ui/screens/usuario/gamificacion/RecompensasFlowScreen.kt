@@ -499,7 +499,6 @@ private fun RecompensasScreen(
 
                 BarraPuntos(
                     puntos = puntos,
-                    nivel = nivel,
                     onRedimirClick =
                         onRedimirClick
                 )
@@ -590,11 +589,10 @@ private fun MedallasGrid(
 @Composable
 private fun BarraPuntos(
     puntos: Int,
-    nivel: Int,
     onRedimirClick: () -> Unit
 ) {
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
@@ -602,86 +600,23 @@ private fun BarraPuntos(
                 color = RewardBottomGreen,
                 shape = RoundedCornerShape(26.dp)
             )
-            .padding(
-                start = 18.dp,
-                end = 16.dp,
-                top = 10.dp,
-                bottom = 10.dp
-            ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+            .padding(horizontal = 18.dp)
     ) {
 
-        // ====================================================
-        // NIVEL
-        // ====================================================
-
-        Column(
-            modifier = Modifier.width(56.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            IconoGlobo(
-                color = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "NIVEL",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                lineHeight = 12.sp
-            )
-
-            Text(
-                text = nivel.toString(),
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 20.sp
-            )
-        }
-
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-
-        // DIVISOR (de arriba a abajo)
-
-        Box(
-            modifier = Modifier
-                .width(1.dp)
-                .fillMaxHeight()
-                .background(Color.White.copy(alpha = 0.3f))
-        )
-
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-
-        // ====================================================
-        // ESTRELLA
-        // ====================================================
-
+        // ESTRELLA A LA IZQUIERDA
         IconoEstrella(
             color = Color.White,
-            modifier = Modifier.size(42.dp)
+            modifier = Modifier
+                .size(42.dp)
+                .align(Alignment.CenterStart)
         )
 
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-
-        // ====================================================
-        // PUNTOS
-        // ====================================================
-
-        Column {
+        // 520 + PUNTOS CENTRADOS EN TODA LA BARRA
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
             Text(
                 text = puntos.toString(),
@@ -695,14 +630,9 @@ private fun BarraPuntos(
                 text = "Puntos",
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 15.sp,
-                lineHeight = 16.sp,
-                modifier = Modifier.offset(y = (-2).dp)
+                lineHeight = 16.sp
             )
         }
-
-
-        Spacer(modifier = Modifier.weight(1f))
-
 
         // ====================================================
         // REDIMIR (abajo a la derecha, subrayado)
@@ -710,7 +640,7 @@ private fun BarraPuntos(
 
         Row(
             modifier = Modifier
-                .align(Alignment.Bottom)
+                .align(Alignment.CenterEnd)
                 .clickable { onRedimirClick() }
                 .padding(vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
