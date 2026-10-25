@@ -7,6 +7,10 @@ import {
   FieldValue,
   getFirestore,
 } from "firebase-admin/firestore";
+import {
+    onCall,
+    HttpsError
+} from "firebase-functions/v2/https";
 
 
 // ============================================================
@@ -1889,3 +1893,208 @@ export const procesarSolicitudPublicada =
       }
     }
   );
+
+export const calcularRutaHaciaParada =
+    onCall(
+        {
+            secrets: [
+                routesApiKey
+            ]
+        },
+
+        async (request) => {
+
+            // =================================================
+            // DEBE ESTAR AUTENTICADO
+            // =================================================
+
+            if (!request.auth) {
+
+                throw new HttpsError(
+                    "unauthenticated",
+                    "Debes iniciar sesión."
+                );
+            }
+
+
+            // =================================================
+            // DATOS
+            // =================================================
+
+            const {
+                origenLat,
+                origenLng,
+                destinoLat,
+                destinoLng
+            } = request.data ?? {};
+
+
+            const coordenadas = [
+                origenLat,
+                origenLng,
+                destinoLat,
+                destinoLng
+            ];
+
+
+            const sonValidas =
+                coordenadas.every(
+                    (valor) =>
+                        typeof valor === "number" &&
+                        Number.isFinite(valor)
+                );
+
+
+            if (!sonValidas) {
+
+                throw new HttpsError(
+                    "invalid-argument",
+                    "Las coordenadas no son válidas."
+                );
+            }
+
+
+            // =================================================
+            // GOOGLE ROUTES
+            // =================================================
+
+            const respuesta =
+                await fetch(
+                    "https://routes.googleapis.com/directions/v2:computeRoutes",
+                    {
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                            "X-Goog-Api-Key":
+                                routesApiKey.value(),
+
+                            "X-Goog-FieldMask":
+                                "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline"
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                origin: {
+
+                                    location: {
+
+                                        latLng: {
+
+                                            latitude:
+                                                origenLat,
+
+                                            longitude:
+                                                origenLng
+                                        }
+                                    }
+                                },
+
+
+                                destination: {
+
+                                    location: {
+
+                                        latLng: {
+
+                                            latitude:
+                                                destinoLat,
+
+                                            longitude:
+                                                destinoLng
+                                        }
+                                    }
+                                },
+
+
+                                travelMode:
+                                    "DRIVE",
+
+
+                                routingPreference:
+                                    "TRAFFIC_AWARE",
+
+
+                                polylineEncoding:
+                                    "ENCODED_POLYLINE"
+                            })
+                    }
+                );
+
+
+            if (!respuesta.ok) {
+
+                const detalle =
+                    await respuesta.text();
+
+
+                console.error(
+                    "Routes API:",
+                    detalle
+                );
+
+
+                throw new HttpsError(
+                    "internal",
+                    "No se pudo calcular el recorrido."
+                );
+            }
+
+
+            const json =
+                await respuesta.json() as {
+
+                    routes?: Array<{
+
+                        distanceMeters?: number;
+
+                        duration?: string;
+
+                        polyline?: {
+
+                            encodedPolyline?: string;
+                        };
+                    }>;
+                };
+
+
+            const ruta =
+                json.routes?.[0];
+
+
+            const polyline =
+                ruta
+                    ?.polyline
+                    ?.encodedPolyline;
+
+
+            if (!polyline) {
+
+                throw new HttpsError(
+                    "not-found",
+                    "Google Routes no encontró un recorrido."
+                );
+            }
+
+
+            // =================================================
+            // RESULTADO
+            // =================================================
+
+            return {
+
+                polyline:
+                    polyline,
+
+                distanciaMetros:
+                    ruta.distanceMeters ?? 0,
+
+                duracion:
+                    ruta.duration ?? ""
+            };
+        }
+    );

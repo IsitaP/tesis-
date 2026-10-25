@@ -88,6 +88,8 @@ fun PantallaSolicitudesRecolector(
     val asignaciones = remember(state.paradas, fecha) {
         state.paradas.map { it.aAsignacion(fecha) }
     }
+
+
     // ============================================================
 // BUSCADOR
 // ============================================================
@@ -162,7 +164,6 @@ fun PantallaSolicitudesRecolector(
                     .height(52.dp),
                 placeholder = { Text("Recolección ...") },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = MainGreen) },
-                trailingIcon = { Icon(Icons.Filled.Tune, contentDescription = "Filtros", tint = MainGreen) },
                 shape = RoundedCornerShape(50),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(

@@ -83,4 +83,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.3")
     implementation(libs.places)
+    implementation("com.google.android.gms:play-services-location:21.4.0")
+    implementation("com.google.firebase:firebase-functions")
 }

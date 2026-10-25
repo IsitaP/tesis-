@@ -33,7 +33,7 @@ import com.rebottle.app.ui.screens.recolector.inicio.PantallaInicioRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaSolicitudesRecolector
 import com.rebottle.app.ui.screens.recolector.solicitudes.PantallaDetalleAsignacionRecolector
 import com.rebottle.app.ui.screens.recolector.perfil.PantallaPerfilRecolector
-import com.rebottle.app.ui.screens.recolector.rutas.PantallaRutasRecolector
+import com.rebottle.app.ui.screens.recolector.rutas.MapaRutaRecolectorScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.rebottle.app.ui.screens.fundacion.gestion.RutasCreadasScreen
@@ -110,6 +110,7 @@ enum class AppScreens {
     solicitudesRecolector,
     rutasRecolector,
     detalleAsignacionRecolector,
+    mapaRecolector
 }
 
 @Composable
@@ -210,7 +211,7 @@ fun Navigation() {
         composable(route = AppScreens.homeRecolector.name) { PantallaInicioRecolector(navController) }
         composable(route = AppScreens.solicitudesRecolector.name) { PantallaSolicitudesRecolector(navController) }
         composable(route = AppScreens.perfilRecolector.name) { PantallaPerfilRecolector(navController) }
-        composable(route = AppScreens.rutasRecolector.name) { PantallaRutasRecolector(navController) }
+        composable(route = AppScreens.rutasRecolector.name) { MapaRutaRecolectorScreen(controller = navController) }
         composable(
             route = "${AppScreens.detalleAsignacionRecolector.name}/{asignacionId}",
             arguments = listOf(navArgument("asignacionId") { type = NavType.StringType })

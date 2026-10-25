@@ -56,8 +56,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.rebottle.app.components.MainGreen
 import com.rebottle.app.model.MaterialType
 import com.rebottle.app.model.RutaProgresoViewModel
+import com.rebottle.app.navigation.AppScreens
 
 private val BackgroundColor = RebottleColors.Background
 private val MainText = RebottleColors.MainText
@@ -347,7 +349,33 @@ fun PantallaDetalleAsignacionRecolector(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = mensaje, fontSize = 13.sp, color = Color(0xFFC94338))
             }
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            Button(
+                onClick = { AppScreens.rutasRecolector.name },
+                enabled = state.resolviendoId == null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MainGreen
+                )
+            ) {
+                Text(
+                    text = "Ver ruta en el mapa",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
+
+
+
 
         // Imagen del paisaje pegada al borde inferior de la pantalla
         Image(
