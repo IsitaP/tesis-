@@ -72,7 +72,7 @@ import com.rebottle.app.ui.theme.RebottleColors
 import androidx.compose.foundation.shape.GenericShape
 import java.util.Locale
 import androidx.compose.foundation.layout.fillMaxHeight
-
+import androidx.compose.ui.graphics.Brush
 
 private val ScreenBackground = Color(0xFFB5C99A) // Verde claro de fondo
 private val CardBackground = RebottleColors.Background
@@ -445,7 +445,6 @@ private fun Podio(
         )
     }
 }
-
 @Composable
 private fun PuestoPodio(
     usuario: UsuarioRanking?,
@@ -456,6 +455,31 @@ private fun PuestoPodio(
     esPrimero: Boolean = false
 ) {
 
+    // Tonos para crear profundidad 3D
+    val colorClaro = when (puesto) {
+
+        1 -> Color(0xFFFFDB72) // oro claro
+
+        2 -> Color(0xFFEAEAEA) // plata clara
+
+        3 -> Color(0xFFE99A56) // bronce claro
+
+        else -> color
+    }
+
+
+    val colorOscuro = when (puesto) {
+
+        1 -> Color(0xFFC99518) // oro oscuro
+
+        2 -> Color(0xFF969696) // plata oscura
+
+        3 -> Color(0xFF9E511E) // bronce oscuro
+
+        else -> color
+    }
+
+
     Column(
         modifier = modifier.fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -463,7 +487,7 @@ private fun PuestoPodio(
     ) {
 
         // ====================================================
-        // INFORMACIÓN DEL USUARIO
+        // USUARIO + AVATAR + CORONA
         // ====================================================
 
         InfoPodio(
@@ -471,45 +495,124 @@ private fun PuestoPodio(
             esPrimero = esPrimero
         )
 
+
         Spacer(
             modifier = Modifier.height(6.dp)
         )
 
 
         // ====================================================
-        // BLOQUE DEL PODIO
+        // BLOQUE 3D
         // ====================================================
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(altura)
-                .background(
-                    color = color,
-                    shape = RoundedCornerShape(
-                        topStart = 10.dp,
-                        topEnd = 10.dp
-                    )
-                ),
-
-            contentAlignment = Alignment.Center
         ) {
 
-            Text(
-                text = puesto.toString(),
-                color = Color.White,
-                fontSize =
-                    if (puesto == 1) {
-                        48.sp
-                    } else {
-                        42.sp
+            // ------------------------------------------------
+            // PARTE FRONTAL
+            // ------------------------------------------------
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(altura - 14.dp)
+                    .align(Alignment.BottomCenter)
+                    .shadow(
+                        elevation = 5.dp,
+                        shape = RoundedCornerShape(
+                            topStart = 2.dp,
+                            topEnd = 2.dp
+                        )
+                    )
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colorClaro,
+                                color,
+                                colorOscuro
+                            )
+                        ),
+                        shape = RoundedCornerShape(
+                            topStart = 2.dp,
+                            topEnd = 2.dp
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text(
+                    text = puesto.toString(),
+                    color = Color.White,
+
+                    fontSize = when (puesto) {
+                        1 -> 90.sp
+                        2 -> 58.sp
+                        3 -> 48.sp
+                        else -> 48.sp
                     },
-                fontWeight = FontWeight.Bold
+
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+
+            // ------------------------------------------------
+            // PARTE SUPERIOR DEL BLOQUE
+            // EFECTO DE PROFUNDIDAD
+            // ------------------------------------------------
+
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+                    .align(Alignment.TopCenter)
+                    .clip(PodioTopShape)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colorClaro,
+                                color
+                            )
+                        )
+                    )
             )
         }
     }
 }
+private val PodioTopShape = GenericShape { size, _ ->
 
+    // Esquina superior izquierda,
+    // un poco metida hacia adentro
+    moveTo(
+        size.width * 0.12f,
+        0f
+    )
+
+    // Esquina superior derecha
+    lineTo(
+        size.width * 0.88f,
+        0f
+    )
+
+    // Baja y se abre hacia la derecha
+    lineTo(
+        size.width,
+        size.height
+    )
+
+    // Baja y se abre hacia la izquierda
+    lineTo(
+        0f,
+        size.height
+    )
+
+    close()
+}
 @Composable
 private fun InfoPodio(
     usuario: UsuarioRanking?,
