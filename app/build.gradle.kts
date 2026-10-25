@@ -32,6 +32,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders["PLACES_API_KEY"] = placesApiKey
+        buildConfigField(
+            "String",
+            "PLACES_API_KEY",
+            "\"$placesApiKey\""
+        )
     }
 
     buildTypes {
