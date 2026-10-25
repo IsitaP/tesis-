@@ -185,7 +185,6 @@ fun SolicitudesUsuarioScreenContent(
                         .height(52.dp),
                     placeholder = { Text("Recolección ...", color = SecondaryText) },
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = SecondaryText) },
-                    trailingIcon = { Icon(Icons.Filled.Tune, contentDescription = "Filtros", tint = SecondaryText) },
                     shape = RoundedCornerShape(50),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
