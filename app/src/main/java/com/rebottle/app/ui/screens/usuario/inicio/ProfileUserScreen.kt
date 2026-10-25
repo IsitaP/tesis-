@@ -58,6 +58,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -180,7 +181,8 @@ fun ProfileUserScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = BackgroundColor,
         bottomBar = {
-            ReBottleUsuarioProfileBottomBar(controller = controller)
+
+            ReBottleBottomBar(controller = controller)
         }
     ) { innerPadding ->
 
@@ -422,74 +424,6 @@ private fun ProfileUsuarioSummaryCard(
 }
 
 
-@Composable
-private fun ReBottleUsuarioProfileBottomBar(
-    controller: NavController
-) {
-    val navBackStackEntry by controller.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    Box(modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(top = 3.dp)) {
-        NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            tonalElevation = 0.dp
-        ) {
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.homeCiudadano.name,
-                onClick = {
-                    if (currentRoute != AppScreens.homeCiudadano.name) {
-                        controller.navigate(AppScreens.homeCiudadano.name)
-                    }
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Home, contentDescription = "Inicio", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Inicio", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen, selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText, unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.solicitudesUsuario.name,
-                onClick = {
-                    if (currentRoute != AppScreens.solicitudesUsuario.name) {
-                        controller.navigate(AppScreens.solicitudesUsuario.name)
-                    }
-                },
-                icon = { Image(painter = painterResource(id = R.drawable.icon_collection), contentDescription = "Recolecciones", modifier = Modifier.size(25.dp)) },
-                label = { Text(text = "Recolecciones", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
-            )
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.recompensas.name,
-                onClick = {
-                    if (currentRoute != AppScreens.recompensas.name) {
-                        controller.navigate(AppScreens.recompensas.name)
-                    }
-                },
-                icon = { Image(painter = painterResource(id = R.drawable.icon_rewards), contentDescription = "Recompensas", modifier = Modifier.size(25.dp)) },
-                label = { Text(text = "Recompensas", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(selectedTextColor = MainGreen, unselectedTextColor = SecondaryText, indicatorColor = Color.Transparent)
-            )
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.perfilUsuario.name,
-                onClick = {
-                    if (currentRoute != AppScreens.perfilUsuario.name) {
-                        controller.navigate(AppScreens.perfilUsuario.name)
-                    }
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Perfil", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Perfil", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen, selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText, unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
