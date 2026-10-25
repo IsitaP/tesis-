@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextDecoration
 import kotlin.math.cos
 import kotlin.math.sin
@@ -1407,6 +1408,14 @@ private fun ItemQuisCard(
                 modifier =
                     Modifier
                         .size(95.dp)
+                        .scale(
+                            when (item.id) {
+                                "jordan" -> 1.4f
+                                "camisaRoja" -> 1.3f
+                                "pantalon" -> 1.4f
+                                else -> 1f
+                            }
+                        )
                         .alpha(
                             if (disponible) {
                                 1f
