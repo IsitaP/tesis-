@@ -22,6 +22,9 @@ enum class CategoriaQuis {
 
 enum class SlotQuis {
 
+
+    PIERNAS,
+
     // Tenis
     PIES,
 
@@ -70,7 +73,57 @@ data class ItemQuis(
 // ROPA
 // ============================================================
 
-val ropaQuis = emptyList<ItemQuis>()
+val ropaQuis = listOf(
+
+    ItemQuis(
+        id = "tenis",
+        nombre = "Tenis",
+        precio = 110,
+        categoria = CategoriaQuis.ROPA,
+        slot = SlotQuis.PIES,
+        imagen = R.drawable.ropa_tenis,
+        overlay = R.drawable.overlay_tenis
+    ),
+    ItemQuis(
+        id = "jordan",
+        nombre = "jordan",
+        precio = 110,
+        categoria = CategoriaQuis.ROPA,
+        slot = SlotQuis.PIES,
+        imagen = R.drawable.ropa_jordan,
+        overlay = R.drawable.overlay_jordan
+    ),
+
+    ItemQuis(
+        id = "camisa",
+        nombre = "Camisa",
+        precio = 120,
+        categoria = CategoriaQuis.ROPA,
+        slot = SlotQuis.TORSO_BASE,
+        imagen = R.drawable.ropa_camisa,
+        overlay = R.drawable.overlay_camisa
+    ),
+    ItemQuis(
+        id = "camisaRoja",
+        nombre = "CamisaRoja",
+        precio = 120,
+        categoria = CategoriaQuis.ROPA,
+        slot = SlotQuis.TORSO_BASE,
+        imagen = R.drawable.ropa_camisaroja,
+        overlay = R.drawable.overlay_camisaroja
+    ),
+
+    ItemQuis(
+        id = "pantalon",
+        nombre = "Pantalón",
+        precio = 120,
+        categoria = CategoriaQuis.ROPA,
+        slot = SlotQuis.PIERNAS,
+        imagen = R.drawable.ropa_pantalon,
+        overlay = R.drawable.overlay_pantalon
+    )
+
+)
 
 // ============================================================
 // ACCESORIOS

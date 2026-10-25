@@ -1212,9 +1212,9 @@ private fun QuisPersonalizable(
 ) {
 
     val ordenCapas = listOf(
+        SlotQuis.PIERNAS,
         SlotQuis.PIES,
         SlotQuis.TORSO_BASE,
-        SlotQuis.TORSO_EXTERIOR,
         SlotQuis.CUELLO,
         SlotQuis.MANOS,
         SlotQuis.OJOS,
