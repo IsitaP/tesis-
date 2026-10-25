@@ -167,26 +167,80 @@ private fun RecompensasFlowContent(
             RecompensaStep.RECOMPENSAS
         )
     }
-    var saldoPuntos by remember(puntos) {
-        mutableStateOf(puntos)
-    }
+    val puntosViewModel: PuntosViewModel = viewModel()
 
-    val comprados = remember {
-        mutableStateMapOf<String, Boolean>()
-    }
+    val puntosState by
+    puntosViewModel.state.collectAsState()
 
-// El artículo gratis ya se considera comprado
+
     LaunchedEffect(Unit) {
-        comprados["guantes"] = true
+        puntosViewModel.escucharPuntos()
     }
 
-    // ========================================================
-    // ARTÍCULOS EQUIPADOS
-    // ========================================================
 
-    val equipados = remember {
-        mutableStateMapOf<SlotQuis, ItemQuis>()
-    }
+// ============================================================
+// PUNTOS DISPONIBLES REALES DE FIREBASE
+// ============================================================
+
+    val saldoPuntos =
+        puntosState.puntosDisponibles.toInt()
+
+
+// ============================================================
+// ITEMS COMPRADOS EN FIREBASE
+// ============================================================
+
+    val comprados =
+        puntosState.itemsComprados
+
+
+// ============================================================
+// TODOS LOS ITEMS DISPONIBLES
+// ============================================================
+
+    val todosLosItems =
+        remember {
+            ropaQuis + accesoriosQuis
+        }
+
+
+// ============================================================
+// CONVERTIR LOS IDS DE FIREBASE A ItemQuis
+// ============================================================
+
+    val equipados: Map<SlotQuis, ItemQuis> =
+        remember(
+            puntosState.itemsEquipados
+        ) {
+
+            buildMap {
+
+                puntosState.itemsEquipados
+                    .forEach { (nombreSlot, itemId) ->
+
+                        val slot =
+                            runCatching {
+                                SlotQuis.valueOf(nombreSlot)
+                            }.getOrNull()
+
+                        val item =
+                            todosLosItems.firstOrNull {
+                                it.id == itemId
+                            }
+
+                        if (
+                            slot != null &&
+                            item != null
+                        ) {
+
+                            put(
+                                slot,
+                                item
+                            )
+                        }
+                    }
+            }
+        }
 
 
     when (step) {
@@ -229,7 +283,7 @@ private fun RecompensasFlowContent(
 
                 equipados = equipados,
 
-                comprados = comprados.keys,
+                comprados = comprados,
 
                 onBack = {
                     step =
@@ -242,51 +296,55 @@ private fun RecompensasFlowContent(
                         equipados[item.slot]
 
                     val yaComprado =
-                        comprados[item.id] == true
+                        item.id in comprados
 
-                    // =================================================
-                    // SI YA ESTÁ COMPRADO
-                    // =================================================
+
+                    // ========================================================
+                    // YA LO COMPRÓ
+                    // ========================================================
 
                     if (yaComprado) {
 
-                        // Si toca el mismo que ya tiene puesto,
-                        // se lo quita.
+                        // Si ya estaba equipado, lo quitamos
                         if (actual?.id == item.id) {
 
-                            equipados.remove(
-                                item.slot
+                            puntosViewModel.desequiparItem(
+                                slot = item.slot
                             )
 
                         } else {
 
-                            // Si ya lo compró, se puede poner
-                            // sin volver a gastar puntos.
-                            equipados[item.slot] =
-                                item
+                            // Si no, lo equipamos
+                            puntosViewModel.equiparItem(
+                                slot = item.slot,
+                                itemId = item.id
+                            )
                         }
+
 
                     } else {
 
-                        // =================================================
-                        // SI TODAVÍA NO LO HA COMPRADO
-                        // =================================================
+                        // ====================================================
+                        // TODAVÍA NO LO HA COMPRADO
+                        // ====================================================
 
                         if (saldoPuntos >= item.precio) {
 
-                            // Descontamos los puntos
-                            saldoPuntos -= item.precio
+                            puntosViewModel.comprarItem(
+                                itemId = item.id,
+                                precio = item.precio.toLong(),
 
-                            // Lo marcamos como comprado
-                            comprados[item.id] = true
+                                onSuccess = {
 
-                            // Se lo ponemos a Quis
-                            equipados[item.slot] =
-                                item
+                                    // Después de comprarlo,
+                                    // lo equipamos automáticamente
+                                    puntosViewModel.equiparItem(
+                                        slot = item.slot,
+                                        itemId = item.id
+                                    )
+                                }
+                            )
                         }
-
-                        // Si no alcanza el saldo,
-                        // no hace absolutamente nada.
                     }
                 },
 

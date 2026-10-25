@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
+import com.rebottle.app.ui.screens.usuario.gamificacion.SlotQuis
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,7 +50,18 @@ data class ModuloCompletado(
 
 data class PuntosState(
     val puntosTotales: Long = 0L,
+
+    // Puntos que puede gastar
+    val puntosDisponibles: Long = 0L,
+
     val modulosCompletados: List<ModuloCompletado> = emptyList(),
+
+    // IDs de ropa/accesorios comprados
+    val itemsComprados: Set<String> = emptySet(),
+
+    // Slot -> id del item
+    val itemsEquipados: Map<String, String> = emptyMap(),
+
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -145,6 +157,7 @@ class PuntosViewModel : ViewModel() {
                     mapOf(
                         "usuarioId" to usuarioActual.uid,
                         "puntosTotales" to FieldValue.increment(puntos),
+                        "puntosDisponibles" to FieldValue.increment(puntos),
                         "actualizadoEn" to FieldValue.serverTimestamp(),
                         "modulosCompletados" to mapOf(
                             moduloId to mapOf(
@@ -168,6 +181,122 @@ class PuntosViewModel : ViewModel() {
                     error = e.message ?: "Error al guardar los puntos"
                 )
             }
+    }
+    fun comprarItem(
+        itemId: String,
+        precio: Long,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+
+        val usuarioActual = auth.currentUser ?: run {
+            onError("No hay usuario autenticado")
+            return
+        }
+
+        val ref =
+            progresoRef(usuarioActual.uid)
+
+        firestore
+            .runTransaction { transaction ->
+
+                val snapshot =
+                    transaction.get(ref)
+
+                val puntosDisponibles =
+                    snapshot.getLong(
+                        "puntosDisponibles"
+                    )
+                        ?: snapshot.getLong(
+                            "puntosTotales"
+                        )
+                        ?: 0L
+
+                @Suppress("UNCHECKED_CAST")
+                val itemsComprados =
+                    snapshot.get(
+                        "itemsComprados"
+                    ) as? List<String>
+                        ?: emptyList()
+
+                // Ya lo compró
+                if (itemId in itemsComprados) {
+                    return@runTransaction
+                }
+
+                if (puntosDisponibles < precio) {
+                    throw Exception(
+                        "No tienes suficientes puntos"
+                    )
+                }
+
+                transaction.update(
+                    ref,
+                    mapOf(
+                        "puntosDisponibles" to
+                                puntosDisponibles - precio,
+
+                        "itemsComprados" to
+                                FieldValue.arrayUnion(itemId),
+
+                        "actualizadoEn" to
+                                FieldValue.serverTimestamp()
+                    )
+                )
+            }
+            .addOnSuccessListener {
+
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+
+                onError(
+                    exception.message
+                        ?: "Error al comprar el artículo"
+                )
+            }
+    }
+    fun equiparItem(
+        slot: SlotQuis,
+        itemId: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+
+        val usuarioActual = auth.currentUser ?: run {
+            onError("No hay usuario autenticado")
+            return
+        }
+
+        progresoRef(usuarioActual.uid)
+            .update(
+                "itemsEquipados.${slot.name}",
+                itemId
+            )
+            .addOnSuccessListener {
+
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+
+                onError(
+                    exception.message
+                        ?: "Error al equipar el artículo"
+                )
+            }
+    }
+    fun desequiparItem(
+        slot: SlotQuis
+    ) {
+
+        val usuarioActual =
+            auth.currentUser ?: return
+
+        progresoRef(usuarioActual.uid)
+            .update(
+                "itemsEquipados.${slot.name}",
+                FieldValue.delete()
+            )
     }
 
 
@@ -200,6 +329,22 @@ class PuntosViewModel : ViewModel() {
 
                     val total =
                         snapshot?.getLong("puntosTotales") ?: 0L
+                    val disponibles =
+                        snapshot?.getLong(
+                            "puntosDisponibles"
+                        ) ?: total
+                    @Suppress("UNCHECKED_CAST")
+                    val comprados =
+                        snapshot?.get(
+                            "itemsComprados"
+                        ) as? List<String>
+                            ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    val equipados =
+                        snapshot?.get(
+                            "itemsEquipados"
+                        ) as? Map<String, String>
+                            ?: emptyMap()
 
                     @Suppress("UNCHECKED_CAST")
                     val mapa =
@@ -217,6 +362,9 @@ class PuntosViewModel : ViewModel() {
 
                     _state.value = _state.value.copy(
                         puntosTotales = total,
+                        puntosDisponibles = disponibles,
+                        itemsComprados = comprados.toSet(),
+                        itemsEquipados = equipados,
                         modulosCompletados = modulos,
                         isLoading = false,
                         error = null
