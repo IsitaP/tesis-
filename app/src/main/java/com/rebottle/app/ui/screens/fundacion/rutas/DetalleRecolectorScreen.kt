@@ -53,6 +53,7 @@ import com.rebottle.app.model.MaterialType
 import com.rebottle.app.model.ParadaRuta
 import com.rebottle.app.model.RutaProgresoState
 import com.rebottle.app.model.RutaProgresoViewModel
+import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.screens.fundacion.componentes.BarraNavegacionFundacion
 import com.rebottle.app.ui.theme.RebottleColors
 
@@ -154,7 +155,14 @@ fun DetalleRecolectorScreen(
 
                     pestana == 0 -> PestanaMapa(state)
 
-                    else -> PestanaDetalles(state)
+                    else -> PestanaDetalles(
+                        state = state,
+                        onVerMas = { parada ->
+                            controller.navigate(
+                                "${AppScreens.detalleParadaRecolector.name}/$recolectorId/${parada.solicitudId}"
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -346,7 +354,10 @@ private fun FilaParada(
 // ============================================================
 
 @Composable
-private fun PestanaDetalles(state: RutaProgresoState) {
+private fun PestanaDetalles(
+    state: RutaProgresoState,
+    onVerMas: (ParadaRuta) -> Unit
+) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -354,14 +365,17 @@ private fun PestanaDetalles(state: RutaProgresoState) {
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(state.paradas, key = { it.solicitudId }) { parada ->
-            TarjetaParada(parada)
+            TarjetaParada(parada, onVerMas = { onVerMas(parada) })
         }
     }
 }
 
 
 @Composable
-private fun TarjetaParada(parada: ParadaRuta) {
+private fun TarjetaParada(
+    parada: ParadaRuta,
+    onVerMas: () -> Unit
+) {
 
     val (fondo, borde, acento) =
         when (parada.estado) {
@@ -415,7 +429,7 @@ private fun TarjetaParada(parada: ParadaRuta) {
                 color = acento,
                 modifier = Modifier
                     .align(Alignment.End)
-                    .clickable { /* detalle de la solicitud */ }
+                    .clickable { onVerMas() }
             )
         }
     }

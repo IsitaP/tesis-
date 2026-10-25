@@ -109,30 +109,30 @@ fun HomeFundacionScreen(
                     rememberScrollState()
                 )
                 .padding(
-                    start = 18.dp,
-                    end = 18.dp,
-                    top = 24.dp,
-                    bottom = 24.dp
+                    start = 22.dp,
+                    end = 22.dp,
+                    top = 25.dp,
+                    bottom = 25.dp
                 )
         ) {
 
             HeaderFundacion()
 
             Spacer(
-                modifier = Modifier.height(18.dp)
+                modifier = Modifier.height(34.dp)
             )
 
 
             Text(
                 text = "¿Qué desea hacer hoy?",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = DarkGreen
             )
 
 
             Spacer(
-                modifier = Modifier.height(16.dp)
+                modifier = Modifier.height(12.dp)
             )
 
 
@@ -142,7 +142,7 @@ fun HomeFundacionScreen(
 
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(9.dp)
             )
 
 
@@ -163,7 +163,7 @@ fun HomeFundacionScreen(
 
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(9.dp)
             )
 
 
@@ -180,7 +180,7 @@ fun HomeFundacionScreen(
 
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(18.dp)
             )
 
 
@@ -190,7 +190,7 @@ fun HomeFundacionScreen(
 
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier = Modifier.height(9.dp)
             )
 
 
@@ -228,8 +228,8 @@ private fun HeaderFundacion() {
 
             Text(
                 text = "Hola, $nombre !",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold,
                 color = Brown,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -243,14 +243,14 @@ private fun HeaderFundacion() {
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = "Ubicación",
                     tint = SecondaryText,
-                    modifier = Modifier.size(15.dp)
+                    modifier = Modifier.size(13.dp)
                 )
 
                 Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = "Cll 34b #18-24",
-                    fontSize = 18.sp,
+                    fontSize = 13.sp,
                     color = SecondaryText
                 )
             }
@@ -261,7 +261,9 @@ private fun HeaderFundacion() {
         // ------------------------------------------------
 
         Box(
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier
+                .size(42.dp)
+                .background(color = Color(0xFFF1F5ED), shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
 
@@ -269,7 +271,7 @@ private fun HeaderFundacion() {
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Notificaciones",
                 tint = MainGreen,
-                modifier = Modifier.size(25.dp)
+                modifier = Modifier.size(23.dp)
             )
 
             // Punto rojo
@@ -299,8 +301,8 @@ private fun SectionTitle(
 
     Text(
         text = title,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontSize = 19.sp,
+        fontWeight = FontWeight.Medium,
         color = MainText
     )
 }
@@ -320,10 +322,10 @@ private fun RequestsCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .height(162.dp),
+            .height(140.dp),
 
         shape =
-            RoundedCornerShape(7.dp),
+            RoundedCornerShape(8.dp),
 
         border =
             BorderStroke(
@@ -338,7 +340,7 @@ private fun RequestsCard(
 
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = 3.dp
+                defaultElevation = 2.dp
             )
     ) {
 
@@ -346,10 +348,10 @@ private fun RequestsCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = 10.dp,
+                    start = 14.dp,
                     end = 8.dp,
-                    top = 8.dp,
-                    bottom = 8.dp
+                    top = 10.dp,
+                    bottom = 10.dp
                 ),
 
             verticalAlignment =
@@ -365,7 +367,9 @@ private fun RequestsCard(
                     text =
                         "Resumen de solicitudes",
 
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
+
+                    maxLines = 1,
 
                     fontWeight =
                         FontWeight.Medium,
@@ -384,7 +388,8 @@ private fun RequestsCard(
                     text =
                         "Solicitudes por atender",
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -392,14 +397,16 @@ private fun RequestsCard(
 
                 Text(
                     text = if (state.nuevas == 1) "1 nueva" else "${state.nuevas} nuevas",
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = SecondaryText
                 )
 
 
                 Text(
                     text = if (state.aceptadas == 1) "1 aceptada" else "${state.aceptadas} aceptadas",
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = SecondaryText
                 )
 
@@ -409,7 +416,8 @@ private fun RequestsCard(
                         if (state.completadasHoy == 1) "1 completada hoy"
                         else "${state.completadasHoy} completadas hoy",
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -423,7 +431,7 @@ private fun RequestsCard(
 
                 Text(
                     text = "Ver todas →",
-                    fontSize = 15.sp,
+                    fontSize = 11.sp,
                     fontWeight =
                         FontWeight.Medium,
                     color = MainGreen
@@ -443,8 +451,8 @@ private fun RequestsCard(
                     "Resumen de solicitudes",
 
                 modifier = Modifier
-                    .width(150.dp)
-                    .height(100.dp),
+                    .width(120.dp)
+                    .height(105.dp),
 
                 contentScale =
                     ContentScale.Fit
@@ -468,10 +476,10 @@ private fun NextRouteCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .height(165.dp),
+            .height(140.dp),
 
         shape =
-            RoundedCornerShape(7.dp),
+            RoundedCornerShape(8.dp),
 
         border =
             BorderStroke(
@@ -486,7 +494,7 @@ private fun NextRouteCard(
 
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = 3.dp
+                defaultElevation = 2.dp
             )
     ) {
 
@@ -494,10 +502,10 @@ private fun NextRouteCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = 10.dp,
+                    start = 14.dp,
                     end = 8.dp,
-                    top = 8.dp,
-                    bottom = 8.dp
+                    top = 10.dp,
+                    bottom = 10.dp
                 ),
 
             verticalAlignment =
@@ -515,7 +523,9 @@ private fun NextRouteCard(
                     text =
                         "Siguiente recolección",
 
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
+
+                    maxLines = 1,
 
                     fontWeight =
                         FontWeight.Medium,
@@ -526,7 +536,7 @@ private fun NextRouteCard(
 
                 Spacer(
                     modifier =
-                        Modifier.height(6.dp)
+                        Modifier.height(5.dp)
                 )
 
 
@@ -538,7 +548,8 @@ private fun NextRouteCard(
 
                     overflow = TextOverflow.Ellipsis,
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -548,7 +559,8 @@ private fun NextRouteCard(
 
                 Text(
                     text = ruta.cuando,
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
                     color = if (ruta.enCurso) MainGreen else SecondaryText
                 )
 
@@ -561,7 +573,8 @@ private fun NextRouteCard(
 
                     overflow = TextOverflow.Ellipsis,
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -575,7 +588,8 @@ private fun NextRouteCard(
 
                     overflow = TextOverflow.Ellipsis,
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -584,13 +598,13 @@ private fun NextRouteCard(
 
                 Spacer(
                     modifier =
-                        Modifier.height(5.dp)
+                        Modifier.height(2.dp)
                 )
 
 
                 Text(
                     text = if (ruta != null) "Ver ruta →" else "Ver rutas →",
-                    fontSize = 15.sp,
+                    fontSize = 11.sp,
                     fontWeight =
                         FontWeight.Medium,
                     color = MainGreen
@@ -609,8 +623,9 @@ private fun NextRouteCard(
                 contentDescription =
                     "Próxima ruta",
 
-                modifier =
-                    Modifier.size(150.dp),
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(105.dp),
 
                 contentScale =
                     ContentScale.Fit
@@ -634,10 +649,10 @@ private fun DailySummaryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .height(150.dp),
+            .height(140.dp),
 
         shape =
-            RoundedCornerShape(7.dp),
+            RoundedCornerShape(8.dp),
 
         border =
             BorderStroke(
@@ -652,7 +667,7 @@ private fun DailySummaryCard(
 
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = 3.dp
+                defaultElevation = 2.dp
             )
     ) {
 
@@ -660,10 +675,10 @@ private fun DailySummaryCard(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    start = 10.dp,
-                    end = 12.dp,
-                    top = 9.dp,
-                    bottom = 9.dp
+                    start = 14.dp,
+                    end = 8.dp,
+                    top = 10.dp,
+                    bottom = 10.dp
                 ),
 
             verticalAlignment =
@@ -679,7 +694,9 @@ private fun DailySummaryCard(
                     text =
                         "Actividad de hoy",
 
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
+
+                    maxLines = 1,
 
                     fontWeight =
                         FontWeight.Medium,
@@ -690,7 +707,7 @@ private fun DailySummaryCard(
 
                 Spacer(
                     modifier =
-                        Modifier.height(9.dp)
+                        Modifier.height(5.dp)
                 )
 
 
@@ -699,7 +716,8 @@ private fun DailySummaryCard(
                         if (state.completadasHoy == 1) "1 recolección realizada"
                         else "${state.completadasHoy} recolecciones realizadas",
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -709,7 +727,8 @@ private fun DailySummaryCard(
                     text =
                         "${formatKg(state.kgRecicladosHoy)} de materiales reciclados",
 
-                    fontSize = 14.sp,
+                    fontSize = 11.sp,
+                    lineHeight = 14.sp,
 
                     color = SecondaryText
                 )
@@ -718,7 +737,8 @@ private fun DailySummaryCard(
                 if (state.kgPorRecolectarHoy > 0) {
                     Text(
                         text = "${formatKg(state.kgPorRecolectarHoy)} por recolectar hoy",
-                        fontSize = 14.sp,
+                        fontSize = 11.sp,
+                    lineHeight = 14.sp,
                         color = SecondaryText
                     )
                 }
@@ -726,7 +746,7 @@ private fun DailySummaryCard(
 
                 Spacer(
                     modifier =
-                        Modifier.height(6.dp)
+                        Modifier.height(5.dp)
                 )
 
 
@@ -734,7 +754,7 @@ private fun DailySummaryCard(
                     text =
                         "Ver estadísticas →",
 
-                    fontSize = 15.sp,
+                    fontSize = 11.sp,
 
                     fontWeight =
                         FontWeight.Medium,
@@ -755,8 +775,9 @@ private fun DailySummaryCard(
                 contentDescription =
                     "Resumen de actividad",
 
-                modifier =
-                    Modifier.size(150.dp),
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(105.dp),
 
                 contentScale =
                     ContentScale.Fit

@@ -56,6 +56,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.rebottle.app.model.MaterialType
 import com.rebottle.app.model.RutaProgresoViewModel
 
 private val BackgroundColor = RebottleColors.Background
@@ -69,12 +70,16 @@ private val ButtonText = Color(0xFF5A6255)
 fun PantallaDetalleAsignacionRecolector(
     controller: NavController,
     asignacionId: String,
+    // La fundación pasa el recolector a consultar; el recolector usa su propia sesión
+    recolectorId: String? = null,
+    // Oculta las acciones del recolector (marcar como completada)
+    soloLectura: Boolean = false,
     model: RutaProgresoViewModel = viewModel()
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) {
-        FirebaseAuth.getInstance().currentUser?.uid?.let { model.escucharRutaDe(it) }
+    LaunchedEffect(recolectorId) {
+        (recolectorId ?: FirebaseAuth.getInstance().currentUser?.uid)?.let { model.escucharRutaDe(it) }
     }
 
     val fecha = formatearFecha(state.ruta?.fechaRecoleccion.orEmpty())
@@ -125,37 +130,39 @@ fun PantallaDetalleAsignacionRecolector(
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundColor)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.SpaceBetween
     ) {
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Header
+        Row(
+            modifier = Modifier.padding(horizontal = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBack,
+                contentDescription = "Volver",
+                tint = MainText,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { controller.popBackStack() }
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Asignación # $numero",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = MainText
+            )
+        }
+
+        // La tarjeta va justo debajo del encabezado y hace scroll si no cabe
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp)
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp, vertical = 18.dp)
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
-            // Header
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = MainText,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { controller.popBackStack() }
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "Asignación # $numero",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MainText
-                )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
             // Tarjeta de detalles
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -250,39 +257,37 @@ fun PantallaDetalleAsignacionRecolector(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Materiales
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(28.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_metal),
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                                tint = BrownIcon
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                    // Materiales reales de la solicitud, dos por fila
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (asignacion.materiales.isEmpty()) {
                             Text(
-                                text = "Metal",
+                                text = "Sin materiales registrados",
                                 fontSize = 14.sp,
                                 color = SecondaryText
                             )
                         }
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_glass),
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                                tint = BrownIcon
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Vidrio",
-                                fontSize = 14.sp,
-                                color = SecondaryText
-                            )
+                        asignacion.materiales.chunked(2).forEach { fila ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(28.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                fila.forEach { material ->
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painter = painterResource(id = iconoMaterial(material)),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(22.dp),
+                                            tint = BrownIcon
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = material,
+                                            fontSize = 14.sp,
+                                            color = SecondaryText
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -311,51 +316,11 @@ fun PantallaDetalleAsignacionRecolector(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Botón interno de Mapa
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { /* TODO: Abrir mapa */ },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, ButtonBorder),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color.White,
-                                contentColor = ButtonText
-                            ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_location_pin),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(22.dp),
-                                    tint = BrownIcon
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Ver mapa",
-                                    fontSize = 12.sp,
-                                    color = ButtonText,
-                                    lineHeight = 14.sp,
-                                    textAlign = TextAlign.Start
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
             // El botón inferior solo se muestra si el estado es PENDIENTE
-            if (estado == EstadoAsignacion.PENDIENTE) {
+            if (estado == EstadoAsignacion.PENDIENTE && !soloLectura) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
@@ -382,11 +347,9 @@ fun PantallaDetalleAsignacionRecolector(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = mensaje, fontSize = 13.sp, color = Color(0xFFC94338))
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Imagen del paisaje alineada abajo
+        // Imagen del paisaje pegada al borde inferior de la pantalla
         Image(
             painter = painterResource(id = R.drawable.solicitudes_paisaje),
             contentDescription = null,
@@ -397,6 +360,14 @@ fun PantallaDetalleAsignacionRecolector(
         )
     }
 }
+
+// Los materiales llegan con su etiqueta legible (ej. "Vidrio")
+private fun iconoMaterial(material: String): Int =
+    when (material) {
+        MaterialType.METAL.label -> R.drawable.ic_metal
+        MaterialType.VIDRIO.label -> R.drawable.ic_glass
+        else -> R.drawable.icon_collection
+    }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

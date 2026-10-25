@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -57,7 +58,8 @@ fun BarraNavegacionFundacion(
             .fillMaxWidth()
             .height(82.dp)
             .background(Color.White)
-            .padding(horizontal = 8.dp),
+            // El padding inferior sube los íconos para que no queden sobre la barra de gestos
+            .padding(start = 8.dp, end = 8.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -83,6 +85,8 @@ fun BarraNavegacionFundacion(
                     currentRoute == AppScreens.filtroRutas.name ||
                     currentRoute?.startsWith(AppScreens.detalleRecolectorRuta.name) == true,
             iconRes = R.drawable.icon_routes,
+            // El PNG tiene mucho margen alrededor; se agranda para igualar a los demás
+            iconScale = 1.6f,
             modifier = Modifier.weight(1f),
             onClick = { ir(AppScreens.rutas.name) }
         )
@@ -105,6 +109,7 @@ private fun ItemBarraFundacion(
     modifier: Modifier = Modifier,
     iconRes: Int? = null,
     imageVector: ImageVector? = null,
+    iconScale: Float = 1f,
     onClick: () -> Unit
 ) {
 
@@ -129,7 +134,9 @@ private fun ItemBarraFundacion(
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = title,
-                modifier = Modifier.size(31.dp),
+                modifier = Modifier
+                    .size(31.dp)
+                    .scale(iconScale),
                 tint = itemColor
             )
         }

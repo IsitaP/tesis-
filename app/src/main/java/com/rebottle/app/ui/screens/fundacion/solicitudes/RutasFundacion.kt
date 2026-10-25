@@ -350,63 +350,6 @@ private fun CollectionRoutesContent(
 
 
             // =================================================
-            // BOTÓN SUPERIOR
-            // =================================================
-
-            /*
-             * Se conserva en la misma posición
-             * para mantener exactamente la estructura
-             * visual que ya tenía la pantalla.
-             */
-
-            item {
-
-                Box(
-                    modifier =
-                        Modifier.fillMaxWidth(),
-
-                    contentAlignment =
-                        Alignment.CenterEnd
-                ) {
-
-                    Surface(
-                        onClick =
-                            onCreateClick,
-
-                        color =
-                            MainGreen,
-
-                        shape =
-                            RoundedCornerShape(
-                                8.dp
-                            )
-                    ) {
-
-                        Text(
-                            text =
-                                "Rutas publicadas →",
-
-                            color =
-                                Color.White,
-
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = 16.dp,
-                                    vertical = 8.dp
-                                ),
-
-                            fontSize =
-                                14.sp,
-
-                            fontWeight =
-                                FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-
-            // =================================================
             // TÍTULO DE LISTA
             // =================================================
 
