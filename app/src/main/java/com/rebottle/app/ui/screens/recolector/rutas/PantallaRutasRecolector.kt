@@ -10,18 +10,29 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -36,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -61,6 +73,8 @@ import com.rebottle.app.model.RutaProgresoViewModel
 
 import com.rebottle.app.ui.screens.fundacion.rutas.MapaParadas
 import com.rebottle.app.ui.screens.fundacion.rutas.PuntoMapa
+import com.rebottle.app.ui.screens.recolector.solicitudes.aAsignacion
+import com.rebottle.app.ui.screens.recolector.solicitudes.formatearFecha
 
 import com.rebottle.app.ui.theme.RebottleColors
 
@@ -77,7 +91,7 @@ private val GrisParadaCompletada =
 
 
 // ============================================================
-// MAPA DE LA RUTA DEL RECOLECTOR
+// MAPA DE RUTA DEL RECOLECTOR
 // ============================================================
 
 @SuppressLint("MissingPermission")
@@ -87,12 +101,12 @@ fun MapaRutaRecolectorScreen(
     model: RutaProgresoViewModel = viewModel()
 ) {
 
-    // ========================================================
-    // CONTEXTO
-    // ========================================================
-
     val context =
         LocalContext.current
+
+
+
+
 
 
     // ========================================================
@@ -100,10 +114,7 @@ fun MapaRutaRecolectorScreen(
     // ========================================================
 
     val state by
-    model
-        .state
-        .collectAsState()
-
+    model.state.collectAsState()
 
     // ========================================================
     // FIREBASE FUNCTIONS
@@ -111,14 +122,22 @@ fun MapaRutaRecolectorScreen(
 
     val functions =
         remember {
-
-            FirebaseFunctions
-                .getInstance()
+            FirebaseFunctions.getInstance()
         }
 
 
     // ========================================================
-    // PERMISO DE UBICACIÓN
+    // MARKER SELECCIONADO
+    // ========================================================
+
+    var solicitudSeleccionadaId by
+    remember {
+        mutableStateOf<String?>(null)
+    }
+
+
+    // ========================================================
+    // PERMISOS DE UBICACIÓN
     // ========================================================
 
     var permisoUbicacion by
@@ -129,44 +148,31 @@ fun MapaRutaRecolectorScreen(
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) ==
-                    PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
                     ||
-
                     ContextCompat.checkSelfPermission(
                         context,
                         Manifest.permission.ACCESS_COARSE_LOCATION
-                    ) ==
-                    PackageManager.PERMISSION_GRANTED
+                    ) == PackageManager.PERMISSION_GRANTED
         )
     }
 
 
-    // ========================================================
-    // SOLICITAR PERMISOS
-    // ========================================================
-
     val launcherPermisoUbicacion =
         rememberLauncherForActivityResult(
-
             contract =
-                ActivityResultContracts
-                    .RequestMultiplePermissions()
-
+                ActivityResultContracts.RequestMultiplePermissions()
         ) { permisos ->
-
 
             val permisoPreciso =
                 permisos[
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ] ?: false
 
-
             val permisoAproximado =
                 permisos[
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ] ?: false
-
 
             permisoUbicacion =
                 permisoPreciso ||
@@ -174,18 +180,11 @@ fun MapaRutaRecolectorScreen(
         }
 
 
-    // ========================================================
-    // PEDIR PERMISO AL ENTRAR
-    // ========================================================
-
     LaunchedEffect(Unit) {
 
-        if (
-            !permisoUbicacion
-        ) {
+        if (!permisoUbicacion) {
 
             launcherPermisoUbicacion.launch(
-
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
@@ -196,7 +195,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // CARGAR LA RUTA DEL RECOLECTOR
+    // ESCUCHAR RUTA DEL RECOLECTOR
     // ========================================================
 
     LaunchedEffect(Unit) {
@@ -207,11 +206,7 @@ fun MapaRutaRecolectorScreen(
                 .currentUser
                 ?.uid
 
-
-        if (
-            !recolectorId
-                .isNullOrBlank()
-        ) {
+        if (!recolectorId.isNullOrBlank()) {
 
             model.escucharRutaDe(
                 recolectorId
@@ -221,7 +216,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // CLIENTE DE UBICACIÓN
+    // GPS
     // ========================================================
 
     val fusedLocationClient =
@@ -234,22 +229,11 @@ fun MapaRutaRecolectorScreen(
         }
 
 
-    // ========================================================
-    // UBICACIÓN ACTUAL DEL RECOLECTOR
-    // ========================================================
-
     var ubicacionRecolector by
     remember {
-
-        mutableStateOf<Location?>(
-            null
-        )
+        mutableStateOf<Location?>(null)
     }
 
-
-    // ========================================================
-    // ESCUCHAR GPS EN TIEMPO REAL
-    // ========================================================
 
     DisposableEffect(
         permisoUbicacion
@@ -262,20 +246,16 @@ fun MapaRutaRecolectorScreen(
                     result: LocationResult
                 ) {
 
-                    result
-                        .lastLocation
-                        ?.let { location ->
+                    result.lastLocation?.let { location ->
 
-                            ubicacionRecolector =
-                                location
-                        }
+                        ubicacionRecolector =
+                            location
+                    }
                 }
             }
 
 
-        if (
-            permisoUbicacion
-        ) {
+        if (permisoUbicacion) {
 
             val locationRequest =
                 LocationRequest
@@ -289,27 +269,17 @@ fun MapaRutaRecolectorScreen(
                     .build()
 
 
-            // =================================================
-            // ÚLTIMA UBICACIÓN CONOCIDA
-            // =================================================
-
             fusedLocationClient
                 .lastLocation
                 .addOnSuccessListener { location ->
 
-                    if (
-                        location != null
-                    ) {
+                    if (location != null) {
 
                         ubicacionRecolector =
                             location
                     }
                 }
 
-
-            // =================================================
-            // ACTUALIZACIONES DE UBICACIÓN
-            // =================================================
 
             fusedLocationClient
                 .requestLocationUpdates(
@@ -319,10 +289,6 @@ fun MapaRutaRecolectorScreen(
                 )
         }
 
-
-        // ====================================================
-        // DEJAR DE ESCUCHAR AL SALIR DEL MAPA
-        // ====================================================
 
         onDispose {
 
@@ -335,7 +301,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // ORDEN GUARDADO EN LA RUTA
+    // ORDEN DE SOLICITUDES
     // ========================================================
 
     val ordenSolicitudes =
@@ -345,9 +311,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // ORDENAR LAS PARADAS
-    //
-    // solicitudId se compara con ordenSolicitudes.
+    // ORDENAR PARADAS
     // ========================================================
 
     val paradasOrdenadas =
@@ -356,18 +320,11 @@ fun MapaRutaRecolectorScreen(
             ordenSolicitudes
         ) {
 
-            if (
-                ordenSolicitudes.isEmpty()
-            ) {
+            if (ordenSolicitudes.isEmpty()) {
 
                 state.paradas
 
             } else {
-
-
-                // =============================================
-                // PARADAS EN EL ORDEN ORIGINAL DE GOOGLE ROUTES
-                // =============================================
 
                 val ordenadas =
                     ordenSolicitudes
@@ -381,12 +338,6 @@ fun MapaRutaRecolectorScreen(
                                 }
                         }
 
-
-                // =============================================
-                // POR SEGURIDAD:
-                // SI HAY ALGUNA PARADA NO PRESENTE EN EL ORDEN,
-                // LA AGREGAMOS AL FINAL.
-                // =============================================
 
                 val restantes =
                     state.paradas
@@ -405,10 +356,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // SABER SI UNA PARADA TERMINÓ
-    //
-    // Uso estado.name para que no dependamos de que tu enum
-    // tenga exactamente una única constante concreta.
+    // SABER SI ESTÁ COMPLETADA
     // ========================================================
 
     fun estaCompletada(
@@ -428,8 +376,6 @@ fun MapaRutaRecolectorScreen(
 
     // ========================================================
     // PARADA ACTIVA
-    //
-    // Es la primera que todavía no está completada.
     // ========================================================
 
     val paradaActiva =
@@ -443,30 +389,35 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // ¿YA TERMINÓ TODA LA RUTA?
+    // PARADA SELECCIONADA AL TOCAR MARKER
+    // ========================================================
+
+    val paradaSeleccionada =
+        paradasOrdenadas
+            .firstOrNull { parada ->
+
+                parada.solicitudId ==
+                        solicitudSeleccionadaId
+            }
+
+
+    // ========================================================
+    // ¿TERMINÓ TODA LA RUTA?
     // ========================================================
 
     val rutaFinalizada =
-        paradasOrdenadas
-            .isNotEmpty()
+        paradasOrdenadas.isNotEmpty()
                 &&
-                paradasOrdenadas
-                    .all { parada ->
+                paradasOrdenadas.all { parada ->
 
-                        estaCompletada(
-                            parada.estado
-                        )
-                    }
+                    estaCompletada(
+                        parada.estado
+                    )
+                }
 
 
     // ========================================================
-    // PUNTOS DEL MAPA
-    //
-    // COMPLETADA -> GRIS
-    // ACTUAL     -> NARANJA
-    // FUTURAS    -> VERDE
-    //
-    // Si toda la ruta terminó -> no mandamos marcadores.
+    // MARCADORES
     // ========================================================
 
     val puntosMapa =
@@ -476,131 +427,88 @@ fun MapaRutaRecolectorScreen(
             rutaFinalizada
         ) {
 
-            if (
-                rutaFinalizada
-            ) {
+            if (rutaFinalizada) {
 
                 emptyList()
 
             } else {
 
-                paradasOrdenadas
-                    .map { parada ->
+                paradasOrdenadas.map { parada ->
 
+                    val colorParada =
+                        when {
 
-                        val colorParada =
-                            when {
+                            estaCompletada(
+                                parada.estado
+                            ) -> {
 
-
-                                // =================================
-                                // COMPLETADA
-                                // =================================
-
-                                estaCompletada(
-                                    parada.estado
-                                ) -> {
-
-                                    GrisParadaCompletada
-                                }
-
-
-                                // =================================
-                                // ACTUAL
-                                // =================================
-
-                                parada.solicitudId ==
-                                        paradaActiva
-                                            ?.solicitudId -> {
-
-                                    NaranjaParadaActiva
-                                }
-
-
-                                // =================================
-                                // FUTURA
-                                // =================================
-
-                                else -> {
-
-                                    RebottleColors.MainGreen
-                                }
+                                GrisParadaCompletada
                             }
 
 
-                        PuntoMapa(
-                            latitud =
-                                parada.latitud,
+                            parada.solicitudId ==
+                                    paradaActiva?.solicitudId -> {
 
-                            longitud =
-                                parada.longitud,
+                                NaranjaParadaActiva
+                            }
 
-                            color =
-                                colorParada
-                        )
-                    }
+
+                            else -> {
+
+                                RebottleColors.MainGreen
+                            }
+                        }
+
+
+                    PuntoMapa(
+                        latitud =
+                            parada.latitud,
+
+                        longitud =
+                            parada.longitud,
+
+                        color =
+                            colorParada,
+
+                        // MUY IMPORTANTE
+                        solicitudId =
+                            parada.solicitudId
+                    )
+                }
             }
         }
 
 
     // ========================================================
-    // POLYLINE:
-    // GPS -> PARADA ACTUAL
+    // POLYLINE GPS -> PARADA ACTIVA
     // ========================================================
 
     var polylineHaciaParada by
     remember {
-
         mutableStateOf("")
     }
 
 
-    // ========================================================
-    // ÚLTIMA UBICACIÓN DESDE LA QUE CALCULAMOS
-    // ========================================================
-
     var ultimaUbicacionCalculada by
     remember {
-
-        mutableStateOf<Location?>(
-            null
-        )
+        mutableStateOf<Location?>(null)
     }
 
-
-    // ========================================================
-    // ÚLTIMA PARADA CALCULADA
-    // ========================================================
 
     var ultimoDestinoId by
     remember {
-
-        mutableStateOf<String?>(
-            null
-        )
+        mutableStateOf<String?>(null)
     }
 
-
-    // ========================================================
-    // INDICADOR DE CARGA
-    // ========================================================
 
     var calculandoTramo by
     remember {
-
-        mutableStateOf(
-            false
-        )
+        mutableStateOf(false)
     }
 
 
     // ========================================================
-    // CALCULAR TRAMO:
-    //
-    // GPS ACTUAL
-    //     ↓
-    // GOOGLE ROUTES
-    //     ↓
-    // PARADA ACTIVA
+    // CALCULAR RUTA HACIA LA PARADA ACTUAL
     // ========================================================
 
     LaunchedEffect(
@@ -611,42 +519,31 @@ fun MapaRutaRecolectorScreen(
     ) {
 
         // ====================================================
-        // SI TODA LA RUTA TERMINÓ
-        // LIMPIAMOS EL TRAMO ACTIVO.
+        // RUTA TERMINADA
         // ====================================================
 
-        if (
-            rutaFinalizada
-        ) {
+        if (rutaFinalizada) {
 
             polylineHaciaParada =
                 ""
 
-
             ultimoDestinoId =
                 null
-
 
             ultimaUbicacionCalculada =
                 null
 
+            solicitudSeleccionadaId =
+                null
 
             return@LaunchedEffect
         }
 
 
-        // ====================================================
-        // NECESITAMOS UBICACIÓN GPS
-        // ====================================================
-
         val ubicacion =
             ubicacionRecolector
                 ?: return@LaunchedEffect
 
-
-        // ====================================================
-        // NECESITAMOS UNA PARADA ACTIVA
-        // ====================================================
 
         val destino =
             paradaActiva
@@ -662,13 +559,7 @@ fun MapaRutaRecolectorScreen(
                 }
 
 
-        // ====================================================
-        // EVITAR CONSULTAS SIMULTÁNEAS
-        // ====================================================
-
-        if (
-            calculandoTramo
-        ) {
+        if (calculandoTramo) {
 
             return@LaunchedEffect
         }
@@ -684,7 +575,7 @@ fun MapaRutaRecolectorScreen(
 
 
         // ====================================================
-        // DISTANCIA RECORRIDA DESDE ÚLTIMO CÁLCULO
+        // ¿CUÁNTO SE MOVIÓ?
         // ====================================================
 
         val distanciaDesdeUltimoCalculo =
@@ -696,33 +587,21 @@ fun MapaRutaRecolectorScreen(
 
 
         // ====================================================
-        // NO LLAMAMOS GOOGLE ROUTES SI:
-        //
-        // - seguimos hacia la misma parada
-        // - nos hemos movido menos de 75 metros
+        // SOLO RECALCULAMOS DESPUÉS DE 75 METROS
         // ====================================================
 
         if (
             !cambioDestino &&
-            distanciaDesdeUltimoCalculo <
-            75f
+            distanciaDesdeUltimoCalculo < 75f
         ) {
 
             return@LaunchedEffect
         }
 
 
-        // ====================================================
-        // COMENZAR CÁLCULO
-        // ====================================================
-
         calculandoTramo =
             true
 
-
-        // ====================================================
-        // DATOS PARA CLOUD FUNCTION
-        // ====================================================
 
         val datos =
             hashMapOf<String, Any>(
@@ -741,10 +620,6 @@ fun MapaRutaRecolectorScreen(
             )
 
 
-        // ====================================================
-        // LLAMAR CLOUD FUNCTION
-        // ====================================================
-
         functions
             .getHttpsCallable(
                 "calcularRutaHaciaParada"
@@ -754,11 +629,6 @@ fun MapaRutaRecolectorScreen(
             )
             .addOnSuccessListener { resultado ->
 
-
-                // =============================================
-                // RESPUESTA DE FIREBASE
-                // =============================================
-
                 val respuesta =
                     resultado.data
                             as? Map<*, *>
@@ -766,38 +636,21 @@ fun MapaRutaRecolectorScreen(
 
                 val nuevaPolyline =
                     respuesta
-                        ?.get(
-                            "polyline"
-                        )
+                        ?.get("polyline")
                             as? String
 
 
-                // =============================================
-                // GUARDAR POLYLINE
-                // =============================================
-
-                if (
-                    !nuevaPolyline
-                        .isNullOrBlank()
-                ) {
+                if (!nuevaPolyline.isNullOrBlank()) {
 
                     polylineHaciaParada =
                         nuevaPolyline
 
-
-                    // =========================================
-                    // GUARDAR UBICACIÓN DEL ÚLTIMO CÁLCULO
-                    // =========================================
 
                     ultimaUbicacionCalculada =
                         Location(
                             ubicacion
                         )
 
-
-                    // =========================================
-                    // GUARDAR PARADA DESTINO
-                    // =========================================
 
                     ultimoDestinoId =
                         destino.solicitudId
@@ -809,11 +662,9 @@ fun MapaRutaRecolectorScreen(
             }
             .addOnFailureListener { error ->
 
-
                 println(
                     "Error calculando ruta hacia parada: ${error.message}"
                 )
-
 
                 calculandoTramo =
                     false
@@ -822,7 +673,7 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
-    // UBICACIÓN PARA RECORTAR LA RUTA VERDE
+    // UBICACIÓN PARA RECORTAR RUTA VERDE
     // ========================================================
 
     val ubicacionMapa =
@@ -845,15 +696,11 @@ fun MapaRutaRecolectorScreen(
             Modifier.fillMaxSize()
     ) {
 
-
         // ====================================================
-        // TENEMOS RUTA
+        // HAY RUTA
         // ====================================================
 
-        if (
-            state.ruta != null
-        ) {
-
+        if (state.ruta != null) {
 
             // =================================================
             // MAPA
@@ -861,37 +708,16 @@ fun MapaRutaRecolectorScreen(
 
             MapaParadas(
 
-                // =============================================
-                // MARCADORES
-                //
-                // Después de terminar la última parada:
-                // []
-                // =============================================
-
                 puntos =
-                    if (
-                        rutaFinalizada
-                    ) {
-
+                    if (rutaFinalizada) {
                         emptyList()
-
                     } else {
-
                         puntosMapa
                     },
 
 
-                // =============================================
-                // POLYLINE VERDE
-                //
-                // Después de terminar:
-                // ""
-                // =============================================
-
                 polyline =
-                    if (
-                        rutaFinalizada
-                    ) {
+                    if (rutaFinalizada) {
 
                         ""
 
@@ -903,16 +729,8 @@ fun MapaRutaRecolectorScreen(
                     },
 
 
-                // =============================================
-                // POLYLINE NARANJA
-                //
-                // GPS -> siguiente parada
-                // =============================================
-
                 polylineActiva =
-                    if (
-                        rutaFinalizada
-                    ) {
+                    if (rutaFinalizada) {
 
                         ""
 
@@ -922,14 +740,8 @@ fun MapaRutaRecolectorScreen(
                     },
 
 
-                // =============================================
-                // GPS PARA RECORTAR LA PARTE YA RECORRIDA
-                // =============================================
-
                 ubicacionActual =
-                    if (
-                        rutaFinalizada
-                    ) {
+                    if (rutaFinalizada) {
 
                         null
 
@@ -939,12 +751,19 @@ fun MapaRutaRecolectorScreen(
                     },
 
 
-                // =============================================
-                // PUNTO AZUL DE GOOGLE MAPS
-                // =============================================
-
                 mostrarMiUbicacion =
                     permisoUbicacion,
+
+
+                // =============================================
+                // CLICK EN MARKER
+                // =============================================
+
+                onPuntoClick = { punto ->
+
+                    solicitudSeleccionadaId =
+                        punto.solicitudId
+                },
 
 
                 modifier =
@@ -953,9 +772,245 @@ fun MapaRutaRecolectorScreen(
 
 
             // =================================================
-            // INDICADOR MIENTRAS RECALCULA
-            //
-            // No aparece si ya terminó la ruta.
+            // CARD DEL MARKER SELECCIONADO
+            // =================================================
+
+            if (
+                paradaSeleccionada != null &&
+                !rutaFinalizada
+            ) {
+
+                val esCompletada =
+                    estaCompletada(
+                        paradaSeleccionada.estado
+                    )
+
+
+                val esParadaActual =
+                    paradaSeleccionada.solicitudId ==
+                            paradaActiva?.solicitudId
+
+
+                Card(
+                    modifier =
+                        Modifier
+                            .align(
+                                Alignment.BottomCenter
+                            )
+                            .padding(
+                                start = 20.dp,
+                                end = 20.dp,
+                                bottom = 32.dp
+                            )
+                            .fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(
+                            18.dp
+                        ),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                Color.White
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation =
+                                8.dp
+                        )
+                ) {
+
+                    Column(
+                        modifier =
+                            Modifier.padding(
+                                18.dp
+                            )
+                    ) {
+
+                        // =====================================
+                        // TÍTULO
+                        // =====================================
+
+                        Text(
+                            text =
+                                "Recolección ${paradaSeleccionada.solicitudId}",
+
+                            fontSize =
+                                17.sp,
+
+                            fontWeight =
+                                FontWeight.Bold,
+
+                            color =
+                                RebottleColors.MainText
+                        )
+
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    6.dp
+                                )
+                        )
+
+
+                        // =====================================
+                        // COMPLETADA
+                        // =====================================
+
+                        if (esCompletada) {
+
+                            Text(
+                                text =
+                                    "✓ Recolección completada",
+
+                                color =
+                                    RebottleColors.MainGreen,
+
+                                fontSize =
+                                    14.sp,
+
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+                        }
+
+
+                        // =====================================
+                        // PARADA ACTUAL
+                        // =====================================
+
+                        else if (esParadaActual) {
+
+                            Text(
+                                text =
+                                    "Esta es tu parada actual",
+
+                                color =
+                                    NaranjaParadaActiva,
+
+                                fontSize =
+                                    14.sp,
+
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(
+                                        14.dp
+                                    )
+                            )
+
+
+                            Button(
+                                onClick = {
+                                    model.completarParada(paradaSeleccionada.solicitudId)
+                                },
+
+                                enabled =
+                                    state.resolviendoId ==
+                                            null,
+
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(
+                                            48.dp
+                                        ),
+
+                                shape =
+                                    RoundedCornerShape(
+                                        14.dp
+                                    ),
+
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor =
+                                            RebottleColors.MainGreen
+                                    )
+                            ) {
+
+                                Text(
+                                    text =
+                                        "Marcar como finalizada",
+
+                                    color =
+                                        Color.White,
+
+                                    fontSize =
+                                        15.sp,
+
+                                    fontWeight =
+                                        FontWeight.Medium
+                                )
+                            }
+                        }
+
+
+                        // =====================================
+                        // PARADA FUTURA
+                        // =====================================
+
+                        else {
+
+                            Text(
+                                text =
+                                    "Completa primero la parada anterior",
+
+                                color =
+                                    Color(0xFF7F887A),
+
+                                fontSize =
+                                    14.sp
+                            )
+                        }
+
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    4.dp
+                                )
+                        )
+
+
+                        // =====================================
+                        // CERRAR AVISO
+                        // =====================================
+
+                        TextButton(
+                            onClick = {
+
+                                solicitudSeleccionadaId =
+                                    null
+                            },
+
+                            modifier =
+                                Modifier.align(
+                                    Alignment.End
+                                )
+                        ) {
+
+                            Text(
+                                text =
+                                    "Cerrar",
+
+                                color =
+                                    RebottleColors.MainGreen
+                            )
+                        }
+                    }
+                }
+            }
+
+
+            // =================================================
+            // CARGANDO NUEVO TRAMO
             // =================================================
 
             if (
@@ -970,8 +1025,7 @@ fun MapaRutaRecolectorScreen(
                                 Alignment.TopCenter
                             )
                             .padding(
-                                top =
-                                    52.dp
+                                top = 52.dp
                             ),
 
                     color =
@@ -983,7 +1037,6 @@ fun MapaRutaRecolectorScreen(
                     shadowElevation =
                         4.dp
                 ) {
-
 
                     CircularProgressIndicator(
                         modifier =
@@ -999,7 +1052,6 @@ fun MapaRutaRecolectorScreen(
 
         } else {
 
-
             // =================================================
             // NO HAY RUTA
             // =================================================
@@ -1012,13 +1064,7 @@ fun MapaRutaRecolectorScreen(
                     Alignment.Center
             ) {
 
-
                 when {
-
-
-                    // =========================================
-                    // CARGANDO
-                    // =========================================
 
                     state.isLoading -> {
 
@@ -1028,10 +1074,6 @@ fun MapaRutaRecolectorScreen(
                         )
                     }
 
-
-                    // =========================================
-                    // ERROR
-                    // =========================================
 
                     state.error != null -> {
 
@@ -1048,10 +1090,6 @@ fun MapaRutaRecolectorScreen(
                         )
                     }
 
-
-                    // =========================================
-                    // SIN RUTA
-                    // =========================================
 
                     else -> {
 
@@ -1082,11 +1120,8 @@ fun MapaRutaRecolectorScreen(
                         Alignment.TopStart
                     )
                     .padding(
-                        start =
-                            16.dp,
-
-                        top =
-                            48.dp
+                        start = 16.dp,
+                        top = 48.dp
                     ),
 
             shape =
@@ -1099,15 +1134,12 @@ fun MapaRutaRecolectorScreen(
                 6.dp
         ) {
 
-
             IconButton(
                 onClick = {
 
-                    controller
-                        .popBackStack()
+                    controller.popBackStack()
                 }
             ) {
-
 
                 Icon(
                     imageVector =

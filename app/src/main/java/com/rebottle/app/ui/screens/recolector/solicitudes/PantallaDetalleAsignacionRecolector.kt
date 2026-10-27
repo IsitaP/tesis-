@@ -355,7 +355,11 @@ fun PantallaDetalleAsignacionRecolector(
             )
 
             Button(
-                onClick = { AppScreens.rutasRecolector.name },
+                onClick = {
+                    controller.navigate(
+                        AppScreens.rutasRecolector.name
+                    )
+                },
                 enabled = state.resolviendoId == null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -373,8 +377,6 @@ fun PantallaDetalleAsignacionRecolector(
                 )
             }
         }
-
-
 
 
         // Imagen del paisaje pegada al borde inferior de la pantalla

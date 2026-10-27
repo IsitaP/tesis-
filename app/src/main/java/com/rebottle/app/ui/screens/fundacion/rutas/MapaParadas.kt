@@ -37,78 +37,113 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.rebottle.app.ui.theme.RebottleColors
 
 
+// ============================================================
+// MODELO DE PUNTO DEL MAPA
+// ============================================================
+
 data class PuntoMapa(
     val latitud: Double,
     val longitud: Double,
-    val color: Color
+    val color: Color,
+
+    // Se usa principalmente en el mapa del recolector.
+    // Fundación puede seguir sin pasarlo.
+    val solicitudId: String = ""
 )
 
+
+// ============================================================
+// MAPA DE PARADAS
+// ============================================================
 
 @Composable
 fun MapaParadas(
     puntos: List<PuntoMapa>,
+
+    // Ruta completa creada por Google Routes.
     polyline: String = "",
+
+    // Ruta desde el GPS del recolector
+    // hasta la siguiente parada.
     polylineActiva: String = "",
+
+    // Activa el punto azul de Google Maps.
     mostrarMiUbicacion: Boolean = false,
 
-    // Ubicación GPS que usaremos para ir
-    // recortando la ruta ya recorrida.
+    // Ubicación actual del recolector.
+    // Se usa para eliminar la parte ya recorrida.
     ubicacionActual: LatLng? = null,
+
+    // Evento al tocar un marker.
+    onPuntoClick: (PuntoMapa) -> Unit = {},
 
     modifier: Modifier = Modifier
 ) {
 
     // ========================================================
-    // RUTA COMPLETA ORIGINAL
+    // DECODIFICAR RUTA COMPLETA
     // ========================================================
 
     val trazoCompleto =
-        remember(polyline) {
+        remember(
+            polyline
+        ) {
 
-            decodificarPolyline(polyline)
-                .map {
+            decodificarPolyline(
+                polyline
+            ).map { coordenada ->
 
-                    LatLng(
-                        it.first,
-                        it.second
-                    )
-                }
+                LatLng(
+                    coordenada.first,
+                    coordenada.second
+                )
+            }
         }
 
 
     // ========================================================
-    // TRAMO GPS -> PARADA ACTUAL
+    // DECODIFICAR RUTA ACTIVA
+    //
+    // GPS -> SIGUIENTE PARADA
     // ========================================================
 
     val trazoActivo =
-        remember(polylineActiva) {
+        remember(
+            polylineActiva
+        ) {
 
-            decodificarPolyline(polylineActiva)
-                .map {
+            decodificarPolyline(
+                polylineActiva
+            ).map { coordenada ->
 
-                    LatLng(
-                        it.first,
-                        it.second
-                    )
-                }
+                LatLng(
+                    coordenada.first,
+                    coordenada.second
+                )
+            }
         }
 
 
     // ========================================================
-    // ÍNDICE HASTA DONDE YA RECORRIMOS
+    // ÍNDICE DE LA RUTA YA RECORRIDA
+    //
+    // Este índice solo puede avanzar.
+    // Nunca retrocede.
     // ========================================================
 
     var indiceRecorrido by
-    remember(polyline) {
+    remember(
+        polyline
+    ) {
 
-        mutableIntStateOf(0)
+        mutableIntStateOf(
+            0
+        )
     }
 
 
     // ========================================================
-    // BUSCAR EL PUNTO DE LA RUTA MÁS CERCANO AL GPS
-    //
-    // Solo avanzamos el índice, nunca retrocedemos.
+    // ACTUALIZAR PARTE RECORRIDA
     // ========================================================
 
     LaunchedEffect(
@@ -125,7 +160,9 @@ fun MapaParadas(
             trazoCompleto.isEmpty()
         ) {
 
-            indiceRecorrido = 0
+            indiceRecorrido =
+                0
+
             return@LaunchedEffect
         }
 
@@ -138,38 +175,52 @@ fun MapaParadas(
             Float.MAX_VALUE
 
 
-        val resultado =
-            FloatArray(1)
+        val resultadoDistancia =
+            FloatArray(
+                1
+            )
 
 
         trazoCompleto
-            .forEachIndexed { indice, punto ->
+            .forEachIndexed { indice, puntoRuta ->
 
-                // Nunca permitimos volver hacia atrás.
+
+                // =================================================
+                // NO BUSCAMOS DETRÁS DE DONDE YA PASAMOS
+                // =================================================
+
                 if (
-                    indice < indiceRecorrido
+                    indice <
+                    indiceRecorrido
                 ) {
 
                     return@forEachIndexed
                 }
 
 
+                // =================================================
+                // DISTANCIA GPS -> PUNTO DE LA POLYLINE
+                // =================================================
+
                 Location.distanceBetween(
+
                     ubicacion.latitude,
                     ubicacion.longitude,
-                    punto.latitude,
-                    punto.longitude,
-                    resultado
+
+                    puntoRuta.latitude,
+                    puntoRuta.longitude,
+
+                    resultadoDistancia
                 )
 
 
                 if (
-                    resultado[0] <
+                    resultadoDistancia[0] <
                     distanciaMasCercana
                 ) {
 
                     distanciaMasCercana =
-                        resultado[0]
+                        resultadoDistancia[0]
 
 
                     indiceMasCercano =
@@ -178,15 +229,17 @@ fun MapaParadas(
             }
 
 
-        /*
-         * Solo recortamos si realmente estamos cerca
-         * de la ruta.
-         *
-         * Esto evita que una ubicación lejana haga
-         * desaparecer media ruta accidentalmente.
-         */
+        // ====================================================
+        // SOLO RECORTAMOS SI EL RECOLECTOR ESTÁ CERCA
+        // DE LA RUTA ORIGINAL.
+        //
+        // Esto evita eliminar partes de la ruta por errores
+        // temporales del GPS.
+        // ====================================================
+
         if (
-            distanciaMasCercana <= 120f
+            distanciaMasCercana <=
+            120f
         ) {
 
             indiceRecorrido =
@@ -199,7 +252,7 @@ fun MapaParadas(
 
 
     // ========================================================
-    // SOLO QUEDA LA PARTE NO RECORRIDA
+    // PARTE DE LA RUTA QUE TODAVÍA FALTA
     // ========================================================
 
     val trazoPendiente =
@@ -225,7 +278,7 @@ fun MapaParadas(
 
 
     // ========================================================
-    // PUNTOS PARA AJUSTAR LA CÁMARA
+    // TODOS LOS ELEMENTOS PARA AJUSTAR LA CÁMARA
     // ========================================================
 
     val todos =
@@ -237,11 +290,11 @@ fun MapaParadas(
 
             trazoPendiente +
                     trazoActivo +
-                    puntos.map {
+                    puntos.map { punto ->
 
                         LatLng(
-                            it.latitud,
-                            it.longitud
+                            punto.latitud,
+                            punto.longitud
                         )
                     }
         }
@@ -254,23 +307,28 @@ fun MapaParadas(
     val camara =
         rememberCameraPositionState {
 
+            // Bogotá por defecto
             position =
-                CameraPosition.fromLatLngZoom(
-                    LatLng(
-                        4.7110,
-                        -74.0721
-                    ),
-                    11f
-                )
+                CameraPosition
+                    .fromLatLngZoom(
+
+                        LatLng(
+                            4.7110,
+                            -74.0721
+                        ),
+
+                        11f
+                    )
         }
 
 
     // ========================================================
-    // MI UBICACIÓN
+    // PROPIEDADES DEL MAPA
     // ========================================================
 
     val propiedadesMapa =
         MapProperties(
+
             isMyLocationEnabled =
                 mostrarMiUbicacion
         )
@@ -279,12 +337,14 @@ fun MapaParadas(
     var mapaCargado by
     remember {
 
-        mutableStateOf(false)
+        mutableStateOf(
+            false
+        )
     }
 
 
     // ========================================================
-    // AJUSTAR CÁMARA
+    // AJUSTAR LA CÁMARA AUTOMÁTICAMENTE
     // ========================================================
 
     LaunchedEffect(
@@ -301,39 +361,59 @@ fun MapaParadas(
         }
 
 
+        // ====================================================
+        // SOLO HAY UN PUNTO
+        // ====================================================
+
         if (
-            todos.size == 1
+            todos.size ==
+            1
         ) {
 
             camara.move(
-                CameraUpdateFactory.newLatLngZoom(
-                    todos.first(),
-                    15f
-                )
+
+                CameraUpdateFactory
+                    .newLatLngZoom(
+
+                        todos.first(),
+
+                        15f
+                    )
             )
+
 
             return@LaunchedEffect
         }
 
+
+        // ====================================================
+        // ENCUADRAR TODA LA RUTA
+        // ====================================================
 
         val limites =
             LatLngBounds
                 .builder()
                 .apply {
 
-                    todos.forEach {
+                    todos.forEach { punto ->
 
-                        include(it)
+                        include(
+                            punto
+                        )
                     }
                 }
                 .build()
 
 
         camara.move(
-            CameraUpdateFactory.newLatLngBounds(
-                limites,
-                100
-            )
+
+            CameraUpdateFactory
+                .newLatLngBounds(
+
+                    limites,
+
+                    100
+                )
         )
     }
 
@@ -354,6 +434,7 @@ fun MapaParadas(
 
         uiSettings =
             MapUiSettings(
+
                 zoomControlsEnabled =
                     false,
 
@@ -374,11 +455,14 @@ fun MapaParadas(
 
 
         // ====================================================
-        // RUTA QUE TODAVÍA FALTA - VERDE
+        // RUTA PENDIENTE
+        //
+        // COLOR VERDE
         // ====================================================
 
         if (
-            trazoPendiente.size >= 2
+            trazoPendiente.size >=
+            2
         ) {
 
             Polyline(
@@ -395,11 +479,14 @@ fun MapaParadas(
 
 
         // ====================================================
-        // GPS -> SIGUIENTE PARADA - NARANJA
+        // RUTA HACIA LA PARADA ACTUAL
+        //
+        // COLOR NARANJA
         // ====================================================
 
         if (
-            trazoActivo.size >= 2
+            trazoActivo.size >=
+            2
         ) {
 
             Polyline(
@@ -407,7 +494,9 @@ fun MapaParadas(
                     trazoActivo,
 
                 color =
-                    Color(0xFFD99B4B),
+                    Color(
+                        0xFFD99B4B
+                    ),
 
                 width =
                     15f
@@ -424,25 +513,54 @@ fun MapaParadas(
             key(
                 punto.latitud,
                 punto.longitud,
-                punto.color
+                punto.color,
+                punto.solicitudId
             ) {
+
 
                 Marker(
                     state =
                         rememberMarkerState(
+
                             position =
                                 LatLng(
+
                                     punto.latitud,
+
                                     punto.longitud
                                 )
                         ),
 
-                    // Ahora sí conserva gris,
-                    // naranja, verde, etc.
+                    // =========================================
+                    // MARCADOR PERSONALIZADO
+                    //
+                    // Permite usar gris real.
+                    // =========================================
+
                     icon =
                         crearMarcador(
                             punto.color
+                        ),
+
+
+                    // =========================================
+                    // CLICK SOBRE EL MARKER
+                    // =========================================
+
+                    onClick = {
+
+                        onPuntoClick(
+                            punto
                         )
+
+
+                        /*
+                         * true indica que nosotros manejamos
+                         * el click y evitamos el InfoWindow
+                         * estándar de Google Maps.
+                         */
+                        true
+                    }
                 )
             }
         }
@@ -451,10 +569,10 @@ fun MapaParadas(
 
 
 // ============================================================
-// MARCADOR PERSONALIZADO
+// CREAR MARKER PERSONALIZADO
 //
-// No usamos defaultMarker(hue) porque no permite representar
-// correctamente colores sin saturación como gris.
+// Usamos un bitmap porque defaultMarker(hue)
+// no puede representar correctamente el gris.
 // ============================================================
 
 private fun crearMarcador(
@@ -464,21 +582,31 @@ private fun crearMarcador(
     val ancho =
         56
 
+
     val alto =
         72
 
 
     val bitmap =
         Bitmap.createBitmap(
+
             ancho,
+
             alto,
+
             Bitmap.Config.ARGB_8888
         )
 
 
     val canvas =
-        Canvas(bitmap)
+        Canvas(
+            bitmap
+        )
 
+
+    // ========================================================
+    // COLOR DEL PIN
+    // ========================================================
 
     val pintura =
         Paint(
@@ -488,10 +616,15 @@ private fun crearMarcador(
             this.color =
                 color.toArgb()
 
+
             style =
                 Paint.Style.FILL
         }
 
+
+    // ========================================================
+    // BORDE BLANCO
+    // ========================================================
 
     val borde =
         Paint(
@@ -501,8 +634,10 @@ private fun crearMarcador(
             this.color =
                 android.graphics.Color.WHITE
 
+
             style =
                 Paint.Style.STROKE
+
 
             strokeWidth =
                 4f
@@ -521,15 +656,18 @@ private fun crearMarcador(
                 68f
             )
 
+
             lineTo(
                 14f,
                 38f
             )
 
+
             lineTo(
                 42f,
                 38f
             )
+
 
             close()
         }
@@ -575,7 +713,7 @@ private fun crearMarcador(
 
 
 // ============================================================
-// DECODIFICAR POLYLINE
+// DECODIFICAR POLYLINE DE GOOGLE
 // ============================================================
 
 private fun decodificarPolyline(
@@ -599,22 +737,31 @@ private fun decodificarPolyline(
         var indice =
             0
 
+
         var lat =
             0
+
 
         var lng =
             0
 
 
         while (
-            indice < encoded.length
+            indice <
+            encoded.length
         ) {
+
+            // =================================================
+            // LATITUD
+            // =================================================
 
             var desplazamiento =
                 0
 
+
             var acumulado =
                 0
+
 
             var b: Int
 
@@ -622,7 +769,9 @@ private fun decodificarPolyline(
             do {
 
                 b =
-                    encoded[indice++].code -
+                    encoded[
+                        indice++
+                    ].code -
                             63
 
 
@@ -638,13 +787,15 @@ private fun decodificarPolyline(
                     5
 
             } while (
-                b >= 0x20
+                b >=
+                0x20
             )
 
 
             lat +=
                 if (
-                    (acumulado and 1) != 0
+                    (acumulado and 1) !=
+                    0
                 ) {
 
                     (acumulado shr 1)
@@ -656,8 +807,13 @@ private fun decodificarPolyline(
                 }
 
 
+            // =================================================
+            // LONGITUD
+            // =================================================
+
             desplazamiento =
                 0
+
 
             acumulado =
                 0
@@ -666,7 +822,9 @@ private fun decodificarPolyline(
             do {
 
                 b =
-                    encoded[indice++].code -
+                    encoded[
+                        indice++
+                    ].code -
                             63
 
 
@@ -682,13 +840,15 @@ private fun decodificarPolyline(
                     5
 
             } while (
-                b >= 0x20
+                b >=
+                0x20
             )
 
 
             lng +=
                 if (
-                    (acumulado and 1) != 0
+                    (acumulado and 1) !=
+                    0
                 ) {
 
                     (acumulado shr 1)
@@ -700,7 +860,12 @@ private fun decodificarPolyline(
                 }
 
 
+            // =================================================
+            // AGREGAR PUNTO
+            // =================================================
+
             resultado.add(
+
                 (lat / 1e5) to
                         (lng / 1e5)
             )
