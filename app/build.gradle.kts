@@ -85,4 +85,6 @@ dependencies {
     implementation(libs.places)
     implementation("com.google.android.gms:play-services-location:21.4.0")
     implementation("com.google.firebase:firebase-functions")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
 }
