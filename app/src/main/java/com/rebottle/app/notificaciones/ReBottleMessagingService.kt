@@ -11,17 +11,12 @@ class ReBottleMessagingService : FirebaseMessagingService() {
         private const val TAG = "ReBottleFCM"
     }
 
-    // Se ejecuta cuando el dispositivo queda registrado en FCM.
-    override fun onRegistered(installationId: String) {
-        super.onRegistered(installationId)
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
 
-        Log.d(
-            TAG,
-            "Dispositivo registrado. FID: $installationId"
-        )
+        Log.d(TAG, "Nuevo token FCM: $token")
     }
 
-    // Recibe mensajes enviados desde Firebase.
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
@@ -31,6 +26,5 @@ class ReBottleMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Notificación recibida")
         Log.d(TAG, "Título: $titulo")
         Log.d(TAG, "Mensaje: $contenido")
-        Log.d(TAG, "Datos: ${message.data}")
     }
 }

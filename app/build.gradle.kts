@@ -69,7 +69,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-storage")
     implementation(libs.googleid)
     implementation(libs.maps.compose)
@@ -86,5 +86,4 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.4.0")
     implementation("com.google.firebase:firebase-functions")
     implementation("com.google.firebase:firebase-messaging")
-    implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
 }
