@@ -14,6 +14,9 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -83,6 +86,27 @@ class ReBottleMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "Mensaje: $contenido")
 
         mostrarNotificacion(titulo, contenido)
+    }
+
+
+    override fun onRegistered(installationId: String) {
+        val usuario = FirebaseAuth.getInstance().currentUser ?: return
+
+        val datos = hashMapOf<String, Any>(
+            "installationId" to installationId,
+            "actualizadoEn" to FieldValue.serverTimestamp()
+        )
+
+        FirebaseFirestore.getInstance()
+            .collection("fcmRegistros")
+            .document(usuario.uid)
+            .set(datos)
+            .addOnSuccessListener {
+                Log.d("ReBottleFCM", "Dispositivo registrado")
+            }
+            .addOnFailureListener { error ->
+                Log.e("ReBottleFCM", "Error al registrar dispositivo", error)
+            }
     }
 
     // ---------- MOSTRAR NOTIFICACIÓN ----------

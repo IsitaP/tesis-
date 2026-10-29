@@ -14,14 +14,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 
 import com.google.android.libraries.places.api.Places
-import com.google.firebase.messaging.FirebaseMessaging
 import com.rebottle.app.navigation.Navigation
 import com.rebottle.app.notificaciones.ReBottleMessagingService
 import com.rebottle.app.ui.theme.RebottleTheme
 
 class MainActivity : ComponentActivity() {
 
-    // ---------- PERMISO DE NOTIFICACIONES ----------
+    // =============================================
+    // PERMISO DE NOTIFICACIONES
+    // =============================================
 
     private val permisoNotificaciones =
         registerForActivityResult(
@@ -29,11 +30,14 @@ class MainActivity : ComponentActivity() {
         ) { permitido ->
 
             if (permitido) {
+
                 Log.d(
                     "ReBottleFCM",
                     "Permiso de notificaciones concedido"
                 )
+
             } else {
+
                 Log.d(
                     "ReBottleFCM",
                     "Permiso de notificaciones denegado"
@@ -41,20 +45,27 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-    // ---------- ON CREATE ----------
+    // =============================================
+    // ON CREATE
+    // =============================================
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
 
-        // Crear canal de notificaciones
+        // =========================================
+        // CANAL DE NOTIFICACIONES
+        // =========================================
+
         ReBottleMessagingService.crearCanal(this)
 
-        // Solicitar permisos y obtener token FCM
+        // Solicitar permiso de notificaciones
         configurarNotificaciones()
 
-        // ---------- GOOGLE PLACES ----------
+        // =========================================
+        // GOOGLE PLACES
+        // =========================================
 
         val appInfo = packageManager.getApplicationInfo(
             packageName,
@@ -87,20 +98,28 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // ---------- JETPACK COMPOSE ----------
+        // =========================================
+        // JETPACK COMPOSE
+        // =========================================
 
         setContent {
+
             RebottleTheme {
+
                 Navigation()
+
             }
         }
     }
 
-    // ---------- CONFIGURAR NOTIFICACIONES ----------
+    // =============================================
+    // CONFIGURAR NOTIFICACIONES
+    // =============================================
 
     private fun configurarNotificaciones() {
 
         // Solicitar permiso en Android 13 o superior
+
         if (
             Build.VERSION.SDK_INT >=
             Build.VERSION_CODES.TIRAMISU
@@ -117,31 +136,21 @@ class MainActivity : ComponentActivity() {
                 permisoNotificaciones.launch(
                     Manifest.permission.POST_NOTIFICATIONS
                 )
-            }
-        }
 
-        // ---------- OBTENER TOKEN FCM ----------
-
-        FirebaseMessaging.getInstance().token
-            .addOnCompleteListener { tarea ->
-
-                if (!tarea.isSuccessful) {
-
-                    Log.e(
-                        "ReBottleFCM",
-                        "Error obteniendo token FCM",
-                        tarea.exception
-                    )
-
-                    return@addOnCompleteListener
-                }
-
-                val token = tarea.result
+            } else {
 
                 Log.d(
                     "ReBottleFCM",
-                    "Token FCM obtenido: $token"
+                    "El permiso de notificaciones ya está concedido"
                 )
             }
+        }
+
+        // El registro del dispositivo en Firebase Messaging
+        // se realiza después del inicio de sesión mediante
+        // FirebaseMessaging.getInstance().register()
+        //
+        // ReBottleMessagingService.onRegistered()
+        // guarda el installationId en Firestore.
     }
 }

@@ -1,8 +1,9 @@
-import {onDocumentWritten} from "firebase-functions/v2/firestore";
+import {onDocumentWritten, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import {defineSecret} from "firebase-functions/params";
 
 import {initializeApp} from "firebase-admin/app";
+import {getMessaging} from "firebase-admin/messaging";
 import {
   FieldValue,
   getFirestore,
@@ -2098,3 +2099,114 @@ export const calcularRutaHaciaParada =
             };
         }
     );
+
+// ============================================================
+// NOTIFICACION AUTOMATICA - RUTA ASIGNADA AL RECOLECTOR
+// ============================================================
+
+export const notificarRutaAsignada = onDocumentUpdated(
+  "rutas/{rutaId}",
+  async (event) => {
+    const cambio = event.data;
+
+    if (!cambio) {
+      logger.warn("No se encontraron datos del cambio de ruta.");
+      return;
+    }
+
+    const antes = cambio.before.data();
+    const despues = cambio.after.data();
+
+    if (!antes || !despues) {
+      return;
+    }
+
+    // Notificar solo cuando se realiza una asignacion nueva.
+    if (
+      antes.estado !== "PUBLICADA" ||
+      despues.estado !== "ASIGNADA"
+    ) {
+      return;
+    }
+
+    if (
+      typeof antes.recolectorId === "string" &&
+      antes.recolectorId.trim() !== ""
+    ) {
+      return;
+    }
+
+    const recolectorId = despues.recolectorId;
+    const rutaId = event.params.rutaId;
+
+    if (
+      typeof recolectorId !== "string" ||
+      recolectorId.trim() === ""
+    ) {
+      logger.warn("La ruta no tiene recolectorId valido.", {rutaId});
+      return;
+    }
+
+    try {
+      const registro = await db
+        .collection("fcmRegistros")
+        .doc(recolectorId)
+        .get();
+
+      if (!registro.exists) {
+        logger.warn("Recolector sin dispositivo registrado.", {
+          rutaId,
+          recolectorId,
+        });
+        return;
+      }
+
+      const installationId = registro.get("installationId");
+
+      if (
+        typeof installationId !== "string" ||
+        installationId.trim() === ""
+      ) {
+        logger.warn("Recolector sin installationId valido.", {
+          rutaId,
+          recolectorId,
+        });
+        return;
+      }
+
+      // Compatibilidad temporal con versiones de firebase-admin
+      // que aun no incluyen la propiedad fid en el tipo Message.
+      // Firebase admite FIDs en token durante la migracion.
+      const mensajeId = await getMessaging().send({
+        token: installationId,
+        notification: {
+          title: "ReBottle - Nueva ruta asignada",
+          body:
+            "¡Tienes una nueva ruta de recolección! " +
+            "Ingresa a ReBottle para consultar los detalles.",
+        },
+        data: {
+          tipo: "RUTA_ASIGNADA",
+          rutaId: rutaId,
+        },
+        android: {
+          notification: {
+            channelId: "rebottle_rutas",
+          },
+        },
+      });
+
+      logger.info("Notificacion de ruta asignada enviada.", {
+        rutaId,
+        recolectorId,
+        mensajeId,
+      });
+    } catch (error) {
+      logger.error("Error notificando asignacion de ruta.", {
+        rutaId,
+        recolectorId,
+        error,
+      });
+    }
+  }
+);

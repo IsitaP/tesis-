@@ -1,0 +1,58 @@
+
+const { getFirestore } = require("firebase-admin/firestore");
+const { getMessaging } = require("firebase-admin/messaging");
+
+// Enviar notificación a un usuario de ReBottle
+async function enviarNotificacionAUsuario(
+    uid,
+    titulo,
+    mensaje,
+    datos = {}
+) {
+    // Buscar el dispositivo del usuario
+    const registro = await getFirestore()
+        .collection("fcmRegistros")
+        .doc(uid)
+        .get();
+
+    if (!registro.exists) {
+        console.log(
+            "El usuario no tiene dispositivo registrado:",
+            uid
+        );
+        return false;
+    }
+
+    const installationId = registro.data()?.installationId;
+
+    if (!installationId) {
+        console.log(
+            "El usuario no tiene installationId:",
+            uid
+        );
+        return false;
+    }
+
+    // Enviar notificación mediante Firebase
+    await getMessaging().send({
+        fid: installationId,
+
+        notification: {
+            title: titulo,
+            body: mensaje
+        },
+
+        data: datos
+    });
+
+    console.log(
+        "Notificación enviada al usuario:",
+        uid
+    );
+
+    return true;
+}
+
+module.exports = {
+    enviarNotificacionAUsuario
+};

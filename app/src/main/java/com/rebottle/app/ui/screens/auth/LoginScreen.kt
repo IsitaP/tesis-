@@ -1,6 +1,7 @@
 package com.rebottle.app.ui.screens.auth
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +41,7 @@ import androidx.navigation.NavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.rebottle.app.R
 import com.rebottle.app.model.AuthViewModel
 import com.rebottle.app.navigation.AppScreens
@@ -235,22 +237,72 @@ fun validEmailAddress(email:String):Boolean{
 }
 
 
-fun login(model: AuthViewModel, email: String, password: String, controller: NavController, context: Context) {
+
+fun login(
+    model: AuthViewModel,
+    email: String,
+    password: String,
+    controller: NavController,
+    context: Context
+) {
+
     if (validateForm(model, email, password)) {
+
         model.updateLoginLoading(true)
-        firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
-            model.updateLoginLoading(false)
-            if (it.isSuccessful) {
-                val uid = firebaseAuth.currentUser?.uid
-                if (uid != null) {
-                    navigateByRole(uid, controller, context)
+
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { tarea ->
+
+                model.updateLoginLoading(false)
+
+                if (tarea.isSuccessful) {
+
+                    val uid = firebaseAuth.currentUser?.uid
+
+                    if (uid != null) {
+
+                        // REGISTRAR DISPOSITIVO EN FCM
+                        FirebaseMessaging.getInstance()
+                            .register()
+                            .addOnCompleteListener { registro ->
+
+                                if (registro.isSuccessful) {
+
+                                    Log.d(
+                                        "ReBottleFCM",
+                                        "Registro FCM solicitado correctamente"
+                                    )
+
+                                } else {
+
+                                    Log.e(
+                                        "ReBottleFCM",
+                                        "Error solicitando registro FCM",
+                                        registro.exception
+                                    )
+                                }
+                            }
+
+                        // CONTINUAR HACIA LA PANTALLA DEL ROL
+                        navigateByRole(
+                            uid,
+                            controller,
+                            context
+                        )
+                    }
+
+                } else {
+
+                    Toast.makeText(
+                        context,
+                        "Login error ${tarea.exception}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
-            } else {
-                Toast.makeText(context, "Login error ${it.exception.toString()}", Toast.LENGTH_LONG).show()
             }
-        }
     }
 }
+
 
 private fun navigateByRole(uid: String, controller: NavController, context: Context) {
     Firebase.firestore.collection("users").document(uid).get()
