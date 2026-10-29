@@ -33,6 +33,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${PLACES_API_KEY}" />
 
+        <!-- Canal predeterminado de Firebase Messaging -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="rebottle_rutas" />
+
 
         <!-- Servicio de notificaciones ReBottle -->
         <service

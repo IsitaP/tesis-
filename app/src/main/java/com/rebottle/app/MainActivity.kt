@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.libraries.places.api.Places
 import com.google.firebase.messaging.FirebaseMessaging
 import com.rebottle.app.navigation.Navigation
+import com.rebottle.app.notificaciones.ReBottleMessagingService
 import com.rebottle.app.ui.theme.RebottleTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,7 +48,10 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
-        // Inicializar notificaciones
+        // Crear canal de notificaciones
+        ReBottleMessagingService.crearCanal(this)
+
+        // Solicitar permisos y obtener token FCM
         configurarNotificaciones()
 
         // ---------- GOOGLE PLACES ----------
