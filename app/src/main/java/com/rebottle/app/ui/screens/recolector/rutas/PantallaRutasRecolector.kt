@@ -137,6 +137,23 @@ fun MapaRutaRecolectorScreen(
 
 
     // ========================================================
+    // ESTADO DEL AVISO DE LLEGADA
+    // ========================================================
+
+    var llegadaEnProcesoId by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var llegadasRegistradas by remember {
+        mutableStateOf(setOf<String>())
+    }
+
+    var mensajesLlegada by remember {
+        mutableStateOf(mapOf<String, String>())
+    }
+
+
+    // ========================================================
     // PERMISOS DE UBICACIÓN
     // ========================================================
 
@@ -906,6 +923,91 @@ fun MapaRutaRecolectorScreen(
                                     )
                             )
 
+
+                            // =====================================
+                            // HE LLEGADO - AVISAR AL CIUDADANO
+                            // =====================================
+
+                            val solicitudId = paradaSeleccionada.solicitudId
+                            val llegadaRegistrada =
+                                solicitudId in llegadasRegistradas
+
+                            Button(
+                                onClick = {
+                                    llegadaEnProcesoId = solicitudId
+                                    mensajesLlegada = mensajesLlegada - solicitudId
+
+                                    functions
+                                        .getHttpsCallable("avisarLlegadaRecolector")
+                                        .call(mapOf("solicitudId" to solicitudId))
+                                        .addOnSuccessListener { resultado ->
+                                            llegadaEnProcesoId = null
+                                            val datos = resultado.data as? Map<*, *>
+
+                                            if (datos?.get("registrada") == true) {
+                                                llegadasRegistradas =
+                                                    llegadasRegistradas + solicitudId
+
+                                                val mensaje = when {
+                                                    datos["yaRegistrada"] == true ->
+                                                        "La llegada ya estaba registrada"
+                                                    datos["notificacionEnviada"] == true ->
+                                                        "Llegada registrada. Usuario notificado"
+                                                    else ->
+                                                        "Llegada registrada, pero no se envió el aviso"
+                                                }
+                                                mensajesLlegada =
+                                                    mensajesLlegada + (solicitudId to mensaje)
+                                            } else {
+                                                mensajesLlegada = mensajesLlegada +
+                                                        (solicitudId to "No se pudo registrar la llegada")
+                                            }
+                                        }
+                                        .addOnFailureListener { error ->
+                                            llegadaEnProcesoId = null
+                                            mensajesLlegada = mensajesLlegada +
+                                                    (solicitudId to (
+                                                            error.localizedMessage
+                                                                ?: "Error al registrar la llegada"
+                                                            ))
+                                        }
+                                },
+                                enabled =
+                                    llegadaEnProcesoId == null &&
+                                            !llegadaRegistrada &&
+                                            state.resolviendoId == null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = NaranjaParadaActiva
+                                )
+                            ) {
+                                Text(
+                                    text = when {
+                                        llegadaEnProcesoId == solicitudId ->
+                                            "Avisando llegada..."
+                                        llegadaRegistrada ->
+                                            "✓ Llegada registrada"
+                                        else -> "He llegado"
+                                    },
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            mensajesLlegada[solicitudId]?.let { mensaje ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = mensaje,
+                                    fontSize = 13.sp,
+                                    color = RebottleColors.MainText
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             Button(
                                 onClick = {

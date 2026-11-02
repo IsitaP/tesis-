@@ -1,4 +1,4 @@
-import {onDocumentWritten, onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {onDocumentWritten, onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore";
 import * as logger from "firebase-functions/logger";
 import {defineSecret} from "firebase-functions/params";
 
@@ -2210,3 +2210,549 @@ export const notificarRutaAsignada = onDocumentUpdated(
     }
   }
 );
+
+ // ============================================================
+ // NOTIFICAR A USUARIOS CUANDO SE ASIGNA UNA RUTA
+ // ============================================================
+
+export const notificarUsuariosRutaAsignada = onDocumentUpdated(
+  "rutas/{rutaId}",
+  async (event) => {
+
+    const antes = event.data?.before.data();
+    const despues = event.data?.after.data();
+
+    if (!antes || !despues) {
+      return;
+    }
+
+    // Solo notificar cuando la ruta es asignada
+    if (
+      antes.estado !== "PUBLICADA" ||
+      despues.estado !== "ASIGNADA"
+    ) {
+      return;
+    }
+
+    const rutaId = event.params.rutaId;
+
+    // Obtener las solicitudes de la ruta
+    const solicitudesIds: string[] =
+      Array.isArray(despues.solicitudesIds)
+        ? despues.solicitudesIds.filter(
+            (id: unknown): id is string =>
+              typeof id === "string" &&
+              id.trim().length > 0
+          )
+        : [];
+
+    if (solicitudesIds.length === 0) {
+      logger.warn("Ruta sin solicitudes", {rutaId});
+      return;
+    }
+
+    try {
+
+      // Consultar las solicitudes en Firestore
+      const referencias = solicitudesIds.map(
+        (id: string) =>
+          db.collection("solicitudes").doc(id)
+      );
+
+      const solicitudes = await db.getAll(...referencias);
+
+      // Evitar notificar dos veces al mismo ciudadano
+      const usuarios = new Set<string>();
+
+      for (const solicitud of solicitudes) {
+
+        const datos = solicitud.data();
+
+        if (!datos) {
+          continue;
+        }
+
+        // Verificar que pertenece a la ruta actual
+        if (
+          datos.rutaId !== rutaId ||
+          datos.estado === "CANCELADA"
+        ) {
+          continue;
+        }
+
+        const usuarioId = datos.usuarioId;
+
+        if (
+          typeof usuarioId === "string" &&
+          usuarioId.trim() !== ""
+        ) {
+          usuarios.add(usuarioId);
+        }
+      }
+
+      // Enviar la notificación a cada usuario
+      await Promise.all(
+        Array.from(usuarios).map(async (usuarioId) => {
+
+          try {
+
+            const registro = await db
+              .collection("fcmRegistros")
+              .doc(usuarioId)
+              .get();
+
+            const installationId =
+              registro.get("installationId");
+
+            if (
+              typeof installationId !== "string" ||
+              installationId.trim() === ""
+            ) {
+
+              logger.warn(
+                "Usuario sin dispositivo registrado",
+                {rutaId, usuarioId}
+              );
+
+              return;
+            }
+
+            await getMessaging().send({
+
+              token: installationId,
+
+              notification: {
+                title: "ReBottle - Recolección programada",
+                body:
+                  "Tu solicitud ya tiene un recolector " +
+                  "asignado. ¡Prepara tus materiales reciclables!",
+              },
+
+              data: {
+                tipo: "RUTA_ASIGNADA_USUARIO",
+                rutaId: rutaId,
+              },
+
+              android: {
+                notification: {
+                  channelId: "rebottle_rutas",
+                },
+              },
+            });
+
+            logger.info(
+              "Notificación enviada al ciudadano",
+              {rutaId, usuarioId}
+            );
+
+          } catch (error) {
+
+            logger.error(
+              "Error notificando al ciudadano",
+              {rutaId, usuarioId, error}
+            );
+          }
+        })
+      );
+
+      logger.info(
+        "Notificaciones de asignación procesadas",
+        {
+          rutaId,
+          usuariosEncontrados: usuarios.size,
+        }
+      );
+
+    } catch (error) {
+
+      logger.error(
+        "Error procesando notificaciones de la ruta",
+        {rutaId, error}
+      );
+    }
+  }
+);
+
+
+
+ // ============================================================
+ // NOTIFICACION - LLEGADA DEL RECOLECTOR
+ // ============================================================
+
+export const avisarLlegadaRecolector = onCall(
+  async (request) => {
+
+    const recolectorId = request.auth?.uid;
+    const solicitudId = request.data?.solicitudId;
+
+    // Validar autenticacion
+    if (!recolectorId) {
+      throw new HttpsError(
+        "unauthenticated",
+        "Debes iniciar sesión."
+      );
+    }
+
+    // Validar solicitud
+    if (
+      typeof solicitudId !== "string" ||
+      solicitudId.trim() === ""
+    ) {
+      throw new HttpsError(
+        "invalid-argument",
+        "La solicitud no es válida."
+      );
+    }
+
+    const solicitudRef = db
+      .collection("solicitudes")
+      .doc(solicitudId);
+
+    // ============================================
+    // VALIDAR Y REGISTRAR LA LLEGADA
+    // ============================================
+
+    const resultado = await db.runTransaction(
+      async (transaction) => {
+
+        const solicitudSnapshot =
+          await transaction.get(solicitudRef);
+
+        if (!solicitudSnapshot.exists) {
+          throw new HttpsError(
+            "not-found",
+            "La solicitud no existe."
+          );
+        }
+
+        const solicitud = solicitudSnapshot.data()!;
+
+        const rutaId = solicitud.rutaId;
+        const usuarioId = solicitud.usuarioId;
+
+        if (
+          typeof rutaId !== "string" ||
+          typeof usuarioId !== "string" ||
+          !rutaId.trim() ||
+          !usuarioId.trim()
+        ) {
+          throw new HttpsError(
+            "failed-precondition",
+            "La solicitud no tiene ruta o usuario válido."
+          );
+        }
+
+        // Consultar la ruta asignada
+        const rutaRef = db
+          .collection("rutas")
+          .doc(rutaId);
+
+        const rutaSnapshot =
+          await transaction.get(rutaRef);
+
+        if (!rutaSnapshot.exists) {
+          throw new HttpsError(
+            "not-found",
+            "La ruta no existe."
+          );
+        }
+
+        const ruta = rutaSnapshot.data()!;
+
+        // Verificar recolector asignado
+        if (ruta.recolectorId !== recolectorId) {
+          throw new HttpsError(
+            "permission-denied",
+            "No eres el recolector asignado."
+          );
+        }
+
+        // Validar estado de ruta
+        if (
+          ruta.estado !== "ASIGNADA" &&
+          ruta.estado !== "EN_CURSO"
+        ) {
+          throw new HttpsError(
+            "failed-precondition",
+            "La ruta no permite registrar llegadas."
+          );
+        }
+
+        // Validar que la solicitud pertenece a la ruta
+        if (
+          !Array.isArray(ruta.solicitudesIds) ||
+          !ruta.solicitudesIds.includes(solicitudId) ||
+          solicitud.estado !== "EN_RUTA"
+        ) {
+          throw new HttpsError(
+            "failed-precondition",
+            "La solicitud no está activa en esta ruta."
+          );
+        }
+
+        // Evitar registrar la llegada nuevamente
+        if (solicitud.llegadaRecolectorEn) {
+          return {
+            usuarioId,
+            rutaId,
+            yaRegistrada: true,
+          };
+        }
+
+        // Guardar llegada en Firestore
+        transaction.update(solicitudRef, {
+          llegadaRecolectorEn: FieldValue.serverTimestamp(),
+        });
+
+        return {
+          usuarioId,
+          rutaId,
+          yaRegistrada: false,
+        };
+      }
+    );
+
+    // Evitar repetir el aviso
+    if (resultado.yaRegistrada) {
+      return {
+        registrada: true,
+        yaRegistrada: true,
+        notificacionEnviada: false,
+      };
+    }
+
+    // ============================================
+    // ENVIAR NOTIFICACION AL CIUDADANO
+    // ============================================
+
+    try {
+
+      const registro = await db
+        .collection("fcmRegistros")
+        .doc(resultado.usuarioId)
+        .get();
+
+      const installationId =
+        registro.get("installationId");
+
+      if (
+        typeof installationId !== "string" ||
+        installationId.trim() === ""
+      ) {
+
+        logger.warn(
+          "Llegada registrada sin dispositivo del usuario",
+          {solicitudId}
+        );
+
+        return {
+          registrada: true,
+          yaRegistrada: false,
+          notificacionEnviada: false,
+        };
+      }
+
+      // Enviar notificacion mediante Firebase
+      await getMessaging().send({
+
+        token: installationId,
+
+        notification: {
+          title: "ReBottle - ¡Tu recolector ha llegado!",
+          body:
+            "El recolector está en tu punto de recolección. " +
+            "¡Ten listos tus materiales reciclables!",
+        },
+
+        data: {
+          tipo: "RECOLECTOR_LLEGO",
+          solicitudId: solicitudId,
+          rutaId: resultado.rutaId,
+        },
+
+        android: {
+          notification: {
+            channelId: "rebottle_rutas",
+          },
+        },
+      });
+
+      logger.info(
+        "Notificacion de llegada enviada",
+        {
+          solicitudId,
+          rutaId: resultado.rutaId,
+        }
+      );
+
+      return {
+        registrada: true,
+        yaRegistrada: false,
+        notificacionEnviada: true,
+      };
+
+    } catch (error) {
+
+      logger.error(
+        "Error enviando notificacion de llegada",
+        {solicitudId, error}
+      );
+
+      return {
+        registrada: true,
+        yaRegistrada: false,
+        notificacionEnviada: false,
+      };
+    }
+  }
+);
+
+
+ // ============================================================
+ // NOTIFICACION AUTOMATICA - NUEVA RUTA PARA FUNDACION
+ // ============================================================
+
+export const notificarNuevaRutaFundacion = onDocumentCreated(
+  "rutas/{rutaId}",
+  async (event) => {
+
+    const ruta = event.data?.data();
+    const rutaId = event.params.rutaId;
+
+    if (!ruta) {
+      logger.warn("No se encontraron datos de la ruta", {
+        rutaId,
+      });
+      return;
+    }
+
+    // Solo notificar rutas nuevas publicadas
+    if (ruta.estado !== "PUBLICADA") {
+      return;
+    }
+
+    logger.info("Nueva ruta publicada", {rutaId});
+
+    try {
+
+      // Buscar cuentas de fundacion
+      const fundaciones = await db
+        .collection("users")
+        .where("role", "==", "fundacion")
+        .get();
+
+      if (fundaciones.empty) {
+        logger.warn(
+          "No se encontraron cuentas de fundacion",
+          {rutaId}
+        );
+        return;
+      }
+
+      // Evitar enviar dos veces al mismo dispositivo
+      // si varias cuentas comparten installationId
+      const dispositivosNotificados = new Set<string>();
+
+      for (const fundacion of fundaciones.docs) {
+
+        const fundacionId = fundacion.id;
+
+        try {
+
+          // Obtener dispositivo registrado
+          const registro = await db
+            .collection("fcmRegistros")
+            .doc(fundacionId)
+            .get();
+
+          const installationId =
+            registro.get("installationId");
+
+          if (
+            typeof installationId !== "string" ||
+            installationId.trim() === ""
+          ) {
+
+            logger.warn(
+              "Fundacion sin dispositivo registrado",
+              {rutaId, fundacionId}
+            );
+
+            continue;
+          }
+
+          if (dispositivosNotificados.has(installationId)) {
+            continue;
+          }
+
+          // Enviar notificacion
+          const mensajeId = await getMessaging().send({
+
+            token: installationId,
+
+            notification: {
+              title: "ReBottle - ¡Nueva ruta disponible!",
+              body:
+                "Se ha generado una nueva ruta de recolección. " +
+                "Ingresa a ReBottle para asignar un recolector.",
+            },
+
+            data: {
+              tipo: "NUEVA_RUTA_FUNDACION",
+              rutaId: rutaId,
+            },
+
+            android: {
+              notification: {
+                channelId: "rebottle_rutas",
+              },
+            },
+          });
+
+          dispositivosNotificados.add(installationId);
+
+          logger.info(
+            "Fundacion notificada de nueva ruta",
+            {
+              rutaId,
+              fundacionId,
+              mensajeId,
+            }
+          );
+
+        } catch (error) {
+
+          logger.error(
+            "Error notificando a fundacion",
+            {
+              rutaId,
+              fundacionId,
+              error,
+            }
+          );
+        }
+      }
+
+      logger.info(
+        "Notificaciones de nueva ruta procesadas",
+        {
+          rutaId,
+          dispositivosNotificados:
+            dispositivosNotificados.size,
+        }
+      );
+
+    } catch (error) {
+
+      logger.error(
+        "Error procesando nueva ruta",
+        {
+          rutaId,
+          error,
+        }
+      );
+    }
+  }
+);
+
+
