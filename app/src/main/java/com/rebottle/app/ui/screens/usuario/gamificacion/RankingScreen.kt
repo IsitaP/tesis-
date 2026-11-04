@@ -71,7 +71,8 @@ import com.rebottle.app.ui.theme.RebottleTheme
 import com.rebottle.app.ui.theme.RebottleColors
 import androidx.compose.foundation.shape.GenericShape
 import java.util.Locale
-
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.graphics.Brush
 
 private val ScreenBackground = Color(0xFFB5C99A) // Verde claro de fondo
 private val CardBackground = RebottleColors.Background
@@ -83,6 +84,14 @@ private val AvatarBackground = Color(0xFFE8F0E0)
 private val Gold = Color(0xFFFFC83D)
 private val Silver = Color(0xFFC0C0C0)
 private val Bronze = Color(0xFFCD7F32)
+
+val GoldPodium = Color(0xFFD4AF37)
+val SilverPodium = Color(0xFFC0C0C0)
+val BronzePodium = Color(0xFFCD7F32)
+
+val GoldLight = Color(0xFFFFF3C4)
+val SilverLight = Color(0xFFF1F1F1)
+val BronzeLight = Color(0xFFF3D2B8)
 
 // ============================================================
 // DATOS DE PRUEBA (solo para los Previews)
@@ -377,71 +386,233 @@ private const val ANCHO_BLOQUE_CENTRAL = 0.32f
 private const val MARGEN_IZQ = 0.04f
 private const val MARGEN_DER = 0.02f
 
+
 @Composable
 private fun Podio(
     lista: List<UsuarioRanking>,
     modifier: Modifier = Modifier
 ) {
-    // Por posición en la lista (ya viene ordenada), así
-    // un empate no deja un bloque del podio vacío
+
     val primero = lista.getOrNull(0)
     val segundo = lista.getOrNull(1)
     val tercero = lista.getOrNull(2)
 
-    val painter = painterResource(id = R.drawable.podio)
-    val proporcion = 1.85f
-
-    // Medimos el ancho real que ocupa el podio en pantalla
-    var anchoPx by remember { mutableIntStateOf(0) }
-    val ancho = with(LocalDensity.current) { anchoPx.toDp() }
-    val altoImagen = ancho / proporcion
-    val separacion = 4.dp // espacio entre los puntos y el bloque
-
-    Column(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .onSizeChanged { anchoPx = it.width }
-    ) {
-        // Fila de usuarios: cada uno se "baja" hasta el tope de su bloque
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = ancho * MARGEN_IZQ, end = ancho * MARGEN_DER)
-                .zIndex(1f), // que se dibujen encima de la imagen
-            verticalAlignment = Alignment.Bottom
-        ) {
-            InfoPodio(
-                usuario = segundo,
-                modifier = Modifier
-                    .weight(ANCHO_BLOQUE_LATERAL)
-                    .offset(y = altoImagen * TOPE_BLOQUE_2 - separacion)
-            )
-            InfoPodio(
-                usuario = primero,
-                esPrimero = true,
-                modifier = Modifier
-                    .weight(ANCHO_BLOQUE_CENTRAL)
-                    .offset(y = altoImagen * TOPE_BLOQUE_1 - separacion)
-            )
-            InfoPodio(
-                usuario = tercero,
-                modifier = Modifier
-                    .weight(ANCHO_BLOQUE_LATERAL)
-                    .offset(y = altoImagen * TOPE_BLOQUE_3 - separacion)
-            )
-        }
+            .height(290.dp),
 
-        Image(
-            painter = painter,
-            contentDescription = "Podio",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(proporcion)
+        verticalAlignment = Alignment.Bottom
+    ) {
+
+        // ====================================================
+        // SEGUNDO PUESTO - PLATA
+        // ====================================================
+
+        PuestoPodio(
+            usuario = segundo,
+            puesto = 2,
+            color = Silver,
+            altura = 105.dp,
+            modifier = Modifier.weight(1f)
+        )
+
+
+        // ====================================================
+        // PRIMER PUESTO - ORO
+        // ====================================================
+
+        PuestoPodio(
+            usuario = primero,
+            puesto = 1,
+            color = Gold,
+            altura = 145.dp,
+            esPrimero = true,
+            modifier = Modifier.weight(1f)
+        )
+
+
+        // ====================================================
+        // TERCER PUESTO - BRONCE
+        // ====================================================
+
+        PuestoPodio(
+            usuario = tercero,
+            puesto = 3,
+            color = Bronze,
+            altura = 85.dp,
+            modifier = Modifier.weight(1f)
         )
     }
 }
+@Composable
+private fun PuestoPodio(
+    usuario: UsuarioRanking?,
+    puesto: Int,
+    color: Color,
+    altura: Dp,
+    modifier: Modifier = Modifier,
+    esPrimero: Boolean = false
+) {
 
+    // Tonos para crear profundidad 3D
+    val colorClaro = when (puesto) {
+
+        1 -> Color(0xFFFFDB72) // oro claro
+
+        2 -> Color(0xFFEAEAEA) // plata clara
+
+        3 -> Color(0xFFE99A56) // bronce claro
+
+        else -> color
+    }
+
+
+    val colorOscuro = when (puesto) {
+
+        1 -> Color(0xFFC99518) // oro oscuro
+
+        2 -> Color(0xFF969696) // plata oscura
+
+        3 -> Color(0xFF9E511E) // bronce oscuro
+
+        else -> color
+    }
+
+
+    Column(
+        modifier = modifier.fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom
+    ) {
+
+        // ====================================================
+        // USUARIO + AVATAR + CORONA
+        // ====================================================
+
+        InfoPodio(
+            usuario = usuario,
+            esPrimero = esPrimero
+        )
+
+
+        Spacer(
+            modifier = Modifier.height(6.dp)
+        )
+
+
+        // ====================================================
+        // BLOQUE 3D
+        // ====================================================
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(altura)
+        ) {
+
+            // ------------------------------------------------
+            // PARTE FRONTAL
+            // ------------------------------------------------
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(altura - 14.dp)
+                    .align(Alignment.BottomCenter)
+                    .shadow(
+                        elevation = 5.dp,
+                        shape = RoundedCornerShape(
+                            topStart = 2.dp,
+                            topEnd = 2.dp
+                        )
+                    )
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colorClaro,
+                                color,
+                                colorOscuro
+                            )
+                        ),
+                        shape = RoundedCornerShape(
+                            topStart = 2.dp,
+                            topEnd = 2.dp
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text(
+                    text = puesto.toString(),
+                    color = Color.White,
+
+                    fontSize = when (puesto) {
+                        1 -> 90.sp
+                        2 -> 58.sp
+                        3 -> 48.sp
+                        else -> 48.sp
+                    },
+
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+
+            // ------------------------------------------------
+            // PARTE SUPERIOR DEL BLOQUE
+            // EFECTO DE PROFUNDIDAD
+            // ------------------------------------------------
+
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(16.dp)
+                    .align(Alignment.TopCenter)
+                    .clip(PodioTopShape)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                colorClaro,
+                                color
+                            )
+                        )
+                    )
+            )
+        }
+    }
+}
+private val PodioTopShape = GenericShape { size, _ ->
+
+    // Esquina superior izquierda,
+    // un poco metida hacia adentro
+    moveTo(
+        size.width * 0.12f,
+        0f
+    )
+
+    // Esquina superior derecha
+    lineTo(
+        size.width * 0.88f,
+        0f
+    )
+
+    // Baja y se abre hacia la derecha
+    lineTo(
+        size.width,
+        size.height
+    )
+
+    // Baja y se abre hacia la izquierda
+    lineTo(
+        0f,
+        size.height
+    )
+
+    close()
+}
 @Composable
 private fun InfoPodio(
     usuario: UsuarioRanking?,

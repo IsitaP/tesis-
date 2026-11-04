@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.rebottle.app.BuildConfig
 
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -106,13 +107,42 @@ fun CreateRequestScreen(
     // inicializa y createClient() cerraría la app. En ese caso el
     // cliente queda en null y el buscador avisa en vez de crashear.
     val placesClient = remember(context) {
-        if (Places.isInitialized()) Places.createClient(context) else null
+
+        val apiKey = BuildConfig.PLACES_API_KEY
+
+        if (
+            !Places.isInitialized() &&
+            apiKey.isNotBlank() &&
+            apiKey != "DEFAULT_API_KEY"
+        ) {
+
+            Places.initializeWithNewPlacesApiEnabled(
+                context.applicationContext,
+                apiKey
+            )
+        }
+
+        if (Places.isInitialized()) {
+            Places.createClient(context)
+        } else {
+            null
+        }
     }
 
+
     LaunchedEffect(placesClient) {
+
         if (placesClient == null) {
-            Log.e("Places", "Places no está inicializado: revisa PLACES_API_KEY en local.properties")
-            model.updateLocationError("El buscador de direcciones no está disponible")
+
+            Log.e(
+                "Places",
+                "Places no pudo inicializarse. Revisa PLACES_API_KEY."
+            )
+
+        } else {
+
+            // Quitamos cualquier error viejo al iniciar correctamente
+            model.updateLocationError("")
         }
     }
 
@@ -759,7 +789,7 @@ fun CreateRequestContent(
 
         Spacer(
             modifier =
-                Modifier.height(10.dp)
+                Modifier.height(25.dp)
         )
 
 

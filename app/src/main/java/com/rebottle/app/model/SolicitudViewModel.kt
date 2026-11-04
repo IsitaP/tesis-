@@ -1,5 +1,6 @@
 package com.rebottle.app.model
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.time.LocalDate
 import java.time.YearMonth
+import com.google.firebase.firestore.SetOptions
 
 
 // ============================================================
@@ -1106,25 +1108,151 @@ class SolicitudViewModel : ViewModel() {
     // ========================================================
 
     fun marcarRecolectada(
-
         solicitudId: String,
-
         onSuccess: () -> Unit = {},
-
         onError: (String) -> Unit = {}
     ) {
 
+        val solicitudRef =
+            firestore
+                .collection("solicitudes")
+                .document(solicitudId)
+
         firestore
-            .collection("solicitudes")
-            .document(solicitudId)
-            .update(
-                mapOf(
-                    "estado" to EstadoSolicitud.RECOLECTADA.name,
-                    "completadaEn" to FieldValue.serverTimestamp()
+            .runTransaction { transaction ->
+
+                // ====================================================
+                // LEER LA SOLICITUD
+                // ====================================================
+
+                val solicitudSnapshot =
+                    transaction.get(solicitudRef)
+
+                if (!solicitudSnapshot.exists()) {
+                    throw Exception("La solicitud no existe")
+                }
+
+
+                // ====================================================
+                // OBTENER USUARIO Y PESO
+                // ====================================================
+
+                val usuarioId =
+                    solicitudSnapshot
+                        .getString("usuarioId")
+                        ?: throw Exception(
+                            "La solicitud no tiene usuario asociado"
+                        )
+
+                val pesoKg =
+                    solicitudSnapshot
+                        .getLong("pesoKg")
+                        ?: 0L
+
+
+                // ====================================================
+                // EVITAR DAR LOS PUNTOS DOS VECES
+                // ====================================================
+
+                val puntosYaOtorgados =
+                    solicitudSnapshot
+                        .getBoolean("puntosOtorgados")
+                        ?: false
+
+                if (puntosYaOtorgados) {
+
+                    // Ya se habían entregado anteriormente
+                    return@runTransaction 0L
+                }
+
+
+                // ====================================================
+                // CALCULAR PUNTOS
+                // 1 KG = 5 PUNTOS
+                // ====================================================
+
+                val puntosGanados =
+                    pesoKg * 5L
+
+
+                // ====================================================
+                // DOCUMENTO DE PUNTOS DEL USUARIO
+                // ====================================================
+
+                val progresoRef =
+                    firestore
+                        .collection("progresoAprendizaje")
+                        .document(usuarioId)
+
+
+                // ====================================================
+                // ACTUALIZAR SOLICITUD
+                // ====================================================
+
+                transaction.update(
+                    solicitudRef,
+                    mapOf(
+                        "estado" to
+                                EstadoSolicitud.RECOLECTADA.name,
+
+                        "completadaEn" to
+                                FieldValue.serverTimestamp(),
+
+                        // Sirve para evitar volver a entregar puntos
+                        "puntosOtorgados" to
+                                true,
+
+                        // Solo para poder saber cuántos ganó
+                        "puntosGanados" to
+                                puntosGanados
+                    )
                 )
-            )
-            .addOnSuccessListener { onSuccess() }
+
+
+                // ====================================================
+                // SUMAR PUNTOS AL USUARIO
+                // ====================================================
+
+                transaction.set(
+                    progresoRef,
+                    mapOf(
+                        "usuarioId" to
+                                usuarioId,
+
+                        "puntosTotales" to
+                                FieldValue.increment(
+                                    puntosGanados
+                                ),
+
+                        "actualizadoEn" to
+                                FieldValue.serverTimestamp()
+                    ),
+                    SetOptions.merge()
+                )
+
+
+                puntosGanados
+            }
+
+            .addOnSuccessListener { puntosGanados ->
+
+                Log.d(
+                    "PUNTOS_SOLICITUD",
+                    "Solicitud $solicitudId recolectada. " +
+                            "Puntos ganados: $puntosGanados"
+                )
+
+                onSuccess()
+            }
+
             .addOnFailureListener { exception ->
+
+                Log.e(
+                    "PUNTOS_SOLICITUD",
+                    "Error completando solicitud",
+                    exception
+                )
+
                 onError(
                     exception.message
                         ?: "Error al completar la solicitud"

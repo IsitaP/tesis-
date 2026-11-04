@@ -246,7 +246,7 @@ fun SolicitudDetalleScreenU(
 
             else ->
                 Color(
-                    0xFFFEF3D7
+                    0xFFFFF8DB
                 )
         }
 
@@ -278,7 +278,7 @@ fun SolicitudDetalleScreenU(
 
             else ->
                 Color(
-                    0xFFF5E1B8
+                    0xFFF0D98A
                 )
         }
 
@@ -310,7 +310,7 @@ fun SolicitudDetalleScreenU(
 
             else ->
                 Color(
-                    0xFFD99B4B
+                    0xFFE0B243
                 )
         }
 

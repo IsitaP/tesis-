@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextDecoration
 import kotlin.math.cos
 import kotlin.math.sin
@@ -166,26 +167,80 @@ private fun RecompensasFlowContent(
             RecompensaStep.RECOMPENSAS
         )
     }
-    var saldoPuntos by remember(puntos) {
-        mutableStateOf(puntos)
-    }
+    val puntosViewModel: PuntosViewModel = viewModel()
 
-    val comprados = remember {
-        mutableStateMapOf<String, Boolean>()
-    }
+    val puntosState by
+    puntosViewModel.state.collectAsState()
 
-// El artículo gratis ya se considera comprado
+
     LaunchedEffect(Unit) {
-        comprados["guantes"] = true
+        puntosViewModel.escucharPuntos()
     }
 
-    // ========================================================
-    // ARTÍCULOS EQUIPADOS
-    // ========================================================
 
-    val equipados = remember {
-        mutableStateMapOf<SlotQuis, ItemQuis>()
-    }
+// ============================================================
+// PUNTOS DISPONIBLES REALES DE FIREBASE
+// ============================================================
+
+    val saldoPuntos =
+        puntosState.puntosDisponibles.toInt()
+
+
+// ============================================================
+// ITEMS COMPRADOS EN FIREBASE
+// ============================================================
+
+    val comprados =
+        puntosState.itemsComprados
+
+
+// ============================================================
+// TODOS LOS ITEMS DISPONIBLES
+// ============================================================
+
+    val todosLosItems =
+        remember {
+            ropaQuis + accesoriosQuis
+        }
+
+
+// ============================================================
+// CONVERTIR LOS IDS DE FIREBASE A ItemQuis
+// ============================================================
+
+    val equipados: Map<SlotQuis, ItemQuis> =
+        remember(
+            puntosState.itemsEquipados
+        ) {
+
+            buildMap {
+
+                puntosState.itemsEquipados
+                    .forEach { (nombreSlot, itemId) ->
+
+                        val slot =
+                            runCatching {
+                                SlotQuis.valueOf(nombreSlot)
+                            }.getOrNull()
+
+                        val item =
+                            todosLosItems.firstOrNull {
+                                it.id == itemId
+                            }
+
+                        if (
+                            slot != null &&
+                            item != null
+                        ) {
+
+                            put(
+                                slot,
+                                item
+                            )
+                        }
+                    }
+            }
+        }
 
 
     when (step) {
@@ -228,7 +283,7 @@ private fun RecompensasFlowContent(
 
                 equipados = equipados,
 
-                comprados = comprados.keys,
+                comprados = comprados,
 
                 onBack = {
                     step =
@@ -241,51 +296,55 @@ private fun RecompensasFlowContent(
                         equipados[item.slot]
 
                     val yaComprado =
-                        comprados[item.id] == true
+                        item.id in comprados
 
-                    // =================================================
-                    // SI YA ESTÁ COMPRADO
-                    // =================================================
+
+                    // ========================================================
+                    // YA LO COMPRÓ
+                    // ========================================================
 
                     if (yaComprado) {
 
-                        // Si toca el mismo que ya tiene puesto,
-                        // se lo quita.
+                        // Si ya estaba equipado, lo quitamos
                         if (actual?.id == item.id) {
 
-                            equipados.remove(
-                                item.slot
+                            puntosViewModel.desequiparItem(
+                                slot = item.slot
                             )
 
                         } else {
 
-                            // Si ya lo compró, se puede poner
-                            // sin volver a gastar puntos.
-                            equipados[item.slot] =
-                                item
+                            // Si no, lo equipamos
+                            puntosViewModel.equiparItem(
+                                slot = item.slot,
+                                itemId = item.id
+                            )
                         }
+
 
                     } else {
 
-                        // =================================================
-                        // SI TODAVÍA NO LO HA COMPRADO
-                        // =================================================
+                        // ====================================================
+                        // TODAVÍA NO LO HA COMPRADO
+                        // ====================================================
 
                         if (saldoPuntos >= item.precio) {
 
-                            // Descontamos los puntos
-                            saldoPuntos -= item.precio
+                            puntosViewModel.comprarItem(
+                                itemId = item.id,
+                                precio = item.precio.toLong(),
 
-                            // Lo marcamos como comprado
-                            comprados[item.id] = true
+                                onSuccess = {
 
-                            // Se lo ponemos a Quis
-                            equipados[item.slot] =
-                                item
+                                    // Después de comprarlo,
+                                    // lo equipamos automáticamente
+                                    puntosViewModel.equiparItem(
+                                        slot = item.slot,
+                                        itemId = item.id
+                                    )
+                                }
+                            )
                         }
-
-                        // Si no alcanza el saldo,
-                        // no hace absolutamente nada.
                     }
                 },
 
@@ -498,7 +557,6 @@ private fun RecompensasScreen(
 
                 BarraPuntos(
                     puntos = puntos,
-                    nivel = nivel,
                     onRedimirClick =
                         onRedimirClick
                 )
@@ -589,11 +647,10 @@ private fun MedallasGrid(
 @Composable
 private fun BarraPuntos(
     puntos: Int,
-    nivel: Int,
     onRedimirClick: () -> Unit
 ) {
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
@@ -601,86 +658,23 @@ private fun BarraPuntos(
                 color = RewardBottomGreen,
                 shape = RoundedCornerShape(26.dp)
             )
-            .padding(
-                start = 18.dp,
-                end = 16.dp,
-                top = 10.dp,
-                bottom = 10.dp
-            ),
-
-        verticalAlignment =
-            Alignment.CenterVertically
+            .padding(horizontal = 18.dp)
     ) {
 
-        // ====================================================
-        // NIVEL
-        // ====================================================
-
-        Column(
-            modifier = Modifier.width(56.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            IconoGlobo(
-                color = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "NIVEL",
-                color = Color.White.copy(alpha = 0.6f),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                lineHeight = 12.sp
-            )
-
-            Text(
-                text = nivel.toString(),
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 20.sp
-            )
-        }
-
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-
-        // DIVISOR (de arriba a abajo)
-
-        Box(
-            modifier = Modifier
-                .width(1.dp)
-                .fillMaxHeight()
-                .background(Color.White.copy(alpha = 0.3f))
-        )
-
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-
-        // ====================================================
-        // ESTRELLA
-        // ====================================================
-
+        // ESTRELLA A LA IZQUIERDA
         IconoEstrella(
             color = Color.White,
-            modifier = Modifier.size(42.dp)
+            modifier = Modifier
+                .size(42.dp)
+                .align(Alignment.CenterStart)
         )
 
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-
-        // ====================================================
-        // PUNTOS
-        // ====================================================
-
-        Column {
+        // 520 + PUNTOS CENTRADOS EN TODA LA BARRA
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
             Text(
                 text = puntos.toString(),
@@ -694,14 +688,9 @@ private fun BarraPuntos(
                 text = "Puntos",
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 15.sp,
-                lineHeight = 16.sp,
-                modifier = Modifier.offset(y = (-2).dp)
+                lineHeight = 16.sp
             )
         }
-
-
-        Spacer(modifier = Modifier.weight(1f))
-
 
         // ====================================================
         // REDIMIR (abajo a la derecha, subrayado)
@@ -709,7 +698,7 @@ private fun BarraPuntos(
 
         Row(
             modifier = Modifier
-                .align(Alignment.Bottom)
+                .align(Alignment.CenterEnd)
                 .clickable { onRedimirClick() }
                 .padding(vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -1212,9 +1201,9 @@ private fun QuisPersonalizable(
 ) {
 
     val ordenCapas = listOf(
+        SlotQuis.PIERNAS,
         SlotQuis.PIES,
         SlotQuis.TORSO_BASE,
-        SlotQuis.TORSO_EXTERIOR,
         SlotQuis.CUELLO,
         SlotQuis.MANOS,
         SlotQuis.OJOS,
@@ -1407,6 +1396,14 @@ private fun ItemQuisCard(
                 modifier =
                     Modifier
                         .size(95.dp)
+                        .scale(
+                            when (item.id) {
+                                "jordan" -> 1.4f
+                                "camisaRoja" -> 1.3f
+                                "pantalon" -> 1.4f
+                                else -> 1f
+                            }
+                        )
                         .alpha(
                             if (disponible) {
                                 1f
