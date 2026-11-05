@@ -32,6 +32,10 @@ object PerfilCache {
         foto = nueva
     }
 
+    fun actualizarNombre(nuevo: String) {
+        nombre = nuevo
+    }
+
     fun cargar(uid: String) {
         if (uidActual == uid && nombre != null) return
 

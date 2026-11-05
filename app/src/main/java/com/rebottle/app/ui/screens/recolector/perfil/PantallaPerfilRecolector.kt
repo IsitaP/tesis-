@@ -187,7 +187,7 @@ fun PantallaPerfilRecolector(
             Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedButton(
-                onClick = { /* TODO: pantalla de edición cuando exista */ },
+                onClick = { controller.navigate(AppScreens.editarPerfilRecolector.name) },
                 modifier = Modifier.width(230.dp).height(36.dp),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(width = 1.dp, color = MainGreen)
