@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
+import com.rebottle.app.components.rememberAbrirGaleriaConPermiso
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -136,7 +137,7 @@ fun PantallaPerfilRecolector(
         }
     }
 
-    val openPhotoPicker = {
+    val openPhotoPicker = rememberAbrirGaleriaConPermiso {
         photoPickerLauncher.launch(
             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         )

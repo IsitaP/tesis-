@@ -21,14 +21,19 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -71,12 +77,34 @@ fun DetalleRecolectorScreen(
     val state by model.state.collectAsState()
     var pestana by remember { mutableStateOf(0) }
     var nombre by remember { mutableStateOf("") }
+    var editandoNombre by remember { mutableStateOf(false) }
 
     LaunchedEffect(recolectorId) {
         model.escucharRutaDe(recolectorId)
 
         Firebase.firestore.collection("users").document(recolectorId).get()
             .addOnSuccessListener { nombre = it.getString("name").orEmpty() }
+    }
+
+    val context = LocalContext.current
+
+    if (editandoNombre) {
+        DialogoEditarRecolector(
+            nombreActual = nombre,
+            onDismiss = { editandoNombre = false },
+            onGuardar = { nuevo ->
+                Firebase.firestore.collection("users").document(recolectorId)
+                    .update("name", nuevo)
+                    .addOnSuccessListener {
+                        nombre = nuevo
+                        editandoNombre = false
+                        Toast.makeText(context, "Recolector actualizado", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "No se pudo actualizar el nombre", Toast.LENGTH_SHORT).show()
+                    }
+            }
+        )
     }
 
     Scaffold(
@@ -116,8 +144,23 @@ fun DetalleRecolectorScreen(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = RebottleColors.DarkGreen,
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 48.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                IconButton(
+                    onClick = { editandoNombre = true },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Editar recolector",
+                        tint = RebottleColors.MainGreen
+                    )
+                }
             }
 
             Pestanas(
@@ -167,6 +210,55 @@ fun DetalleRecolectorScreen(
             }
         }
     }
+}
+
+
+// ============================================================
+// EDITAR RECOLECTOR (NOMBRE)
+// ============================================================
+
+@Composable
+private fun DialogoEditarRecolector(
+    nombreActual: String,
+    onDismiss: () -> Unit,
+    onGuardar: (String) -> Unit
+) {
+    var nuevoNombre by remember { mutableStateOf(nombreActual) }
+    val valido = nuevoNombre.trim().isNotEmpty()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = RebottleColors.Background,
+        title = {
+            Text(
+                text = "Editar recolector",
+                fontWeight = FontWeight.Bold,
+                color = RebottleColors.DarkGreen
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = nuevoNombre,
+                onValueChange = { nuevoNombre = it },
+                label = { Text("Nombre") },
+                singleLine = true,
+                isError = !valido
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onGuardar(nuevoNombre.trim()) },
+                enabled = valido
+            ) {
+                Text("Guardar", color = RebottleColors.MainGreen)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = RebottleColors.SecondaryText)
+            }
+        }
+    )
 }
 
 

@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
@@ -254,37 +253,6 @@ private fun HeaderFundacion() {
                     color = SecondaryText
                 )
             }
-        }
-
-        // ------------------------------------------------
-        // NOTIFICACIONES
-        // ------------------------------------------------
-
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .background(color = Color(0xFFF1F5ED), shape = CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = "Notificaciones",
-                tint = MainGreen,
-                modifier = Modifier.size(23.dp)
-            )
-
-            // Punto rojo
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 7.dp, end = 6.dp)
-                    .size(6.dp)
-                    .background(
-                        color = Color(0xFFE16A58),
-                        shape = CircleShape
-                    )
-            )
         }
     }
 }
