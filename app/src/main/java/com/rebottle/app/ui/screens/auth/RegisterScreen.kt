@@ -39,6 +39,9 @@ import com.rebottle.app.model.AuthViewModel
 import com.rebottle.app.model.RegisterState
 import com.rebottle.app.navigation.AppScreens
 import com.rebottle.app.ui.theme.RebottleTheme
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 @Composable
 public fun RegisterScreen(controller: NavController, model: AuthViewModel = viewModel()) {
@@ -299,26 +302,106 @@ fun RegisterContent(
     }
 }
 
-fun validateRegisterForm(model: AuthViewModel, name: String, email: String, password: String, role: UserRole?): Boolean {
-    if (name.isEmpty()) { model.updateRegisterNameError("El nombre es obligatorio"); return false }
-    else { model.updateRegisterNameError("") }
+fun validateRegisterForm(
+    model: AuthViewModel,
+    name: String,
+    email: String,
+    password: String,
+    role: UserRole?
+): Boolean {
 
-    if (email.isEmpty()) { model.updateRegisterEmailError("El email es obligatorio"); return false }
-    else { model.updateRegisterEmailError("") }
+    var esValido = true
 
-    if (!validEmailAddress(email)) { model.updateRegisterEmailError("Email no válido"); return false }
-    else { model.updateRegisterEmailError("") }
 
-    if (password.isEmpty()) { model.updateRegisterPassError("La contraseña es obligatoria"); return false }
-    else { model.updateRegisterPassError("") }
+    // ========================================================
+    // NOMBRE
+    // ========================================================
 
-    if (password.length < 6) { model.updateRegisterPassError("Mínimo 6 caracteres"); return false }
-    else { model.updateRegisterPassError("") }
+    if (name.isBlank()) {
 
-    if (role == null) { model.updateRegisterRoleError("Selecciona un tipo de usuario"); return false }
-    else { model.updateRegisterRoleError("") }
+        model.updateRegisterNameError(
+            "El nombre es obligatorio"
+        )
 
-    return true
+        esValido = false
+
+    } else {
+
+        model.updateRegisterNameError("")
+    }
+
+
+    // ========================================================
+    // CORREO
+    // ========================================================
+
+    if (email.isBlank()) {
+
+        model.updateRegisterEmailError(
+            "El correo es obligatorio"
+        )
+
+        esValido = false
+
+    } else if (!validEmailAddress(email)) {
+
+        model.updateRegisterEmailError(
+            "El correo no es válido"
+        )
+
+        esValido = false
+
+    } else {
+
+        model.updateRegisterEmailError("")
+    }
+
+
+    // ========================================================
+    // CONTRASEÑA
+    // ========================================================
+
+    if (password.isBlank()) {
+
+        model.updateRegisterPassError(
+            "La contraseña es obligatoria"
+        )
+
+        esValido = false
+
+    } else if (password.length < 6) {
+
+        model.updateRegisterPassError(
+            "La contraseña debe tener mínimo 6 caracteres"
+        )
+
+        esValido = false
+
+    } else {
+
+        model.updateRegisterPassError("")
+    }
+
+
+    // ========================================================
+    // TIPO DE USUARIO
+    // ========================================================
+
+    if (role == null) {
+
+        model.updateRegisterRoleError(
+            "Selecciona un tipo de usuario"
+        )
+
+        esValido = false
+
+    } else {
+
+        model.updateRegisterRoleError("")
+    }
+
+
+    return esValido
 }
 
 fun register(
@@ -482,19 +565,34 @@ fun register(
 
             } else {
 
-                model
-                    .updateRegisterLoading(
-                        false
-                    )
+                model.updateRegisterLoading(false)
 
+                val exception = task.exception
 
-                Toast
-                    .makeText(
-                        context,
-                        "Error en el registro: ${task.exception}",
-                        Toast.LENGTH_LONG
-                    )
-                    .show()
+                val mensaje = when (exception) {
+
+                    is FirebaseAuthUserCollisionException -> {
+                        "Este correo ya está registrado. Intenta iniciar sesión."
+                    }
+
+                    is FirebaseAuthWeakPasswordException -> {
+                        "La contraseña es demasiado débil."
+                    }
+
+                    is FirebaseAuthInvalidCredentialsException -> {
+                        "El correo ingresado no es válido."
+                    }
+
+                    else -> {
+                        "No se pudo crear la cuenta. Inténtalo nuevamente."
+                    }
+                }
+
+                Toast.makeText(
+                    context,
+                    mensaje,
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 }

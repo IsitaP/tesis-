@@ -216,20 +216,53 @@ public fun LoginScreen(controller: NavController, model: AuthViewModel = viewMod
     }
 }
 
-fun validateForm(model: AuthViewModel,email:String, password:String):Boolean{
-    if (email.isEmpty()){ model.updateLoginEmailError("Email is empty")
-        return false
-    }else{model.updateLoginEmailError("")}
-    if(!validEmailAddress(email)){model.updateLoginEmailError("Not a valid address")
-        return false
-    }else{model.updateLoginEmailError("")}
-    if(password.isEmpty()) {model.updateLoginPassError("Password is empty")
-        return false
-    }else{model.updateLoginPassError("")}
-    if(password.length < 6) {model.updateLoginPassError("Password is too short")
-        return false
-    }else{model.updateLoginPassError("")}
-    return true
+fun validateForm(
+    model: AuthViewModel,
+    email: String,
+    password: String
+): Boolean {
+
+    var esValido = true
+
+    if (email.isBlank()) {
+        model.updateLoginEmailError(
+            "El correo es obligatorio"
+        )
+        esValido = false
+
+    } else if (!validEmailAddress(email)) {
+
+        model.updateLoginEmailError(
+            "El correo no es válido"
+        )
+        esValido = false
+
+    } else {
+
+        model.updateLoginEmailError("")
+    }
+
+
+    if (password.isBlank()) {
+
+        model.updateLoginPassError(
+            "La contraseña es obligatoria"
+        )
+        esValido = false
+
+    } else if (password.length < 6) {
+
+        model.updateLoginPassError(
+            "La contraseña debe tener mínimo 6 caracteres"
+        )
+        esValido = false
+
+    } else {
+
+        model.updateLoginPassError("")
+    }
+
+    return esValido
 }
 fun validEmailAddress(email:String):Boolean{
     val regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$"
@@ -293,9 +326,30 @@ fun login(
 
                 } else {
 
+                    val exception = tarea.exception
+
+                    val mensaje = when (exception) {
+
+                        is com.google.firebase.auth.FirebaseAuthInvalidUserException -> {
+                            "El correo no está registrado."
+                        }
+
+                        is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
+                            "El correo o la contraseña son incorrectos."
+                        }
+
+                        is com.google.firebase.FirebaseTooManyRequestsException -> {
+                            "Demasiados intentos. Intenta nuevamente más tarde."
+                        }
+
+                        else -> {
+                            "No se pudo iniciar sesión. Verifica tus datos."
+                        }
+                    }
+
                     Toast.makeText(
                         context,
-                        "Login error ${tarea.exception}",
+                        mensaje,
                         Toast.LENGTH_LONG
                     ).show()
                 }
