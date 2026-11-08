@@ -16,26 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 
 
 
-object PuntosModulos {
-
-    const val M1 = "M1"
-    const val M2 = "M2"
-    const val M3 = "M3"
-    const val M4 = "M4"
-    const val M5 = "M5"
-    const val M6 = "M6"
-    const val M7 = "M7"
-
-    val valores: Map<String, Long> = mapOf(
-        M1 to 100L,
-        M2 to 150L,
-        M3 to 50L,
-        M4 to 200L,
-        M5 to 100L,
-        M6 to 50L,
-        M7 to 150L
-    )
-}
 
 
 // ========================================================
@@ -147,7 +127,7 @@ class PuntosViewModel : ViewModel() {
                     snapshot.get("modulosCompletados") as? Map<String, Any>
                         ?: emptyMap()
 
-                if (completados.containsKey(moduloId)) {
+                if (PuntosModulos.puntosASumar(moduloId, completados.keys) == 0L) {
                     // Ya lo había completado antes: no suma
                     return@runTransaction 0L
                 }

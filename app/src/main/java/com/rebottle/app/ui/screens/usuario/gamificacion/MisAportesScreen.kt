@@ -55,8 +55,11 @@ import com.rebottle.app.R
 import com.rebottle.app.model.EstadoSolicitud
 import com.rebottle.app.model.Solicitud
 import com.rebottle.app.model.SolicitudViewModel
+import com.rebottle.app.logica.inicioDelPeriodo
+import com.rebottle.app.logica.kgPorMaterial
+import com.rebottle.app.logica.porcentajeDe
+import com.rebottle.app.logica.sumarKgPorCategoria
 import com.rebottle.app.ui.theme.RebottleTheme
-import java.text.Normalizer
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -124,34 +127,18 @@ private val infoMateriales = listOf(
 // LÓGICA (sin UI)
 // ============================================================
 
-/** Lleva cualquier texto de material a una de las categorías de la pantalla. */
-private fun categoria(raw: String): String {
-    val t = Normalizer.normalize(raw.lowercase(), Normalizer.Form.NFD)
-        .replace(Regex("\\p{Mn}+"), "")
-
-    return when {
-        "plast" in t || "pet" in t -> "Plástico"
-        "vidri" in t -> "Vidrio"
-        "papel" in t || "carton" in t -> "Papel"
-        "metal" in t || "lata" in t || "alumin" in t -> "Metal"
-        else -> "Otros"
-    }
-}
-
 private fun resumir(
     aportes: List<Aporte>,
     periodo: PeriodoAportes
 ): List<ResumenMaterial> {
 
-    val ahora = System.currentTimeMillis()
-    val desde = periodo.dias
-        ?.let { ahora - it * 24L * 60L * 60L * 1000L }
-        ?: Long.MIN_VALUE
+    val desde = inicioDelPeriodo(System.currentTimeMillis(), periodo.dias)
 
-    val kgPorCategoria = aportes
-        .filter { it.fechaMillis >= desde }
-        .groupBy { categoria(it.material) }
-        .mapValues { (_, lista) -> lista.sumOf { it.kg } }
+    val kgPorCategoria = sumarKgPorCategoria(
+        aportes
+            .filter { it.fechaMillis >= desde }
+            .map { it.material to it.kg }
+    )
 
     val total = kgPorCategoria.values.sum()
 
@@ -161,7 +148,7 @@ private fun resumir(
             ResumenMaterial(
                 titulo = info.nombre,
                 kg = kg,
-                porcentaje = if (total > 0) (kg / total * 100).toFloat() else 0f,
+                porcentaje = porcentajeDe(kg, total),
                 imageRes = info.imageRes,
                 color = info.color
             )
@@ -253,12 +240,12 @@ private fun aportesDesde(solicitudes: List<Solicitud>): List<Aporte> =
                     it.materiales.isNotEmpty()
         }
         .flatMap { solicitud ->
-            val kgPorMaterial = solicitud.pesoKg.toDouble() / solicitud.materiales.size
+            val kgCadaMaterial = kgPorMaterial(solicitud.pesoKg, solicitud.materiales.size)
             val fecha = (solicitud.completadaEn ?: solicitud.creadaEn)?.toDate()?.time
                 ?: System.currentTimeMillis()
 
             solicitud.materiales.map { material ->
-                Aporte(material = material, kg = kgPorMaterial, fechaMillis = fecha)
+                Aporte(material = material, kg = kgCadaMaterial, fechaMillis = fecha)
             }
         }
 

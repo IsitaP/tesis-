@@ -10,7 +10,9 @@ import com.rebottle.app.ui.screens.auth.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.Calendar
+import com.rebottle.app.logica.calcularPosiciones
+import com.rebottle.app.logica.inicioDeSemana
+import com.rebottle.app.logica.puntosDesde
 
 
 // ========================================================
@@ -143,7 +145,7 @@ class RankingViewModel : ViewModel() {
         // mostrar un ranking a medias
         if (!perfilesCargados || !progresosCargados) return
 
-        val inicioSemana = inicioDeSemana()
+        val inicioSemana = inicioDeSemana(System.currentTimeMillis())
 
         val semanal = mutableMapOf<String, Int>()
         val historico = mutableMapOf<String, Int>()
@@ -154,13 +156,13 @@ class RankingViewModel : ViewModel() {
 
             historico[uid] = (progreso?.total ?: 0L).toInt()
 
-            semanal[uid] =
-                progreso?.modulos?.values.orEmpty()
-                    .filter { datos ->
-                        val fecha = datos["fecha"] as? Timestamp
-                        fecha != null && fecha.toDate().time >= inicioSemana
-                    }
-                    .sumOf { datos -> (datos["puntos"] as? Number)?.toInt() ?: 0 }
+            semanal[uid] = puntosDesde(
+                progreso?.modulos?.values.orEmpty().map { datos ->
+                    val fecha = (datos["fecha"] as? Timestamp)?.toDate()?.time
+                    fecha to ((datos["puntos"] as? Number)?.toInt() ?: 0)
+                },
+                inicioSemana
+            )
         }
 
         _state.value = _state.value.copy(
@@ -174,48 +176,20 @@ class RankingViewModel : ViewModel() {
 
     // Mayor puntaje primero. Si empatan comparten puesto
     // (ej: 1, 2, 2, 4) y se ordenan por nombre.
-    private fun ordenar(puntos: Map<String, Int>): List<UsuarioRanking> {
-
-        val ordenados =
-            puntos.entries.sortedWith(
-                compareByDescending<Map.Entry<String, Int>> { it.value }
-                    .thenBy { perfiles[it.key]?.nombre?.lowercase() }
-            )
-
-        var puestoAnterior = 0
-        var puntosAnteriores: Int? = null
-
-        return ordenados.mapIndexed { index, (uid, pts) ->
-
-            val puesto =
-                if (pts == puntosAnteriores) puestoAnterior else index + 1
-
-            puestoAnterior = puesto
-            puntosAnteriores = pts
-
-            val perfil = perfiles[uid]
-
-            UsuarioRanking(
-                puesto = puesto,
-                uid = uid,
-                nombre = perfil?.nombre ?: "Usuario",
-                puntos = pts,
-                fotoUrl = perfil?.fotoUrl.orEmpty()
-            )
-        }
-    }
+    private fun ordenar(puntos: Map<String, Int>): List<UsuarioRanking> =
+        calcularPosiciones(puntos) { uid -> perfiles[uid]?.nombre }
+            .map { posicion ->
+                val perfil = perfiles[posicion.uid]
+                UsuarioRanking(
+                    puesto = posicion.puesto,
+                    uid = posicion.uid,
+                    nombre = perfil?.nombre ?: "Usuario",
+                    puntos = posicion.puntos,
+                    fotoUrl = perfil?.fotoUrl.orEmpty()
+                )
+            }
 
 
-    // Lunes de esta semana a las 00:00 (hora del celular)
-    private fun inicioDeSemana(): Long =
-        Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.MONDAY
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-        }.timeInMillis
 
 
     override fun onCleared() {
