@@ -48,7 +48,7 @@
     <string name="collection_date_title">Fecha de recolección</string>
     <string name="collection_date_value">Agosto 24</string>
     <string name="estimated_schedule_title">Horario estimado</string>
-    <string name="estimated_schedule_value">10:00 AM - 11:00 AM</string>
+    <string name="estimated_schedule_value">Por asignar </string>
     <string name="back_to_home">Volver al inicio</string>
     <string name="go_to_my_requests">Ir a mis solicitudes</string>
     <string name="approval_title">¡ Solicitud Aprobada !</string>

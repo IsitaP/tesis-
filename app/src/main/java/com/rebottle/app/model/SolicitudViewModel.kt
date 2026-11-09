@@ -61,6 +61,8 @@ data class Solicitud(
 
     val fechaRecoleccion: String = "",
 
+    val horaRuta: String = "",
+
     val estado: String = "",
 
     val creadaEn: Timestamp? = null,
@@ -986,6 +988,11 @@ class SolicitudViewModel : ViewModel() {
                                             "fechaRecoleccion"
                                         ) ?: "",
 
+
+                                    horaRuta =
+                                        document.getString(
+                                            "horaRuta"
+                                        ) ?: "",
 
                                     estado =
                                         document.getString(

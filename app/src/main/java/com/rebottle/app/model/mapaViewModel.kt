@@ -665,14 +665,88 @@ class MapaViewModel : ViewModel() {
         onError: (String) -> Unit = {}
     ) {
 
-        if (rutaId.isBlank()) return
+        if (rutaId.isBlank()) {
+            return
+        }
+
+
+        val rutaRef =
+            firestore
+                .collection("rutas")
+                .document(rutaId)
+
 
         firestore
-            .collection("rutas")
-            .document(rutaId)
-            .update("hora", hora)
+            .runTransaction { transaction ->
+
+                // ====================================================
+                // OBTENER LA RUTA
+                // ====================================================
+
+                val rutaSnapshot =
+                    transaction.get(rutaRef)
+
+
+                if (!rutaSnapshot.exists()) {
+                    throw IllegalStateException(
+                        "La ruta no existe"
+                    )
+                }
+
+
+                // ====================================================
+                // OBTENER LAS SOLICITUDES DE LA RUTA
+                // ====================================================
+
+                val solicitudesIds =
+                    (
+                            rutaSnapshot.get(
+                                "solicitudesIds"
+                            ) as? List<*>
+                            )
+                        ?.mapNotNull {
+                            it as? String
+                        }
+                        ?: emptyList()
+
+
+                // ====================================================
+                // ACTUALIZAR HORA DE LA RUTA
+                // ====================================================
+
+                transaction.update(
+                    rutaRef,
+                    "hora",
+                    hora
+                )
+
+
+                // ====================================================
+                // ACTUALIZAR HORA DE CADA SOLICITUD
+                // ====================================================
+
+                solicitudesIds.forEach { solicitudId ->
+
+                    val solicitudRef =
+                        firestore
+                            .collection("solicitudes")
+                            .document(solicitudId)
+
+
+                    transaction.update(
+                        solicitudRef,
+                        "horaRuta",
+                        hora
+                    )
+                }
+            }
+
             .addOnFailureListener { exception ->
-                onError(exception.message ?: "No se pudo guardar la hora")
+
+                onError(
+                    exception.message
+                        ?: "No se pudo guardar la hora"
+                )
             }
     }
 

@@ -417,7 +417,15 @@ private fun CollectionCard(
 
 
                 Text(
-                    text = "Hora: 10:00 AM",
+                    text = "Hora: ${
+                        if (solicitud.horaRuta.isBlank()) {
+                            "Por asignar"
+                        } else {
+                            formatearHoraSolicitud(
+                                solicitud.horaRuta
+                            )
+                        }
+                    }",
                     fontSize = 11.sp,
                     lineHeight = 14.sp,
                     color = SecondaryText
@@ -1011,6 +1019,49 @@ private fun ReBottleBottomItem(
             )
         }
     }
+}
+private fun formatearHoraSolicitud(
+    hora: String
+): String {
+
+    val partes =
+        hora.split(":")
+
+    if (partes.size != 2) {
+        return hora
+    }
+
+    val horas =
+        partes[0].toIntOrNull()
+            ?: return hora
+
+    val minutos =
+        partes[1].toIntOrNull()
+            ?: return hora
+
+
+    val periodo =
+        if (horas < 12) {
+            "AM"
+        } else {
+            "PM"
+        }
+
+
+    val hora12 =
+        when {
+            horas == 0 -> 12
+            horas > 12 -> horas - 12
+            else -> horas
+        }
+
+
+    return String.format(
+        "%d:%02d %s",
+        hora12,
+        minutos,
+        periodo
+    )
 }
 
 
