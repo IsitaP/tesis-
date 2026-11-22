@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -75,7 +76,9 @@ fun BarraNavegacionFundacion(
 
         ItemBarraFundacion(
             title = "Solicitudes",
-            selected = currentRoute == AppScreens.solicitudesFundacion.name,
+            selected = currentRoute == AppScreens.solicitudesFundacion.name ||
+                    currentRoute?.startsWith(AppScreens.detalleRuta.name) == true ||
+                    currentRoute?.startsWith(AppScreens.asignarRecolector.name) == true,
             iconRes = R.drawable.icon_collection,
             modifier = Modifier.weight(1f),
             onClick = { ir(AppScreens.solicitudesFundacion.name) }
@@ -95,7 +98,9 @@ fun BarraNavegacionFundacion(
 
         ItemBarraFundacion(
             title = "Perfil",
-            selected = currentRoute == AppScreens.perfil.name,
+            selected = currentRoute == AppScreens.perfil.name ||
+                    currentRoute == AppScreens.editarPerfilFundacion.name ||
+                    currentRoute == AppScreens.aportesFundacion.name,
             imageVector = Icons.Outlined.Person,
             modifier = Modifier.weight(1f),
             onClick = { ir(AppScreens.perfil.name) }
@@ -149,7 +154,10 @@ private fun ItemBarraFundacion(
             text = title,
             fontSize = 12.sp,
             color = itemColor,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            // Una sola línea para que todos los textos queden a la misma altura
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
         Spacer(modifier = Modifier.height(3.dp))

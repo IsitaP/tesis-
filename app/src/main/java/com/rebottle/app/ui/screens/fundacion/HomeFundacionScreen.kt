@@ -1,5 +1,6 @@
 package com.rebottle.app.ui.screens.fundacion
 
+import com.rebottle.app.ui.screens.fundacion.componentes.BarraNavegacionFundacion
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -93,7 +94,7 @@ fun HomeFundacionScreen(
 
         bottomBar = {
 
-            ReBottleBottomBar(
+            BarraNavegacionFundacion(
                 controller = controller
             )
         }
@@ -761,131 +762,3 @@ private fun DailySummaryCard(
     }
 }
 
-
-// ----------------------------------------------------
-// ICONOS PERSONALIZADOS BOTTOM BAR
-// ----------------------------------------------------
-
-@Composable
-private fun BottomNavIcon(
-
-    @DrawableRes iconRes: Int,
-
-    contentDescription: String,
-
-    size: Dp = 25.dp
-
-) {
-
-    Image(
-        painter =
-            painterResource(
-                id = iconRes
-            ),
-
-        contentDescription =
-            contentDescription,
-
-        modifier =
-            Modifier.size(size)
-    )
-}
-
-
-// ----------------------------------------------------
-// BOTTOM NAVIGATION FUNDACIÓN
-// ----------------------------------------------------
-
-@Composable
-private fun ReBottleBottomBar(
-    controller: NavController
-) {
-    val navBackStackEntry by controller.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BackgroundColor)
-            .padding(top = 3.dp)
-    ) {
-        NavigationBar(
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = Color.White,
-            tonalElevation = 0.dp
-        ) {
-
-            // INICIO
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.homeFundacion.name,
-                onClick = {
-                    if (currentRoute != AppScreens.homeFundacion.name) {
-                        controller.navigate(AppScreens.homeFundacion.name)
-                    }
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Home, contentDescription = "Inicio", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Inicio", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            // SOLICITUDES
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.solicitudesFundacion.name,
-                onClick = {
-                    if (currentRoute != AppScreens.solicitudesFundacion.name) {
-                        controller.navigate(AppScreens.solicitudesFundacion.name)
-                    }
-                },
-                icon = { BottomNavIcon(iconRes = R.drawable.icon_collection, contentDescription = "Solicitudes") },
-                label = { Text(text = "Solicitudes", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            // RUTAS (aún sin pantalla)
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.rutas.name,
-                onClick = {
-                    if (currentRoute != AppScreens.rutas.name) {
-                        controller.navigate(AppScreens.rutas.name)
-                    }
-                },
-                icon = { BottomNavIcon(iconRes = R.drawable.icon_routes, contentDescription = "Recolectores", size = 42.dp) },
-                label = { Text(text = "Recolectores", fontSize = 12.sp, modifier = Modifier.offset(y = (-4).dp)) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedTextColor = MainGreen,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-
-            // PERFIL
-            NavigationBarItem(
-                selected = currentRoute == AppScreens.perfil.name,
-                onClick = {
-                    if (currentRoute != AppScreens.perfil.name) {
-                        controller.navigate(AppScreens.perfil.name)
-                    }
-                },
-                icon = { Icon(imageVector = Icons.Outlined.Person, contentDescription = "Perfil", modifier = Modifier.size(26.dp)) },
-                label = { Text(text = "Perfil", fontSize = 12.sp) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MainGreen,
-                    selectedTextColor = MainGreen,
-                    unselectedIconColor = SecondaryText,
-                    unselectedTextColor = SecondaryText,
-                    indicatorColor = Color.Transparent
-                )
-            )
-        }
-    }
-}
