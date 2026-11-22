@@ -389,31 +389,35 @@ fun PantallaDetalleAsignacionRecolector(
                 Text(text = mensaje, fontSize = 13.sp, color = Color(0xFFC94338))
             }
 
-            Spacer(
-                modifier = Modifier.height(24.dp)
-            )
+            // La fundación abre esta pantalla con soloLectura = true.
+            // Ocultamos únicamente el botón de la ruta en ese caso.
+            if (!soloLectura) {
+                Spacer(
+                    modifier = Modifier.height(24.dp)
+                )
 
-            Button(
-                onClick = {
-                    controller.navigate(
-                        AppScreens.rutasRecolector.name
+                Button(
+                    onClick = {
+                        controller.navigate(
+                            AppScreens.rutasRecolector.name
+                        )
+                    },
+                    enabled = state.resolviendoId == null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MainGreen
                     )
-                },
-                enabled = state.resolviendoId == null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MainGreen
-                )
-            ) {
-                Text(
-                    text = "Ver ruta en el mapa",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                ) {
+                    Text(
+                        text = "Ver ruta en el mapa",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
 
