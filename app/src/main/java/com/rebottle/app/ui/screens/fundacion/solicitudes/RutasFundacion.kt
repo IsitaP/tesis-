@@ -562,7 +562,7 @@ private fun Header(
 
         Text(
             text =
-                "Rutas de recolección",
+                "Solicitudes por ruta",
 
             fontSize =
                 22.sp,

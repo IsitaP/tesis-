@@ -958,7 +958,7 @@ private fun ReBottleProfileBottomBar(
                                 .icon_routes,
 
                         contentDescription =
-                            "Rutas",
+                            "Recolectores",
 
                         size = 42.dp
                     )
@@ -968,7 +968,7 @@ private fun ReBottleProfileBottomBar(
 
                     Text(
 
-                        text = "Rutas",
+                        text = "Recolectores",
 
                         fontSize = 12.sp,
 

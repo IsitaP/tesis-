@@ -216,6 +216,7 @@ private fun HeaderFundacion() {
     }
 
     val nombre = PerfilCache.nombre?.ifEmpty { null } ?: "Fundación"
+    val direccion = PerfilCache.direccion?.trim()?.ifEmpty { null }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -234,24 +235,30 @@ private fun HeaderFundacion() {
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            // Solo se muestra si la fundación registró una dirección
+            if (direccion != null) {
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.height(3.dp))
 
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = "Ubicación",
-                    tint = SecondaryText,
-                    modifier = Modifier.size(13.dp)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
 
-                Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = "Ubicación",
+                        tint = SecondaryText,
+                        modifier = Modifier.size(13.dp)
+                    )
 
-                Text(
-                    text = "Cll 34b #18-24",
-                    fontSize = 13.sp,
-                    color = SecondaryText
-                )
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Text(
+                        text = direccion,
+                        fontSize = 13.sp,
+                        color = SecondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
@@ -852,8 +859,8 @@ private fun ReBottleBottomBar(
                         controller.navigate(AppScreens.rutas.name)
                     }
                 },
-                icon = { BottomNavIcon(iconRes = R.drawable.icon_routes, contentDescription = "Rutas", size = 42.dp) },
-                label = { Text(text = "Rutas", fontSize = 12.sp, modifier = Modifier.offset(y = (-4).dp)) },
+                icon = { BottomNavIcon(iconRes = R.drawable.icon_routes, contentDescription = "Recolectores", size = 42.dp) },
+                label = { Text(text = "Recolectores", fontSize = 12.sp, modifier = Modifier.offset(y = (-4).dp)) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedTextColor = MainGreen,
                     unselectedTextColor = SecondaryText,

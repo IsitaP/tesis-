@@ -1685,7 +1685,7 @@ private fun ReBottleBottomBar(
                             ),
 
                         contentDescription =
-                            "Rutas",
+                            "Recolectores",
 
                         modifier =
                             Modifier.size(
@@ -1700,7 +1700,7 @@ private fun ReBottleBottomBar(
                     Text(
 
                         text =
-                            "Rutas",
+                            "Recolectores",
 
                         fontSize =
                             12.sp,

@@ -57,6 +57,13 @@ import androidx.navigation.NavController
 import com.rebottle.app.R
 import com.rebottle.app.model.DesasignacionRutaState
 import com.rebottle.app.model.EstadoRuta
+import com.rebottle.app.model.EstadoSolicitud
+import com.rebottle.app.model.MaterialType
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.rebottle.app.model.MapaViewModel
 import com.rebottle.app.model.Ruta
 import com.rebottle.app.navigation.AppScreens
@@ -488,6 +495,13 @@ private fun RecoleccionDetalleContent(
 
                             "Asignar recolector"
 
+                        } else if (
+                            ruta.estado ==
+                            EstadoRuta.CANCELADA.name
+                        ) {
+
+                            "Ruta cancelada"
+
                         } else {
 
                             "Recolector asignado"
@@ -498,6 +512,35 @@ private fun RecoleccionDetalleContent(
 
                     fontWeight =
                         FontWeight.Medium
+                )
+            }
+
+
+            // Explica por qué el botón está deshabilitado
+            val motivoSinAsignar =
+                when (ruta.estado) {
+                    EstadoRuta.ASIGNADA.name ->
+                        "Esta ruta ya tiene recolector. Para cambiarlo, primero desasígnalo."
+                    EstadoRuta.EN_CURSO.name ->
+                        "La ruta está en curso, por eso no se puede cambiar el recolector."
+                    EstadoRuta.COMPLETADA.name ->
+                        "La ruta ya fue completada."
+                    EstadoRuta.CANCELADA.name ->
+                        "La ruta fue cancelada, por eso no se puede asignar un recolector."
+                    else -> null
+                }
+
+            if (motivoSinAsignar != null) {
+
+                Text(
+                    text = motivoSinAsignar,
+                    fontSize = 13.sp,
+                    color = Color(0xFF777777),
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp)
                 )
             }
 
@@ -1249,66 +1292,10 @@ private fun RecoleccionDetailCard(
                             solicitudId ->
 
 
-                        Row(
-                            verticalAlignment =
-                                Alignment.CenterVertically
-                        ) {
-
-
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .size(
-                                            22.dp
-                                        )
-                                        .background(
-                                            color =
-                                                BrownIcon,
-
-                                            shape =
-                                                CircleShape
-                                        ),
-
-                                contentAlignment =
-                                    Alignment.Center
-                            ) {
-
-
-                                Text(
-                                    text =
-                                        "${index + 1}",
-
-                                    color =
-                                        Color.White,
-
-                                    fontSize =
-                                        11.sp,
-
-                                    fontWeight =
-                                        FontWeight.Bold
-                                )
-                            }
-
-
-                            Spacer(
-                                modifier =
-                                    Modifier.width(
-                                        8.dp
-                                    )
-                            )
-
-
-                            Text(
-                                text =
-                                    solicitudId,
-
-                                fontSize =
-                                    13.sp,
-
-                                color =
-                                    SecondaryText
-                            )
-                        }
+                        SolicitudDeRutaItem(
+                            numero = index + 1,
+                            solicitudId = solicitudId
+                        )
                     }
             }
 
@@ -1588,6 +1575,143 @@ private fun RecoleccionDetailCard(
         }
     }
 }
+
+
+// ============================================================
+// SOLICITUD DE LA RUTA (se despliega al tocarla)
+// ============================================================
+
+private data class InfoSolicitudRuta(
+    val direccion: String,
+    val materiales: String,
+    val pesoKg: Long,
+    val estado: String
+)
+
+@Composable
+private fun SolicitudDeRutaItem(
+    numero: Int,
+    solicitudId: String
+) {
+
+    var expandida by remember(solicitudId) { mutableStateOf(false) }
+    var info by remember(solicitudId) { mutableStateOf<InfoSolicitudRuta?>(null) }
+    var error by remember(solicitudId) { mutableStateOf(false) }
+
+    // Solo se consulta la solicitud la primera vez que se abre
+    LaunchedEffect(expandida, solicitudId) {
+        if (expandida && info == null) {
+            error = false
+            Firebase.firestore.collection("solicitudes").document(solicitudId).get()
+                .addOnSuccessListener { doc ->
+                    if (!doc.exists()) {
+                        error = true
+                        return@addOnSuccessListener
+                    }
+                    val direccion =
+                        doc.getString("nombreLugar")?.ifBlank { null }
+                            ?.let { lugar ->
+                                doc.getString("direccion")?.ifBlank { null }
+                                    ?.let { "$lugar · $it" } ?: lugar
+                            }
+                            ?: doc.getString("direccion")?.ifBlank { null }
+                            ?: "Sin dirección"
+                    val materiales =
+                        (doc.get("materiales") as? List<*>)
+                            ?.mapNotNull { it as? String }
+                            ?.joinToString(", ") { nombre ->
+                                MaterialType.values().firstOrNull { it.name == nombre }?.label ?: nombre
+                            }
+                            ?.ifBlank { null }
+                            ?: "Sin materiales"
+                    info = InfoSolicitudRuta(
+                        direccion = direccion,
+                        materiales = materiales,
+                        pesoKg = doc.getLong("pesoKg") ?: 0L,
+                        estado = estadoSolicitudLegible(doc.getString("estado"))
+                    )
+                }
+                .addOnFailureListener { error = true }
+        }
+    }
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable { expandida = !expandida }
+                .padding(vertical = 2.dp)
+    ) {
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier =
+                    Modifier
+                        .size(22.dp)
+                        .background(color = BrownIcon, shape = CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "$numero",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = solicitudId,
+                fontSize = 13.sp,
+                color = SecondaryText,
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = if (expandida) "Ocultar ▲" else "Ver detalle ▼",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = BrownIcon
+            )
+        }
+
+        if (expandida) {
+
+            Column(
+                modifier = Modifier.padding(start = 30.dp, top = 4.dp, bottom = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                val datos = info
+                when {
+                    error ->
+                        Text("No se pudo cargar la solicitud", fontSize = 12.sp, color = SecondaryText)
+                    datos == null ->
+                        Text("Cargando...", fontSize = 12.sp, color = SecondaryText)
+                    else -> {
+                        Text("Dirección: ${datos.direccion}", fontSize = 12.sp, color = MainText)
+                        Text("Material: ${datos.materiales}", fontSize = 12.sp, color = MainText)
+                        Text("Peso: ${datos.pesoKg} kg", fontSize = 12.sp, color = MainText)
+                        Text("Estado: ${datos.estado}", fontSize = 12.sp, color = MainText)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun estadoSolicitudLegible(estado: String?): String =
+    when (estado) {
+        EstadoSolicitud.PUBLICADA.name -> "Publicada"
+        EstadoSolicitud.EN_RUTA.name -> "En ruta"
+        EstadoSolicitud.RECOLECTADA.name -> "Recolectada"
+        EstadoSolicitud.CANCELADA.name -> "Cancelada"
+        null -> "Sin estado"
+        else -> estado
+    }
 
 
 // ============================================================

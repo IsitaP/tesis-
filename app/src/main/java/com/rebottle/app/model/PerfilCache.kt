@@ -22,10 +22,14 @@ object PerfilCache {
     var foto by mutableStateOf<ImageBitmap?>(null)
         private set
 
+    var direccion by mutableStateOf<String?>(null)
+        private set
+
     fun limpiar() {
         uidActual = null
         nombre = null
         foto = null
+        direccion = null
     }
 
     fun actualizarFoto(nueva: ImageBitmap) {
@@ -47,6 +51,7 @@ object PerfilCache {
                 if (uidActual != uid) return@addOnSuccessListener
 
                 nombre = doc.getString("name")
+                direccion = doc.getString("direccion")
 
                 val url = doc.getString("fotoUrl")
                 val role = doc.getString("role")

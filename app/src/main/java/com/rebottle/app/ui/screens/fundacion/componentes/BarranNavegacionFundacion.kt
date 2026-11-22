@@ -64,7 +64,7 @@ fun BarraNavegacionFundacion(
     ) {
 
         ItemBarraFundacion(
-            title = "Home",
+            title = "Inicio",
             selected = currentRoute == AppScreens.homeFundacion.name,
             imageVector = Icons.Outlined.Home,
             modifier = Modifier.weight(1f),
@@ -80,7 +80,7 @@ fun BarraNavegacionFundacion(
         )
 
         ItemBarraFundacion(
-            title = "Rutas",
+            title = "Recolectores",
             selected = currentRoute == AppScreens.rutas.name ||
                     currentRoute == AppScreens.filtroRutas.name ||
                     currentRoute?.startsWith(AppScreens.detalleRecolectorRuta.name) == true,
