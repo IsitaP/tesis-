@@ -76,8 +76,9 @@ data class RutaProgresoState(
 // Parada completada = solicitud RECOLECTADA + completadaEn
 //
 // Progreso automático: desde la hora de salida, las paradas se
-// completan solas según el tiempo estimado caminando desde la
-// fundación y entre paradas, más 5 a 7 min en cada una
+// completan solas según el tiempo estimado en carro desde la
+// fundación hasta la primera parada, caminando entre paradas,
+// más 5 a 7 min en cada una
 // (ver logica/ProgresoRutaLogica.kt).
 // ============================================================
 

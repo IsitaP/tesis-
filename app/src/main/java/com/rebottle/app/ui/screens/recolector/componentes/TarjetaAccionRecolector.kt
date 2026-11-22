@@ -5,9 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +25,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.clickable
 
 // ----------------------------------------------------
 // COLORES
@@ -53,10 +53,13 @@ fun TarjetaAccionRecolector(
     onLinkClick: () -> Unit = {}
 ) {
 
+    // La altura es un mínimo: si el texto es largo, la tarjeta crece y no se corta.
+    // Toda la tarjeta se puede tocar, igual que en el inicio del ciudadano.
     Card(
+        onClick = onLinkClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(cardHeight),
+            .heightIn(min = cardHeight),
         shape = RoundedCornerShape(7.dp),
         border = BorderStroke(width = 1.dp, color = BorderGreen),
         colors = CardDefaults.cardColors(containerColor = LightGreen),
@@ -65,8 +68,9 @@ fun TarjetaAccionRecolector(
 
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                .fillMaxWidth()
+                .heightIn(min = cardHeight)
+                .padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -91,15 +95,17 @@ fun TarjetaAccionRecolector(
                     text = linkText,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MainGreen,
-                    modifier = Modifier.clickable { onLinkClick() }
+                    color = MainGreen
                 )
             }
 
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // Imagen un poco más pequeña para dejarle espacio al texto
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = title,
-                modifier = Modifier.size(imageSize),
+                modifier = Modifier.size(minOf(imageSize, 120.dp)),
                 contentScale = ContentScale.Fit
             )
         }

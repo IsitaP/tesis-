@@ -34,11 +34,11 @@ class ProgresoRutaLogicaTest {
     }
 
     @Test
-    fun primeraParadaCuentaElCaminoDesdeLaFundacion() {
+    fun primeraParadaSeCalculaEnCarroDesdeLaFundacion() {
         val tiempos = calcularTiemposParadas(inicio, fundacion, listOf(parada1))
 
-        val caminando = 1112.0 * FACTOR_CALLES / METROS_POR_MINUTO_CAMINANDO // ~19 min
-        val llegadaEsperada = inicio + (caminando * minuto).toLong()
+        val enCarro = 1112.0 * FACTOR_CALLES / METROS_POR_MINUTO_CARRO // ~4,3 min
+        val llegadaEsperada = inicio + (enCarro * minuto).toLong()
 
         assertEquals(llegadaEsperada.toDouble(), tiempos[0].llegadaMillis.toDouble(), 10_000.0)
         assertEquals(
@@ -54,6 +54,17 @@ class ProgresoRutaLogicaTest {
         // Misma ubicación: no hay camino, llega justo al terminar la anterior
         assertEquals(tiempos[0].finMillis, tiempos[1].llegadaMillis)
         assertTrue(tiempos[1].finMillis > tiempos[0].finMillis)
+    }
+
+    @Test
+    fun entreParadasSeCalculaCaminando() {
+        val lejos = PuntoRuta("RB-0003", 4.6200, -74.0800) // ~1,1 km de la parada 1
+        val tiempos = calcularTiemposParadas(inicio, fundacion, listOf(parada1, lejos))
+
+        val caminando = 1112.0 * FACTOR_CALLES / METROS_POR_MINUTO_CAMINANDO // ~19 min
+        val viaje = tiempos[1].llegadaMillis - tiempos[0].finMillis
+
+        assertEquals(caminando * minuto, viaje.toDouble(), 10_000.0)
     }
 
     @Test

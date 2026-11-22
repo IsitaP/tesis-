@@ -12,7 +12,8 @@ import kotlin.math.sqrt
  * Progreso automático de una ruta de recolección.
  *
  * La ruta sale de la dirección de la fundación. Se estima cuánto tarda
- * una persona caminando hasta cada parada y se suman de 5 a 7 minutos
+ * un carro hasta la primera parada y una persona caminando entre las
+ * siguientes, y se suman de 5 a 7 minutos
  * en cada parada. Cuando pasa la hora estimada de fin de una parada,
  * esa parada se marca como recolectada.
  *
@@ -22,6 +23,10 @@ import kotlin.math.sqrt
 
 // Velocidad promedio de una persona caminando: 4,5 km/h
 const val METROS_POR_MINUTO_CAMINANDO = 4500.0 / 60.0
+
+// Velocidad promedio de un carro en ciudad (Bogotá, con tráfico): 20 km/h.
+// Se usa solo para ir de la fundación a la primera parada.
+const val METROS_POR_MINUTO_CARRO = 20_000.0 / 60.0
 
 // Las calles no son línea recta: se aumenta la distancia un 30 %
 const val FACTOR_CALLES = 1.3
@@ -65,14 +70,22 @@ fun distanciaMetros(
     return 2 * RADIO_TIERRA_METROS * asin(sqrt(a))
 }
 
-/** Minutos que tarda una persona caminando entre dos puntos. */
-fun minutosCaminando(desde: PuntoRuta?, hasta: PuntoRuta): Double {
+/** Minutos para ir entre dos puntos a una velocidad dada (metros por minuto). */
+fun minutosTrayecto(desde: PuntoRuta?, hasta: PuntoRuta, metrosPorMinuto: Double): Double {
     if (desde == null || !desde.tieneCoordenadas || !hasta.tieneCoordenadas) return 0.0
 
     val metros = distanciaMetros(desde.latitud, desde.longitud, hasta.latitud, hasta.longitud)
 
-    return metros * FACTOR_CALLES / METROS_POR_MINUTO_CAMINANDO
+    return metros * FACTOR_CALLES / metrosPorMinuto
 }
+
+/** Minutos que tarda una persona caminando entre dos paradas. */
+fun minutosCaminando(desde: PuntoRuta?, hasta: PuntoRuta): Double =
+    minutosTrayecto(desde, hasta, METROS_POR_MINUTO_CAMINANDO)
+
+/** Minutos que tarda un carro desde la fundación hasta la primera parada. */
+fun minutosEnCarro(desde: PuntoRuta?, hasta: PuntoRuta): Double =
+    minutosTrayecto(desde, hasta, METROS_POR_MINUTO_CARRO)
 
 /**
  * Minutos que se queda el recolector en una parada: entre 5 y 7.
@@ -100,9 +113,14 @@ fun calcularTiemposParadas(
     var reloj = inicioMillis.toDouble()
     var anterior = origen
 
-    return paradas.map { parada ->
+    return paradas.mapIndexed { index, parada ->
 
-        reloj += minutosCaminando(anterior, parada) * MILIS_POR_MINUTO
+        // De la fundación a la primera parada se va en carro; entre paradas, caminando
+        val minutosViaje =
+            if (index == 0) minutosEnCarro(anterior, parada)
+            else minutosCaminando(anterior, parada)
+
+        reloj += minutosViaje * MILIS_POR_MINUTO
         val llegada = reloj.roundToLong()
 
         reloj += minutosEnParada(parada.id) * MILIS_POR_MINUTO

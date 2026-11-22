@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -96,6 +97,8 @@ fun BarraNavegacionRecolector(
             title = "Rutas",
             selected = currentRoute == AppScreens.rutasRecolector.name,
             iconRes = R.drawable.icon_routes,
+            // El PNG tiene mucho margen alrededor; se agranda para igualar a los demás
+            iconScale = 1.6f,
             modifier = Modifier.weight(1f),
             onClick = {
                 if (currentRoute != AppScreens.rutasRecolector.name) {
@@ -131,6 +134,7 @@ private fun ItemBarraRecolector(
     modifier: Modifier = Modifier,
     iconRes: Int? = null,
     imageVector: ImageVector? = null,
+    iconScale: Float = 1f,
     onClick: () -> Unit
 ) {
 
@@ -165,7 +169,9 @@ private fun ItemBarraRecolector(
                     id = iconRes
                 ),
                 contentDescription = title,
-                modifier = Modifier.size(31.dp),
+                modifier = Modifier
+                    .size(31.dp)
+                    .scale(iconScale),
                 tint = itemColor
             )
         }
