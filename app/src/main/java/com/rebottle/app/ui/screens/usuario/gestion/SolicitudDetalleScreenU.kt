@@ -31,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +54,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 import com.rebottle.app.R
 import com.rebottle.app.components.MainGreen
@@ -189,6 +194,69 @@ fun SolicitudDetalleScreenU(
 
 
         return
+    }
+
+
+    // ========================================================
+    // NOMBRE DEL RECOLECTOR ASIGNADO
+    // ========================================================
+    // La fundación guarda recolectorId en cada solicitud al
+    // asignar la ruta. Así el ciudadano no necesita leer rutas.
+
+    var nombreRecolector by remember(solicitud.id) {
+        mutableStateOf("No asignado")
+    }
+
+    DisposableEffect(solicitud.id) {
+        val firestore = FirebaseFirestore.getInstance()
+        var listenerPerfil: ListenerRegistration? = null
+
+        // El ciudadano sí puede leer su propia solicitud.
+        val listenerSolicitud = firestore.collection("solicitudes")
+            .document(solicitud.id)
+            .addSnapshotListener { documento, errorSolicitud ->
+
+                // Cancelar la escucha del perfil anterior si
+                // la fundación reasigna esta solicitud.
+                listenerPerfil?.remove()
+                listenerPerfil = null
+
+                if (errorSolicitud != null) {
+                    nombreRecolector = "Error al consultar"
+                    return@addSnapshotListener
+                }
+
+                val recolectorId = documento
+                    ?.getString("recolectorId")
+                    .orEmpty()
+
+                if (recolectorId.isBlank()) {
+                    nombreRecolector = "No asignado"
+                } else {
+                    nombreRecolector = "Cargando..."
+
+                    // Los perfiles públicos son visibles para
+                    // cualquier usuario autenticado, según las reglas.
+                    listenerPerfil = firestore.collection("perfilesPublicos")
+                        .document(recolectorId)
+                        .addSnapshotListener { perfil, errorPerfil ->
+
+                            if (errorPerfil != null) {
+                                nombreRecolector = "Error al consultar"
+                            } else {
+                                nombreRecolector = perfil
+                                    ?.getString("name")
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?: "Nombre no disponible"
+                            }
+                        }
+                }
+            }
+
+        onDispose {
+            listenerSolicitud.remove()
+            listenerPerfil?.remove()
+        }
     }
 
 
@@ -1045,6 +1113,7 @@ fun SolicitudDetalleScreenU(
 
 
                             Row(
+                                modifier = Modifier.weight(1f),
                                 verticalAlignment =
                                     Alignment
                                         .CenterVertically
@@ -1080,22 +1149,16 @@ fun SolicitudDetalleScreenU(
                                 )
 
 
-                                /*
-                                 * El recolector todavía no existe
-                                 * dentro del modelo Solicitud.
-                                 */
                                 Text(
-                                    text =
-                                        "No asignado",
-
-                                    fontSize =
-                                        14.sp,
-
-                                    color =
-                                        SecondaryText
+                                    text = nombreRecolector,
+                                    fontSize = 14.sp,
+                                    color = SecondaryText,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
+                            Spacer(modifier = Modifier.width(8.dp))
 
                             // Botón visible para editar la solicitud
                             Row(

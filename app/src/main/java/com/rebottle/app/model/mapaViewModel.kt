@@ -572,6 +572,26 @@ class MapaViewModel : ViewModel() {
 
 
                 // =================================================
+                // SOLICITUDES INCLUIDAS EN LA RUTA
+                // =================================================
+                // Se leen desde la ruta, ya que el recolector se asigna
+                // a toda la ruta y no individualmente a cada solicitud.
+
+                val solicitudesIds =
+                    (rutaSnapshot.get("solicitudesIds") as? List<*>)
+                        ?.mapNotNull { it as? String }
+                        ?.filter { it.isNotBlank() }
+                        ?.distinct()
+                        ?: emptyList()
+
+                if (solicitudesIds.isEmpty()) {
+                    throw IllegalStateException(
+                        "La ruta no contiene solicitudes para asignar"
+                    )
+                }
+
+
+                // =================================================
                 // ACTUALIZAR RUTA
                 // =================================================
 
@@ -591,6 +611,27 @@ class MapaViewModel : ViewModel() {
                                 FieldValue.serverTimestamp()
                     )
                 )
+
+
+                // =================================================
+                // ASIGNAR EL RECOLECTOR A TODAS LAS SOLICITUDES
+                // =================================================
+                // Esto permite que el ciudadano lea el recolectorId
+                // desde su propia solicitud, sin acceder a las rutas.
+                // Se ejecuta dentro de la misma transacción para evitar
+                // que la ruta y sus solicitudes queden desincronizadas.
+
+                solicitudesIds.forEach { solicitudId ->
+                    val solicitudRef = firestore
+                        .collection("solicitudes")
+                        .document(solicitudId)
+
+                    transaction.update(
+                        solicitudRef,
+                        "recolectorId",
+                        recolectorId
+                    )
+                }
 
 
                 // =================================================
@@ -868,6 +909,24 @@ class MapaViewModel : ViewModel() {
 
 
                 // ================================================
+                // SOLICITUDES INCLUIDAS EN LA RUTA
+                // ================================================
+
+                val solicitudesIds =
+                    (rutaSnapshot.get("solicitudesIds") as? List<*>)
+                        ?.mapNotNull { it as? String }
+                        ?.filter { it.isNotBlank() }
+                        ?.distinct()
+                        ?: emptyList()
+
+                if (solicitudesIds.isEmpty()) {
+                    throw IllegalStateException(
+                        "La ruta no contiene solicitudes para desasignar"
+                    )
+                }
+
+
+                // ================================================
                 // RUTA VUELVE A PUBLICADA
                 // ================================================
 
@@ -884,6 +943,25 @@ class MapaViewModel : ViewModel() {
                                 FieldValue.delete()
                     )
                 )
+
+
+                // ================================================
+                // QUITAR RECOLECTOR DE TODAS LAS SOLICITUDES
+                // ================================================
+                // Al desasignar la ruta, el detalle del ciudadano
+                // volverá a mostrar "No asignado".
+
+                solicitudesIds.forEach { solicitudId ->
+                    val solicitudRef = firestore
+                        .collection("solicitudes")
+                        .document(solicitudId)
+
+                    transaction.update(
+                        solicitudRef,
+                        "recolectorId",
+                        FieldValue.delete()
+                    )
+                }
 
 
                 // ================================================
