@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -328,6 +330,8 @@ fun SolicitudDetalleScreenU(
                 .background(
                     BackgroundColor
                 )
+                // No queda debajo de los botones de navegación del celular
+                .navigationBarsPadding()
     ) {
 
 
@@ -1093,35 +1097,50 @@ fun SolicitudDetalleScreenU(
                             }
 
 
+                            // Botón visible para editar la solicitud
                             Row(
                                 verticalAlignment =
                                     Alignment.CenterVertically,
 
                                 modifier =
-                                    Modifier.clickable {
-
-                                        controller.navigate(
-                                            "${AppScreens.editarSolicitud.name}/${solicitud.id}"
+                                    Modifier
+                                        .background(
+                                            color = MainGreen,
+                                            shape = RoundedCornerShape(50)
                                         )
-                                    }
+                                        .clickable {
+
+                                            controller.navigate(
+                                                "${AppScreens.editarSolicitud.name}/${solicitud.id}"
+                                            )
+                                        }
+                                        .padding(
+                                            horizontal = 14.dp,
+                                            vertical = 8.dp
+                                        )
                             ) {
 
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+
+                                Spacer(modifier = Modifier.width(6.dp))
 
                                 Text(
                                     text =
-                                        "Editar Solicitud",
+                                        "Editar solicitud",
 
                                     fontSize =
-                                        12.sp,
+                                        14.sp,
 
                                     fontWeight =
-                                        FontWeight.ExtraBold,
-
-                                    textDecoration =
-                                        TextDecoration.Underline,
+                                        FontWeight.SemiBold,
 
                                     color =
-                                        MainText
+                                        Color.White
                                 )
                             }
                         }
@@ -1190,8 +1209,9 @@ fun SolicitudDetalleScreenU(
                             ButtonDefaults
                                 .buttonColors(
 
+                                    // Rojo: es una acción que no se puede deshacer
                                     containerColor =
-                                        MainGreen
+                                        Color(0xFFC94338)
                                 )
                     ) {
 

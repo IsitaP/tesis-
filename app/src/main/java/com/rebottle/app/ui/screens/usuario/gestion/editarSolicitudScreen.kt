@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -169,9 +170,12 @@ fun EditRequestScreen(
             }
 
 
+            val fechaValida = model.validarFecha()
+
             if (
                 state.location.isNotBlank() &&
-                state.selectedMaterials.isNotEmpty()
+                state.selectedMaterials.isNotEmpty() &&
+                fechaValida
             ) {
 
                 model.editarSolicitud(
@@ -239,8 +243,10 @@ fun CreateRequestContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(BackgroundColor)
+            // No queda debajo de los botones de navegación del celular
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
     ) {
 
@@ -417,6 +423,16 @@ fun CreateRequestContent(
             onNextMonth = onNextMonth,
             onSelectDate = onSelectDate
         )
+
+        // Error de fecha, con el mismo estilo que el de la dirección
+        if (state.dateError.isNotEmpty()) {
+            Text(
+                text = state.dateError,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(15.dp))
 
@@ -596,7 +612,8 @@ private fun CalendarCard(
                                     text = date.dayOfMonth.toString(),
                                     color = when {
                                         isSelected -> Color.White
-                                        !isCurrentMonth -> PastMonthGray
+                                        // Días pasados en gris: no se pueden elegir
+                                        !isCurrentMonth || date.isBefore(LocalDate.now()) -> PastMonthGray
                                         isWeekend -> Color(0xFFD98555)
                                         else -> DarkGreen
                                     },

@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -344,10 +346,13 @@ private fun CollectionCard(
     onDetailsClick: () -> Unit
 ) {
 
+    // Toda la tarjeta abre el detalle
     Card(
+        onClick = onDetailsClick,
+
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp),
+            .heightIn(min = 140.dp),
 
         shape = RoundedCornerShape(8.dp),
 
@@ -388,7 +393,7 @@ private fun CollectionCard(
 
                 Text(
                     text = "Recolección programada",
-                    fontSize = 15.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Medium,
                     color = MainText,
                     maxLines = 1
@@ -402,16 +407,16 @@ private fun CollectionCard(
 
                 Text(
                     text = "Estado: ${solicitud.estado}",
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
                     color = SecondaryText
                 )
 
 
                 Text(
                     text = "Fecha: ${solicitud.fechaRecoleccion}",
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
                     color = SecondaryText
                 )
 
@@ -426,25 +431,9 @@ private fun CollectionCard(
                             )
                         }
                     }",
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
                     color = SecondaryText
-                )
-
-
-                Spacer(
-                    modifier = Modifier.height(2.dp)
-                )
-
-
-                Text(
-                    text = "Ver más detalles →",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainGreen,
-                    modifier = Modifier.clickable {
-                        onDetailsClick()
-                    }
                 )
             }
 
@@ -489,10 +478,13 @@ private fun LearnCard(
     onLearnClick: () -> Unit
 ) {
 
+    // Toda la tarjeta abre la ruta de aprendizaje
     Card(
+        onClick = onLearnClick,
+
         modifier = Modifier
             .fillMaxWidth()
-            .height(155.dp),
+            .heightIn(min = 155.dp),
 
         shape = RoundedCornerShape(8.dp),
 
@@ -524,7 +516,7 @@ private fun LearnCard(
 
                 Text(
                     text = "¿Cómo reciclar?",
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = MainText
                 )
@@ -537,25 +529,9 @@ private fun LearnCard(
 
                 Text(
                     text = "Aprende a separar tus residuos por material y mantén limpios los envases antes de entregarlos.",
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
+                    fontSize = 14.sp,
+                    lineHeight = 19.sp,
                     color = SecondaryText
-                )
-
-
-                Spacer(
-                    modifier = Modifier.height(7.dp)
-                )
-
-
-                Text(
-                    text = "Aprender más  →",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MainGreen,
-                    modifier = Modifier.clickable {
-                        onLearnClick()
-                    }
                 )
             }
 
@@ -738,8 +714,10 @@ fun ReBottleBottomBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(82.dp)
             .background(Color.White)
+            // Deja libre el espacio de los botones o la barra de gestos del celular
+            .navigationBarsPadding()
+            .height(82.dp)
             .padding(horizontal = 8.dp),
 
         verticalAlignment = Alignment.CenterVertically

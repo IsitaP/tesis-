@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -454,12 +455,19 @@ private fun SolicitudCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // El título toma el espacio que sobra y se recorta si no cabe,
+                // así la etiqueta de estado nunca se sale de la tarjeta
                 Text(
                     text = "Recolección # ${solicitud.id}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = DarkGreen
+                    color = DarkGreen,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Box(
                     modifier = Modifier
@@ -473,7 +481,9 @@ private fun SolicitudCard(
                         text = solicitud.estado,
                         color = Color.White,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }

@@ -133,6 +133,8 @@ data class SolicitudState(
 
     val materialsError: String = "",
 
+    val dateError: String = "",
+
     val isLoading: Boolean = false,
 
 
@@ -152,6 +154,9 @@ data class SolicitudState(
 // ============================================================
 // VIEWMODEL
 // ============================================================
+
+private const val ERROR_FECHA_PASADA =
+    "Selecciona una fecha de hoy en adelante"
 
 class SolicitudViewModel : ViewModel() {
 
@@ -364,12 +369,40 @@ class SolicitudViewModel : ViewModel() {
         date: LocalDate
     ) {
 
+        // No se permite programar recolecciones en días anteriores a hoy
+        if (date.isBefore(LocalDate.now())) {
+
+            _state.value =
+                _state.value.copy(
+                    dateError = ERROR_FECHA_PASADA
+                )
+
+            return
+        }
+
         _state.value =
             _state.value.copy(
 
                 selectedDate =
-                    date
+                    date,
+
+                dateError =
+                    ""
             )
+    }
+
+
+    // Revisa la fecha antes de crear o editar (por si cambió el día con la pantalla abierta)
+    fun validarFecha(): Boolean {
+
+        val valida = !_state.value.selectedDate.isBefore(LocalDate.now())
+
+        _state.value =
+            _state.value.copy(
+                dateError = if (valida) "" else ERROR_FECHA_PASADA
+            )
+
+        return valida
     }
 
 
@@ -1624,6 +1657,9 @@ class SolicitudViewModel : ViewModel() {
                     "",
 
                 materialsError =
+                    "",
+
+                dateError =
                     "",
 
                 isLoading =

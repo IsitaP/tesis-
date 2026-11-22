@@ -1,15 +1,32 @@
 package com.rebottle.app.model
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.location.Geocoder
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.rebottle.app.logica.PuntoRuta
+import com.rebottle.app.logica.calcularTiemposParadas
+import com.rebottle.app.logica.paradasVencidas
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.util.Date
+import java.util.Locale
 
 
 // ============================================================
@@ -57,11 +74,36 @@ data class RutaProgresoState(
 //                               vuelve a DISPONIBLE
 //
 // Parada completada = solicitud RECOLECTADA + completadaEn
+//
+// Progreso automático: desde la hora de salida, las paradas se
+// completan solas según el tiempo estimado caminando desde la
+// fundación y entre paradas, más 5 a 7 min en cada una
+// (ver logica/ProgresoRutaLogica.kt).
 // ============================================================
 
-class RutaProgresoViewModel : ViewModel() {
+// Cada cuánto se revisa si ya terminó alguna parada
+private const val INTERVALO_REVISION_MS = 30_000L
+
+class RutaProgresoViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     private val firestore = FirebaseFirestore.getInstance()
+
+    // ---------- Progreso automático ----------
+
+    // Dirección de la fundación (punto de partida de la ruta)
+    private var origenFundacion: PuntoRuta? = null
+    private var origenCargado = false
+    private var cargandoOrigen = false
+
+    // Hora en que se asignó la ruta (se usa si no hay hora de salida)
+    private var asignadaEnMillis: Long? = null
+
+    // Paradas que este celular ya marcó, para no repetirlas
+    private val autoCompletadas = mutableSetOf<String>()
+
+    private var revisionJob: Job? = null
 
     private val _state = MutableStateFlow(RutaProgresoState())
     val state: StateFlow<RutaProgresoState> = _state.asStateFlow()
@@ -109,7 +151,7 @@ class RutaProgresoViewModel : ViewModel() {
                     val ventana = 24L * 60L * 60L * 1000L
 
                     // Activa primero; una ruta terminada se muestra 24 h
-                    val ruta =
+                    val rutaDoc =
                         snapshot?.documents
                             ?.filter { doc ->
                                 doc.getString("estado") != EstadoRuta.COMPLETADA.name ||
@@ -123,7 +165,10 @@ class RutaProgresoViewModel : ViewModel() {
                                 }
                             )
                             ?.firstOrNull()
-                            ?.let { aRuta(it) }
+
+                    val ruta = rutaDoc?.let { aRuta(it) }
+
+                    asignadaEnMillis = rutaDoc?.getTimestamp("asignadaEn")?.toDate()?.time
 
                     if (ruta == null) {
                         solicitudesListener?.remove()
@@ -199,7 +244,164 @@ class RutaProgresoViewModel : ViewModel() {
             isLoading = ids.isNotEmpty() && solicitudesDocs.isEmpty(),
             error = null
         )
+
+        iniciarRevisionAutomatica()
+        revisarProgresoAutomatico()
     }
+
+
+    // ============================================================
+    // PROGRESO AUTOMÁTICO
+    // ============================================================
+
+    private fun iniciarRevisionAutomatica() {
+
+        if (revisionJob?.isActive == true) return
+
+        revisionJob =
+            viewModelScope.launch {
+                while (isActive) {
+                    delay(INTERVALO_REVISION_MS)
+                    revisarProgresoAutomatico()
+                }
+            }
+    }
+
+    /**
+     * Hora de salida de la ruta: fecha de recolección + hora que definió
+     * la fundación. Si no hay hora, se usa el momento en que se asignó.
+     */
+    private fun inicioRutaMillis(ruta: Ruta): Long? {
+
+        val fecha = runCatching { LocalDate.parse(ruta.fechaRecoleccion) }.getOrNull()
+
+        val partes = ruta.hora.split(":")
+        val hora = partes.getOrNull(0)?.trim()?.toIntOrNull()
+        val minuto = partes.getOrNull(1)?.trim()?.toIntOrNull()
+
+        if (fecha != null && hora != null && minuto != null && hora in 0..23 && minuto in 0..59) {
+            return fecha
+                .atTime(LocalTime.of(hora, minuto))
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        }
+
+        return asignadaEnMillis
+    }
+
+    private fun revisarProgresoAutomatico() {
+
+        val actual = _state.value
+        val ruta = actual.ruta ?: return
+
+        if (
+            ruta.estado != EstadoRuta.ASIGNADA.name &&
+            ruta.estado != EstadoRuta.EN_CURSO.name
+        ) return
+
+        if (actual.resolviendoId != null || actual.paradas.isEmpty()) return
+
+        val inicio = inicioRutaMillis(ruta) ?: return
+
+        // Antes de la hora de salida no hay nada que revisar
+        if (System.currentTimeMillis() < inicio) return
+
+        if (!origenCargado) {
+            cargarOrigenFundacion()
+            return
+        }
+
+        val tiempos =
+            calcularTiemposParadas(
+                inicioMillis = inicio,
+                origen = origenFundacion,
+                paradas = actual.paradas.map {
+                    PuntoRuta(it.solicitudId, it.latitud, it.longitud)
+                }
+            )
+
+        val pendientes =
+            actual.paradas
+                .filter { it.estado == EstadoParada.PENDIENTE && it.solicitudId !in autoCompletadas }
+                .map { it.solicitudId }
+                .toSet()
+
+        // Se completa una a la vez, en orden; al terminar se revisa la siguiente
+        val siguiente =
+            paradasVencidas(tiempos, pendientes, System.currentTimeMillis())
+                .firstOrNull() ?: return
+
+        autoCompletadas += siguiente.solicitudId
+
+        resolverParada(
+            solicitudId = siguiente.solicitudId,
+            completada = true,
+            completadaEn = Timestamp(Date(siguiente.finMillis)),
+            silencioso = true,
+            onSuccess = { revisarProgresoAutomatico() }
+        )
+    }
+
+    /**
+     * Busca la dirección de la fundación y la convierte en coordenadas.
+     * Si no se encuentra, la ruta empieza a contar desde la primera parada.
+     */
+    private fun cargarOrigenFundacion() {
+
+        if (cargandoOrigen) return
+        cargandoOrigen = true
+
+        firestore
+            .collection("users")
+            .whereEqualTo("role", "fundacion")
+            .limit(1)
+            .get()
+            .addOnSuccessListener { snapshot ->
+
+                val doc = snapshot.documents.firstOrNull()
+
+                val lat = doc?.getDouble("latitud")
+                val lon = doc?.getDouble("longitud")
+
+                if (lat != null && lon != null && (lat != 0.0 || lon != 0.0)) {
+                    terminarCargaOrigen(PuntoRuta("fundacion", lat, lon))
+                    return@addOnSuccessListener
+                }
+
+                val direccion = doc?.getString("direccion")?.trim().orEmpty()
+
+                if (direccion.isEmpty()) {
+                    terminarCargaOrigen(null)
+                    return@addOnSuccessListener
+                }
+
+                viewModelScope.launch {
+                    terminarCargaOrigen(geocodificar(direccion))
+                }
+            }
+            .addOnFailureListener {
+                terminarCargaOrigen(null)
+            }
+    }
+
+    private fun terminarCargaOrigen(origen: PuntoRuta?) {
+        origenFundacion = origen
+        origenCargado = true
+        cargandoOrigen = false
+        revisarProgresoAutomatico()
+    }
+
+    @Suppress("DEPRECATION")
+    private suspend fun geocodificar(direccion: String): PuntoRuta? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                Geocoder(getApplication(), Locale("es", "CO"))
+                    .getFromLocationName(direccion, 1)
+                    ?.firstOrNull()
+                    ?.let { PuntoRuta("fundacion", it.latitude, it.longitude) }
+            }.getOrNull()
+        }
 
 
     fun completarParada(solicitudId: String, onSuccess: () -> Unit = {}) =
@@ -208,10 +410,16 @@ class RutaProgresoViewModel : ViewModel() {
     fun cancelarParada(solicitudId: String, onSuccess: () -> Unit = {}) =
         resolverParada(solicitudId, completada = false, onSuccess = onSuccess)
 
+    /**
+     * @param completadaEn hora de recolección; null = hora del servidor
+     * @param silencioso no muestra errores (lo usa el progreso automático)
+     */
     private fun resolverParada(
         solicitudId: String,
         completada: Boolean,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        completadaEn: Timestamp? = null,
+        silencioso: Boolean = false
     ) {
 
         if (_state.value.resolviendoId != null) return
@@ -219,14 +427,18 @@ class RutaProgresoViewModel : ViewModel() {
         val ruta = _state.value.ruta
 
         if (ruta == null) {
-            _state.value = _state.value.copy(resolucionError = "No hay una ruta activa")
+            if (!silencioso) {
+                _state.value = _state.value.copy(resolucionError = "No hay una ruta activa")
+            }
             return
         }
 
         val ids = ruta.ordenSolicitudes.ifEmpty { ruta.solicitudesIds }
 
         if (solicitudId !in ids) {
-            _state.value = _state.value.copy(resolucionError = "La parada no pertenece a esta ruta")
+            if (!silencioso) {
+                _state.value = _state.value.copy(resolucionError = "La parada no pertenece a esta ruta")
+            }
             return
         }
 
@@ -293,7 +505,12 @@ class RutaProgresoViewModel : ViewModel() {
                 )
 
                 if (completada) {
-                    cambiosSolicitud["completadaEn"] = FieldValue.serverTimestamp()
+                    cambiosSolicitud["completadaEn"] = completadaEn ?: FieldValue.serverTimestamp()
+                }
+
+                if (completadaEn != null) {
+                    // Queda registrado que la marcó el progreso automático
+                    cambiosSolicitud["completadaAutomaticamente"] = true
                 }
 
                 transaction.update(objetivo.reference, cambiosSolicitud)
@@ -328,9 +545,14 @@ class RutaProgresoViewModel : ViewModel() {
                 onSuccess()
             }
             .addOnFailureListener { exception ->
+                // Si falló (por ejemplo sin internet), se reintenta en la próxima revisión
+                if (silencioso) autoCompletadas.remove(solicitudId)
+
                 _state.value = _state.value.copy(
                     resolviendoId = null,
-                    resolucionError = exception.message ?: "No se pudo actualizar la parada"
+                    resolucionError =
+                        if (silencioso) null
+                        else exception.message ?: "No se pudo actualizar la parada"
                 )
             }
     }
@@ -349,6 +571,7 @@ class RutaProgresoViewModel : ViewModel() {
             id = doc.id,
             solicitudesIds = lista("solicitudesIds"),
             fechaRecoleccion = doc.getString("fechaRecoleccion") ?: "",
+            hora = doc.getString("hora") ?: "",
             estado = doc.getString("estado") ?: EstadoRuta.PUBLICADA.name,
             recolectorId = doc.getString("recolectorId"),
             ordenSolicitudes = lista("ordenSolicitudes"),
@@ -393,6 +616,10 @@ class RutaProgresoViewModel : ViewModel() {
         rutaActual = null
         idsEscuchados = emptyList()
         solicitudesDocs = emptyList()
+        revisionJob?.cancel()
+        revisionJob = null
+        asignadaEnMillis = null
+        autoCompletadas.clear()
     }
 
     override fun onCleared() {

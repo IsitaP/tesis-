@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -654,10 +655,13 @@ private fun BarraPuntos(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
+            // Toda la barra redime los puntos
+            .clip(RoundedCornerShape(26.dp))
             .background(
                 color = RewardBottomGreen,
                 shape = RoundedCornerShape(26.dp)
             )
+            .clickable { onRedimirClick() }
             .padding(horizontal = 18.dp)
     ) {
 
@@ -692,33 +696,13 @@ private fun BarraPuntos(
             )
         }
 
-        // ====================================================
-        // REDIMIR (abajo a la derecha, subrayado)
-        // ====================================================
-
-        Row(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .clickable { onRedimirClick() }
-                .padding(vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Text(
-                text = "Redimir",
-                color = Color.White,
-                fontSize = 13.sp,
-                textDecoration = TextDecoration.Underline
-            )
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Text(
-                text = "→",
-                color = Color.White,
-                fontSize = 13.sp
-            )
-        }
+        // Flecha a la derecha: indica que la barra se puede tocar
+        Text(
+            text = "→",
+            color = Color.White,
+            fontSize = 22.sp,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        )
     }
 }
 
