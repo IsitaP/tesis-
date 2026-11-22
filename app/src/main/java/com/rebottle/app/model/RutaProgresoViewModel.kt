@@ -49,7 +49,9 @@ data class ParadaRuta(
     val latitud: Double,
     val longitud: Double,
     val estado: EstadoParada,
-    val completadaEn: Timestamp?
+    val completadaEn: Timestamp?,
+    // Ciudadano que hizo la solicitud (para consultar su celular)
+    val usuarioId: String = ""
 )
 
 data class RutaProgresoState(
@@ -611,7 +613,8 @@ class RutaProgresoViewModel(
             latitud = doc.getDouble("latitud") ?: 0.0,
             longitud = doc.getDouble("longitud") ?: 0.0,
             estado = estado,
-            completadaEn = doc.getTimestamp("completadaEn")
+            completadaEn = doc.getTimestamp("completadaEn"),
+            usuarioId = doc.getString("usuarioId") ?: ""
         )
     }
 

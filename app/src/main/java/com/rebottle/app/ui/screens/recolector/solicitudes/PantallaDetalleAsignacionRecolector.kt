@@ -60,6 +60,12 @@ import com.rebottle.app.components.MainGreen
 import com.rebottle.app.model.MaterialType
 import com.rebottle.app.model.RutaProgresoViewModel
 import com.rebottle.app.navigation.AppScreens
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 private val BackgroundColor = RebottleColors.Background
 private val MainText = RebottleColors.MainText
@@ -83,6 +89,23 @@ fun PantallaDetalleAsignacionRecolector(
     LaunchedEffect(recolectorId) {
         (recolectorId ?: FirebaseAuth.getInstance().currentUser?.uid)?.let { model.escucharRutaDe(it) }
     }
+
+    // Celular del ciudadano que hizo la solicitud (vacío = no lo ha registrado)
+    val usuarioIdParada =
+        state.paradas.firstOrNull { it.solicitudId == asignacionId }?.usuarioId.orEmpty()
+
+    var telefonoCiudadano by remember(usuarioIdParada) { mutableStateOf("") }
+
+    LaunchedEffect(usuarioIdParada, soloLectura) {
+        if (usuarioIdParada.isNotBlank() && !soloLectura) {
+            Firebase.firestore.collection("users").document(usuarioIdParada).get()
+                .addOnSuccessListener { doc ->
+                    telefonoCiudadano = doc.getString("telefono")?.trim().orEmpty()
+                }
+        }
+    }
+
+    val context = LocalContext.current
 
     val fecha = formatearFecha(state.ruta?.fechaRecoleccion.orEmpty())
 
@@ -321,6 +344,22 @@ fun PantallaDetalleAsignacionRecolector(
                 }
             }
 
+            // Contactar al ciudadano: solo si registró su celular
+            if (telefonoCiudadano.isNotBlank() && !soloLectura) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ContactarCiudadano(
+                    telefono = telefonoCiudadano,
+                    onLlamar = {
+                        // Abre el marcador con el número listo; la llamada la hace el recolector
+                        val numero = telefonoCiudadano.filter { it.isDigit() || it == '+' }
+                        context.startActivity(
+                            Intent(Intent.ACTION_DIAL, Uri.parse("tel:$numero"))
+                        )
+                    }
+                )
+            }
+
             // El botón inferior solo se muestra si el estado es PENDIENTE
             if (estado == EstadoAsignacion.PENDIENTE && !soloLectura) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -388,6 +427,62 @@ fun PantallaDetalleAsignacionRecolector(
                 .height(200.dp),
             contentScale = ContentScale.FillWidth
         )
+    }
+}
+
+// ============================================================
+// CONTACTAR AL CIUDADANO
+// ============================================================
+
+@Composable
+private fun ContactarCiudadano(
+    telefono: String,
+    onLlamar: () -> Unit
+) {
+    Card(
+        onClick = onLlamar,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = RebottleColors.LightGreen),
+        border = BorderStroke(1.dp, RebottleColors.BorderGreen),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "¿Necesitas comunicarte con el ciudadano?",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MainText
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Toca para llamar al $telefono",
+                    fontSize = 13.sp,
+                    color = SecondaryText
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Botón redondo con el ícono de teléfono
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(RebottleColors.MainGreen, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_phone),
+                    contentDescription = "Llamar al ciudadano",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
 

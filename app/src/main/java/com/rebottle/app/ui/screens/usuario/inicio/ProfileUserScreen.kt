@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -231,6 +232,18 @@ fun ProfileUserScreen(
                 Text(text = "Editar perfil", fontSize = 14.sp, color = MainGreen)
             }
 
+            // Invitación a agregar el celular si todavía no lo tiene
+            if (!cargando && telefono.isBlank()) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                AvisoAgregarCelular(
+                    onClick = { controller.navigate(AppScreens.editarPerfilUsuario.name) }
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+
             Spacer(modifier = Modifier.height(10.dp))
 
             OutlinedButton(
@@ -273,6 +286,70 @@ fun ProfileUserScreen(
                     onClick = { controller.navigate(AppScreens.misAportes.name) }
                 )
                 Spacer(modifier = Modifier.height(25.dp))
+            }
+        }
+    }
+}
+
+
+// ============================================================
+// AVISO: AGREGAR NÚMERO DE CELULAR
+// ============================================================
+
+@Composable
+private fun AvisoAgregarCelular(
+    onClick: () -> Unit
+) {
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 27.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, RebottleColors.BorderGreen),
+        colors = CardDefaults.cardColors(containerColor = RebottleColors.LightGreen),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Phone,
+                    contentDescription = null,
+                    tint = MainGreen,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+
+                Text(
+                    text = "Si quieres que el recolector pueda contactarte a la hora de hacer tu recolección, agrega un número de celular.",
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                    color = MainText
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Agregar celular →",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MainGreen
+                )
             }
         }
     }
