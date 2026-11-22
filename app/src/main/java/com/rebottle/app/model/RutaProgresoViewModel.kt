@@ -84,6 +84,10 @@ data class RutaProgresoState(
 // Cada cuánto se revisa si ya terminó alguna parada
 private const val INTERVALO_REVISION_MS = 30_000L
 
+// Dirección de la fundación (punto de partida de las rutas).
+// Se usa si el perfil de la fundación no tiene dirección ni coordenadas.
+private const val DIRECCION_FUNDACION = "Calle 16 #33-26, Bogotá, Colombia"
+
 class RutaProgresoViewModel(
     application: Application
 ) : AndroidViewModel(application) {
@@ -369,19 +373,18 @@ class RutaProgresoViewModel(
                     return@addOnSuccessListener
                 }
 
-                val direccion = doc?.getString("direccion")?.trim().orEmpty()
-
-                if (direccion.isEmpty()) {
-                    terminarCargaOrigen(null)
-                    return@addOnSuccessListener
-                }
+                val direccion =
+                    doc?.getString("direccion")?.trim()?.ifEmpty { null }
+                        ?: DIRECCION_FUNDACION
 
                 viewModelScope.launch {
                     terminarCargaOrigen(geocodificar(direccion))
                 }
             }
             .addOnFailureListener {
-                terminarCargaOrigen(null)
+                viewModelScope.launch {
+                    terminarCargaOrigen(geocodificar(DIRECCION_FUNDACION))
+                }
             }
     }
 
@@ -395,9 +398,14 @@ class RutaProgresoViewModel(
     @Suppress("DEPRECATION")
     private suspend fun geocodificar(direccion: String): PuntoRuta? =
         withContext(Dispatchers.IO) {
+            // Sin ciudad, el geocodificador puede ubicarla en otra parte del país
+            val completa =
+                if (direccion.contains("bogot", ignoreCase = true)) direccion
+                else "$direccion, Bogotá, Colombia"
+
             runCatching {
                 Geocoder(getApplication(), Locale("es", "CO"))
-                    .getFromLocationName(direccion, 1)
+                    .getFromLocationName(completa, 1)
                     ?.firstOrNull()
                     ?.let { PuntoRuta("fundacion", it.latitude, it.longitude) }
             }.getOrNull()
